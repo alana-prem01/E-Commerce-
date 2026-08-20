@@ -8,15 +8,15 @@ import {
 import { api } from '../utils/api';
 import '../css/AdminDashboard.css';
 
-const COLORS = ['#0B5D50', '#D4AF37', '#2563EB', '#DC2626', '#7C3AED', '#EA580C'];
+const COLORS = ['var(--primary-color-hover)', '#D4AF37', '#2563EB', 'var(--danger)', '#7C3AED', '#EA580C'];
 
 const STATUS_COLORS = {
   Pending: '#D97706',
   Processing: '#EA580C',
   Shipped: '#2563EB',
   'Out for Delivery': '#7C3AED',
-  Delivered: '#16A34A',
-  Cancelled: '#DC2626'
+  Delivered: 'var(--success)',
+  Cancelled: 'var(--danger)'
 };
 
 const DashboardOverview = () => (
@@ -147,10 +147,10 @@ const LowStockProducts = ({ products }) => (
                 </div>
               </td>
               <td>{p.sku}</td>
-              <td><strong style={{ color: p.stock === 0 ? '#DC2626' : '#EA580C' }}>{p.stock}</strong></td>
+              <td><strong style={{ color: p.stock === 0 ? 'var(--danger)' : '#EA580C' }}>{p.stock}</strong></td>
               <td><span className="admin-badge badge-lowstock">{p.stock === 0 ? 'Out of Stock' : 'Low Stock'}</span></td>
             </tr>
-          )) : (<tr><td colSpan="4" style={{ textAlign: 'center', color: '#16A34A' }}>✅ All products well stocked</td></tr>)}
+          )) : (<tr><td colSpan="4" style={{ textAlign: 'center', color: 'var(--success)' }}>✅ All products well stocked</td></tr>)}
         </tbody>
       </table>
     </div>
@@ -188,15 +188,15 @@ const RevenueChart = ({ orders }) => {
         <AreaChart data={last7Days} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#0B5D50" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#0B5D50" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--primary-color-hover)" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="var(--primary-color-hover)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="day" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `₹${v}`} />
           <Tooltip formatter={(val) => [`₹${val.toLocaleString('en-IN')}`, 'Revenue']} />
-          <Area type="monotone" dataKey="revenue" stroke="#0B5D50" strokeWidth={2.5} fill="url(#revenueGrad)" />
+          <Area type="monotone" dataKey="revenue" stroke="var(--primary-color-hover)" strokeWidth={2.5} fill="url(#revenueGrad)" />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -283,8 +283,8 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: '#0B5D50' }}>Loading Dashboard...</div>;
-  if (error) return <div style={{ padding: '20px', color: '#DC2626' }}>Error: {error}</div>;
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--primary-color-hover)' }}>Loading Dashboard...</div>;
+  if (error) return <div style={{ padding: '20px', color: 'var(--danger)' }}>Error: {error}</div>;
 
   return (
     <>

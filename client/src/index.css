@@ -34,9 +34,34 @@
   --info: #2563eb;
 
   /* Typography */
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'Poppins', -apple-system, sans-serif;
+  --font-serif: var(--heading-font);
+  --font-sans: var(--body-font);
   --font-ui: 'Manrope', -apple-system, sans-serif;
+
+  /* Centralized Typography & Colors */
+  --heading-font: 'Cormorant Garamond', Georgia, serif;
+  --body-font: 'Poppins', -apple-system, sans-serif;
+  
+  --primary-color: #046a5a;
+  --secondary-color: #014d40;
+  
+  --heading-color: var(--secondary-color);
+  --body-color: #2b2b2b;
+  --text-muted: #8a8a8a;
+  --border-color: #e5e7eb;
+  --bg-light: #faf9f6;
+
+  /* Button System (Based on Home Page Design) */
+  --btn-primary-bg: var(--brand-primary);
+  --btn-primary-text: var(--brand-lighter);
+  --btn-primary-border: var(--brand-primary);
+  --btn-primary-hover-bg: var(--brand-darker);
+  
+  --btn-secondary-bg: transparent;
+  --btn-secondary-text: var(--brand-primary);
+  --btn-secondary-border: var(--brand-primary);
+  --btn-secondary-hover-bg: var(--brand-primary);
+  --btn-secondary-hover-text: var(--brand-lighter);
 
   /* Spacing */
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
@@ -79,6 +104,16 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font);
+  color: var(--heading-color);
+}
+
+p {
+  font-family: var(--body-font);
+  color: var(--body-color);
 }
 
 img {

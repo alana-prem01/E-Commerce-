@@ -194,15 +194,15 @@ export default function BestSellerPage() {
         {/* Section 8 – Product Grid */}
         <div className="bsp-product-grid-container" style={{ minHeight: '400px' }}>
           {loading ? (
-            <div className="bsp-loading-state" style={{ padding: '40px 0', textAlign: 'center', color: '#6B7280', fontFamily: '"Poppins", sans-serif' }}>
+            <div className="bsp-loading-state" style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-secondary)', fontFamily: 'var(--body-font)' }}>
               Loading best sellers...
             </div>
           ) : error ? (
-            <div className="bsp-error-state" style={{ padding: '40px 0', textAlign: 'center', color: '#EF4444', fontFamily: '"Poppins", sans-serif' }}>
+            <div className="bsp-error-state" style={{ padding: '40px 0', textAlign: 'center', color: '#EF4444', fontFamily: 'var(--body-font)' }}>
               {error}
             </div>
           ) : products.length === 0 ? (
-            <div className="bsp-empty-state" style={{ padding: '40px 0', textAlign: 'center', color: '#6B7280', fontFamily: '"Poppins", sans-serif' }}>
+            <div className="bsp-empty-state" style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-secondary)', fontFamily: 'var(--body-font)' }}>
               No best seller products found matching your criteria.
             </div>
           ) : (

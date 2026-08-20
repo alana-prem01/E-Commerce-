@@ -1,19 +1,19 @@
 /* Admin Panel Core CSS System */
 :root {
-  --admin-bg: #F9FAFB;
-  --admin-surface: #FFFFFF;
+  --admin-bg: var(--bg-lighter);
+  --admin-surface: var(--white);
   --admin-primary: #D4AF37;
   --admin-primary-hover: #c4a132;
-  --admin-text-main: #111827;
+  --admin-text-main: var(--text-dark);
   --admin-text-muted: #4B5563;
   --admin-text-light: #9CA3AF;
-  --admin-border: #E5E7EB;
+  --admin-border: var(--border-color);
   --admin-border-focus: #9ca3af;
   
   --admin-success: #10B981;
   --admin-success-bg: #D1FAE5;
   --admin-danger: #EF4444;
-  --admin-danger-bg: #FEE2E2;
+  --admin-danger-bg: var(--bg-danger);
   --admin-warning: #F59E0B;
   --admin-warning-bg: #FEF3C7;
   --admin-info: #3B82F6;
@@ -153,7 +153,7 @@
 }
 
 .admin-btn-danger:hover {
-  background-color: #DC2626;
+  background-color: var(--danger);
 }
 
 .admin-btn-outline {
@@ -163,7 +163,7 @@
 }
 
 .admin-btn-outline:hover {
-  background-color: #f9fafb;
+  background-color: var(--bg-lighter);
   color: var(--admin-text-main);
 }
 
@@ -180,7 +180,7 @@
 }
 
 .admin-table th {
-  background-color: #F9FAFB;
+  background-color: var(--bg-lighter);
   padding: 12px 16px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -203,7 +203,7 @@
 }
 
 .admin-table tr:hover td {
-  background-color: #F9FAFB;
+  background-color: var(--bg-lighter);
 }
 
 /* Badges */

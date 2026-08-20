@@ -100,6 +100,7 @@ function Header() {
           {/* Desktop Nav */}
           <nav className="nav-links desktop-nav">
             <Link to="/" className={`nav-link-custom ${isActive("/")}`}>Home</Link>
+            <Link to="/shop" className={`nav-link-custom ${isActive("/shop")}`}>Shop</Link>
 
             <div className="categories-wrapper" ref={categoriesRef}>
               <button
@@ -207,6 +208,7 @@ function Header() {
 
             <nav className="mobile-nav">
               <Link to="/" className="mobile-nav-link">Home</Link>
+              <Link to="/shop" className="mobile-nav-link">Shop</Link>
               <div className="mobile-nav-divider">Categories</div>
               {CATEGORIES.map(c => (
                 <Link key={c.slug} to={`/category/${c.slug}`} className="mobile-nav-link sub">

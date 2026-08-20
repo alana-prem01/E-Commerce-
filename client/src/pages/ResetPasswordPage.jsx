@@ -167,7 +167,7 @@ export default function ResetPasswordPage() {
         </div>
 
         {isSuccess ? (
-          <div className="reset-success-message" style={{ color: '#0B5D50', textAlign: 'center', fontWeight: 500, margin: '16px 0' }}>
+          <div className="reset-success-message" style={{ color: 'var(--primary-color-hover)', textAlign: 'center', fontWeight: 500, margin: '16px 0' }}>
             Password has been successfully reset! Redirecting to Sign In...
           </div>
         ) : (

@@ -429,7 +429,7 @@ export default function CheckoutPage() {
                 </div>
               ))
             ) : (
-              <div style={{ padding: '16px 0', color: '#6B7280', textAlign: 'center' }}>
+              <div style={{ padding: '16px 0', color: 'var(--text-secondary)', textAlign: 'center' }}>
                 Your cart is empty.
               </div>
             )}
@@ -449,14 +449,14 @@ export default function CheckoutPage() {
             </div>
             
             {/* Coupon Section */}
-            <div className="checkout-coupon-section" style={{ margin: '16px 0', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+            <div className="checkout-coupon-section" style={{ margin: '16px 0', padding: '16px', backgroundColor: 'var(--bg-lighter)', borderRadius: '8px' }}>
               <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Discount Code</h3>
               {appliedCoupon ? (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#e8f5f3', padding: '8px 12px', borderRadius: '6px', border: '1px solid #0b5d50' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#e8f5f3', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--primary-color-hover)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: 600, color: '#0b5d50' }}>{appliedCoupon.code}</span>
+                    <span style={{ fontWeight: 600, color: 'var(--primary-color-hover)' }}>{appliedCoupon.code}</span>
                   </div>
-                  <button onClick={handleRemoveCoupon} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '18px' }}>&times;</button>
+                  <button onClick={handleRemoveCoupon} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '18px' }}>&times;</button>
                 </div>
               ) : (
                 <div>
@@ -471,18 +471,18 @@ export default function CheckoutPage() {
                     <button 
                       onClick={handleApplyCoupon}
                       disabled={applyingCoupon || !couponCode.trim()}
-                      style={{ padding: '8px 16px', backgroundColor: couponCode.trim() ? '#0b5d50' : '#e5e7eb', color: couponCode.trim() ? 'white' : '#9ca3af', border: 'none', borderRadius: '6px', cursor: couponCode.trim() ? 'pointer' : 'not-allowed', fontWeight: 500 }}
+                      style={{ padding: '8px 16px', backgroundColor: couponCode.trim() ? 'var(--primary-color-hover)' : 'var(--border-color)', color: couponCode.trim() ? 'white' : '#9ca3af', border: 'none', borderRadius: '6px', cursor: couponCode.trim() ? 'pointer' : 'not-allowed', fontWeight: 500 }}
                     >
                       {applyingCoupon ? 'Applying...' : 'Apply'}
                     </button>
                   </div>
-                  {couponError && <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '6px' }}>{couponError}</p>}
+                  {couponError && <p style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '6px' }}>{couponError}</p>}
                 </div>
               )}
             </div>
 
             {discount > 0 && (
-              <div className="checkout-price-row checkout-price-discount" style={{ color: '#16a34a', fontWeight: 500 }}>
+              <div className="checkout-price-row checkout-price-discount" style={{ color: 'var(--success)', fontWeight: 500 }}>
                 <span>Discount ({appliedCoupon?.code})</span>
                 <span>-${discount.toFixed(2)}</span>
               </div>

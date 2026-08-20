@@ -224,7 +224,7 @@
   transition: var(--transition);
 }
 
-.icon-btn:hover .wishlist-icon { color: #dc2626; }
+.icon-btn:hover .wishlist-icon { color: var(--danger); }
 
 /* ===== Search ===== */
 .search-box {

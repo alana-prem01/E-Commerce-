@@ -12,8 +12,8 @@ function About() {
             width={size}
             height={size}
             viewBox="0 0 24 24"
-            fill={star <= rating ? "#D4AF37" : "#E5E7EB"}
-            stroke={star <= rating ? "#D4AF37" : "#E5E7EB"}
+            fill={star <= rating ? "#D4AF37" : "var(--border-color)"}
+            stroke={star <= rating ? "#D4AF37" : "var(--border-color)"}
             strokeWidth="1"
             strokeLinecap="round"
             strokeLinejoin="round"

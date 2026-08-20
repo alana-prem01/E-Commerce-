@@ -2,7 +2,7 @@
 
 .page-root {
   width: 100%;
-  background-color: #FFFFFF;
+  background-color: var(--white);
   box-sizing: border-box;
 }
 
@@ -10,23 +10,23 @@
 .page-header {
   text-align: center;
   padding: 48px 20px 24px;
-  background: #FAF9F6;
+  background: var(--bg-light);
 }
 
 .page-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-weight: 700;
   font-size: 44px;
-  color: #014D40;
+  color: var(--secondary-color);
   margin: 0 0 8px 0;
   line-height: 1.15;
 }
 
 .page-subtitle {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 15px;
-  color: #6B7280;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -59,8 +59,8 @@
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 8px 14px;
   cursor: pointer;
@@ -69,21 +69,21 @@
 
 .price-trigger:hover,
 .price-trigger.open {
-  border-color: #046A5A;
+  border-color: var(--primary-color);
 }
 
 .price-trigger-label {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #2B2B2B;
+  color: var(--body-color);
 }
 
 .arrow-icon {
   width: 12px;
   height: 7px;
   fill: none;
-  stroke: #046A5A;
+  stroke: var(--primary-color);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -101,8 +101,8 @@
   left: 0;
   width: 260px;
   z-index: 10;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 16px;
   box-shadow: 0 8px 24px rgba(1, 77, 64, 0.08);
@@ -114,15 +114,15 @@
   border-radius: 6px;
   padding: 7px 9px;
   margin-bottom: 12px;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 11px;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 .highest-price-value {
   font-weight: 700;
-  color: #046A5A;
+  color: var(--primary-color);
 }
 
 .inputs-row {
@@ -141,19 +141,19 @@
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 13px;
-  color: #6B7280;
+  color: var(--text-secondary);
   pointer-events: none;
 }
 
 .price-input {
   width: 100%;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #2B2B2B;
-  border: 1px solid #E5E7EB;
+  color: var(--body-color);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 9px 10px 9px 34px;
   box-sizing: border-box;
@@ -162,7 +162,7 @@
 }
 
 .price-input:focus {
-  border-color: #046A5A;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(4, 106, 90, 0.1);
 }
 
@@ -175,28 +175,28 @@
 
 .apply-btn {
   width: 100%;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 13px;
-  color: #FFFFFF;
-  background: #046A5A;
-  border: none;
+  color: var(--btn-primary-text);
+  background: var(--btn-primary-bg);
   border-radius: 8px;
   padding: 9px;
+  border: 1px solid var(--btn-primary-border);
   cursor: pointer;
   transition: background 200ms ease;
 }
 
 .apply-btn:hover {
-  background: #014D40;
+  background: var(--btn-primary-hover-bg);
 }
 
 /* 6. Result Count */
 .result-count {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 /* 7. Toolbar Right (Sort) */
@@ -208,10 +208,10 @@
 }
 
 .sort-label {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 14px;
-  color: #2B2B2B;
+  color: var(--body-color);
 }
 
 .sort-select-wrapper {
@@ -219,12 +219,12 @@
 }
 
 .sort-select {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #2B2B2B;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  color: var(--body-color);
+  background: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 8px 32px 8px 14px;
   appearance: none;
@@ -235,7 +235,7 @@
 }
 
 .sort-select:focus {
-  border-color: #046A5A;
+  border-color: var(--primary-color);
 }
 
 .sort-chevron {
@@ -247,7 +247,7 @@
   width: 12px;
   height: 7px;
   fill: none;
-  stroke: #046A5A;
+  stroke: var(--primary-color);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -282,7 +282,7 @@
 .placeholder-icon {
   width: 48px;
   height: 48px;
-  stroke: #046A5A;
+  stroke: var(--primary-color);
   fill: none;
   stroke-width: 1.5;
 }
@@ -291,9 +291,9 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  background: #014D40;
-  color: #FFFFFF;
-  font-family: 'Poppins', sans-serif;
+  background: var(--secondary-color);
+  color: var(--white);
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 11px;
   letter-spacing: 0.4px;
@@ -303,18 +303,18 @@
 }
 
 .product-name {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 16px;
-  color: #2B2B2B;
+  color: var(--body-color);
   margin: 0 0 4px 0;
 }
 
 .product-price {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 700;
   font-size: 18px;
-  color: #046A5A;
+  color: var(--primary-color);
   margin: 0;
 }
 
@@ -331,37 +331,38 @@
 .page-btn {
   height: 38px;
   padding: 0 16px;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 14px;
-  color: #2B2B2B;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  color: var(--btn-secondary-text);
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--btn-secondary-border);
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  transition: border-color 200ms ease, color 200ms ease;
+  transition: border-color 200ms ease, color 200ms ease, background-color 200ms ease;
 }
 
 .page-btn:hover:not(:disabled) {
-  border-color: #046A5A;
-  color: #046A5A;
+  background: var(--btn-secondary-hover-bg);
+  color: var(--btn-secondary-hover-text);
+  border-color: var(--btn-secondary-border);
 }
 
 .page-btn:disabled {
   color: #D1D5DB;
-  border-color: #E5E7EB;
+  border-color: var(--border-color);
   cursor: not-allowed;
   pointer-events: none;
 }
 
 .page-indicator {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 14px;
-  color: #014D40;
+  color: var(--secondary-color);
 }
 
 /* Responsive Breakpoints */

@@ -9,14 +9,14 @@
   justify-content: center;
   padding: 48px 24px;
   box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
 }
 
 .card-container {
   width: 100%;
   max-width: 420px;
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 40px 36px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
@@ -35,38 +35,38 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background-color: #134E4A;
+  background-color: var(--primary-color-dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
-  font-family: 'Cormorant Garamond', serif;
+  color: var(--white);
+  font-family: var(--heading-font);
   font-weight: 700;
   font-size: 20px;
 }
 
 .logo-text {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-size: 22px;
   font-weight: 700;
-  color: #134E4A;
+  color: var(--primary-color-dark);
   letter-spacing: 1px;
 }
 
 .page-heading {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-size: 26px;
   font-weight: 700;
-  color: #134E4A;
+  color: var(--primary-color-dark);
   text-align: center;
   margin: 0 0 6px 0;
 }
 
 .subtext {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 14px;
   font-weight: 400;
-  color: #6B7280;
+  color: var(--text-secondary);
   text-align: center;
   margin: 0 0 28px 0;
 }
@@ -84,10 +84,10 @@
 }
 
 .field-label {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-medium);
   margin-bottom: 6px;
 }
 
@@ -102,16 +102,16 @@
   padding: 0 14px;
   border: 1px solid #D1D5DB;
   border-radius: 10px;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 14px;
-  background-color: #FFFFFF;
+  background-color: var(--white);
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.2s ease;
 }
 
 .input-field:focus {
-  border-color: #134E4A;
+  border-color: var(--primary-color-dark);
 }
 
 .input-field-padded {
@@ -125,13 +125,13 @@
   transform: translateY(-50%);
   cursor: pointer;
   font-size: 12px;
-  color: #6B7280;
+  color: var(--text-secondary);
   user-select: none;
 }
 
 .error-message {
   font-size: 11px;
-  color: #DC2626;
+  color: var(--danger);
   margin-top: 4px;
 }
 
@@ -156,7 +156,7 @@
 }
 
 .strength-weak {
-  color: #DC2626;
+  color: var(--danger);
 }
 
 .consent-row {
@@ -174,15 +174,15 @@
 }
 
 .consent-text {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 12.5px;
   font-weight: 400;
-  color: #6B7280;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
 .link {
-  color: #0B5D50;
+  color: var(--primary-color-hover);
   text-decoration: none;
 }
 
@@ -193,11 +193,11 @@
 .create-account-btn {
   width: 100%;
   height: 46px;
-  background-color: #134E4A;
-  color: #FFFFFF;
+  background-color: var(--primary-color-dark);
+  color: var(--white);
   border: none;
   border-radius: 24px;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -219,11 +219,11 @@
 .divider-line {
   flex: 1;
   height: 1px;
-  background-color: #E5E7EB;
+  background-color: var(--border-color);
 }
 
 .divider-text {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 12px;
   font-weight: 400;
   color: #9CA3AF;
@@ -237,17 +237,17 @@
 }
 
 .footer-text {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 13px;
   font-weight: 400;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 .sign-in-link {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 13px;
   font-weight: 500;
-  color: #0B5D50;
+  color: var(--primary-color-hover);
   cursor: pointer;
   text-decoration: none;
 }

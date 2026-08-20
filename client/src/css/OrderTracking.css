@@ -4,16 +4,16 @@
   max-width: 1000px;
   margin: 0 auto;
   padding: 40px 20px 64px 20px;
-  background-color: #ffffff;
+  background-color: var(--white);
   box-sizing: border-box;
 }
 
 /* 1. Back Link */
 .back-link {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 14px;
-  color: #046a5a;
+  color: var(--primary-color);
   text-decoration: none;
   margin-bottom: 24px;
   display: inline-flex;
@@ -44,24 +44,24 @@
 }
 
 .order-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-weight: 700;
   font-size: 32px;
-  color: #014d40;
+  color: var(--secondary-color);
   margin: 0;
   line-height: 1.2;
 }
 
 .order-subtext {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .status-badge {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 13px;
   padding: 6px 16px;
@@ -72,7 +72,7 @@
 
 .status-badge.delivered {
   background-color: #f3f7f5;
-  color: #046a5a;
+  color: var(--primary-color);
 }
 
 .status-badge.in-transit {
@@ -87,8 +87,8 @@
 
 /* Universal Card Base Styling */
 .tracking-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 28px;
   margin-bottom: 24px;
@@ -107,13 +107,13 @@
   left: 32px;
   right: 32px;
   height: 3px;
-  background-color: #e5e7eb;
+  background-color: var(--border-color);
   z-index: 1;
 }
 
 .timeline-progress-line {
   height: 100%;
-  background-color: #046a5a;
+  background-color: var(--primary-color);
   transition: width 0.3s ease;
 }
 
@@ -143,30 +143,30 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  background-color: #ffffff;
+  background-color: var(--white);
 }
 
 .step-dot.completed {
-  background-color: #046a5a;
-  border: 2px solid #046a5a;
-  color: #ffffff;
+  background-color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  color: var(--white);
 }
 
 .step-dot.current {
-  background-color: #ffffff;
-  border: 2px solid #046a5a;
+  background-color: var(--white);
+  border: 2px solid var(--primary-color);
 }
 
 .inner-emerald-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: #046a5a;
+  background-color: var(--primary-color);
 }
 
 .step-dot.pending {
-  background-color: #ffffff;
-  border: 2px solid #e5e7eb;
+  background-color: var(--white);
+  border: 2px solid var(--border-color);
 }
 
 .inner-gray-dot {
@@ -178,7 +178,7 @@
 
 /* Step Typography */
 .step-label {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 13px;
   margin-top: 12px;
   margin-bottom: 2px;
@@ -186,18 +186,18 @@
 
 .step-label.active {
   font-weight: 500;
-  color: #2b2b2b;
+  color: var(--body-color);
 }
 
 .step-label.pending {
   font-weight: 400;
-  color: #8a8a8a;
+  color: var(--text-muted);
 }
 
 .step-date {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 12px;
-  color: #8a8a8a;
+  color: var(--text-muted);
 }
 
 /* 4. Order Details Card */
@@ -208,26 +208,26 @@
 }
 
 .info-label {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 13px;
-  color: #8a8a8a;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 8px;
 }
 
 .info-text {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #2b2b2b;
+  color: var(--body-color);
   line-height: 22px;
 }
 
 .info-text .name-line {
   font-weight: 600;
-  color: #014d40;
+  color: var(--secondary-color);
 }
 
 /* 5. Items Card */
@@ -242,7 +242,7 @@
   gap: 16px;
   padding-bottom: 16px;
   margin-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .item-row:last-child {
@@ -267,24 +267,24 @@
 }
 
 .item-name {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 15px;
-  color: #014d40;
+  color: var(--secondary-color);
 }
 
 .item-qty {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 13px;
-  color: #8a8a8a;
+  color: var(--text-muted);
 }
 
 .item-price {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 15px;
-  color: #2b2b2b;
+  color: var(--body-color);
   text-align: right;
 }
 
@@ -296,36 +296,36 @@
 }
 
 .summary-row {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-secondary);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .summary-row.total-row {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
   margin-top: 8px;
   padding-top: 16px;
   font-weight: 600;
   font-size: 16px;
-  color: #014d40;
+  color: var(--secondary-color);
 }
 
 /* 7. Help Text */
 .help-text {
   text-align: center;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-top: 32px;
 }
 
 .help-link {
-  color: #046a5a;
+  color: var(--primary-color);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s ease;

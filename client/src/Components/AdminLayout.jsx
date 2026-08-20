@@ -141,7 +141,7 @@ const AdminLayout = ({ children }) => {
             <main className="admin-dashboard-main">
                 <div className="mobile-hamburger-wrapper">
                     <button className="hamburger-menu" onClick={() => setMobileOpen(!mobileOpen)}>
-                        {mobileOpen ? <FiX size={24} color="#111827" /> : <FiMenu size={24} color="#111827" />}
+                        {mobileOpen ? <FiX size={24} color="var(--text-dark)" /> : <FiMenu size={24} color="var(--text-dark)" />}
                     </button>
                 </div>
                 <AdminNavbar />

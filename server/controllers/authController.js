@@ -261,16 +261,18 @@ const forgotPassword = async (req, res) => {
 
         // Generate a 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        console.log(`[DEBUG] Forgot Password OTP for ${user.email}: ${otp}`);
 
-        // OTP expires in 15 minutes
+        // OTP expires in 10 minutes
         user.resetPasswordOTP = otp;
-        user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
         await user.save();
 
         // Send Email
         const sendEmail = require('../utils/sendEmail');
 
-        const message = `You are receiving this email because you (or someone else) have requested the reset of a password. \n\n Your OTP is: ${otp} \n\n It is valid for 15 minutes.`;
+        const message = `You are receiving this email because you (or someone else) have requested the reset of a password. \n\n Your OTP is: ${otp} \n\n It is valid for 10 minutes.`;
 
         try {
             await sendEmail({
@@ -384,10 +386,145 @@ const verifyOTP = async (req, res) => {
     }
 };
 
+// @desc    Change Password (Send OTP)
+// @route   POST /api/auth/change-password/send-otp
+// @access  Private
+const sendChangePasswordOTP = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        console.log(`[DEBUG] Change Password OTP for ${user.email}: ${otp}`);
+
+        // OTP expires in 10 minutes
+        user.resetPasswordOTP = otp;
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        const sendEmail = require('../utils/sendEmail');
+        const message = `You requested a password change. \n\n Your OTP is: ${otp} \n\n It is valid for 10 minutes.`;
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Change Password OTP',
+                message
+            });
+            res.status(200).json({ success: true, message: "OTP sent to your registered email" });
+        } catch (error) {
+            console.error("Email Sending Error:", error);
+            user.resetPasswordOTP = undefined;
+            user.resetPasswordExpires = undefined;
+            await user.save();
+            return res.status(500).json({ success: false, message: "Email could not be sent" });
+        }
+    } catch (error) {
+        console.error("Send Change Password OTP Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// @desc    Change Password (Verify OTP)
+// @route   POST /api/auth/change-password/verify-otp
+// @access  Private
+const verifyChangePasswordOTP = async (req, res) => {
+    try {
+        const { otp } = req.body;
+        const userId = req.user.id;
+
+        if (!otp) {
+            return res.status(400).json({ success: false, message: "OTP is required" });
+        }
+
+        const user = await User.findOne({
+            _id: userId,
+            resetPasswordOTP: otp.trim(),
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+        }
+
+        res.status(200).json({ success: true, message: "OTP verified successfully" });
+    } catch (error) {
+        console.error("Verify Change Password OTP Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// @desc    Change Password (Reset)
+// @route   POST /api/auth/change-password/reset
+// @access  Private
+const resetChangePassword = async (req, res) => {
+    try {
+        const { otp, newPassword, confirmPassword } = req.body;
+        const userId = req.user.id;
+
+        if (!otp || !newPassword || !confirmPassword) {
+            return res.status(400).json({ success: false, message: "Please provide OTP, new password, and confirm password" });
+        }
+
+        const user = await User.findOne({
+            _id: userId,
+            resetPasswordOTP: otp,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+        }
+
+        const trimmedPassword = newPassword.trim();
+        const trimmedConfirmPassword = confirmPassword.trim();
+
+        if (trimmedPassword !== trimmedConfirmPassword) {
+            return res.status(400).json({ success: false, message: "Passwords do not match" });
+        }
+
+        if (trimmedPassword.length < 8 || trimmedPassword.length > 20) {
+            return res.status(400).json({ success: false, message: "Password must be between 8 and 20 characters" });
+        }
+
+        if (/\s/.test(trimmedPassword)) {
+            return res.status(400).json({ success: false, message: "Password cannot contain spaces" });
+        }
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#_.+-])[A-Za-z\d@$!%*?&^#_.+-]{8,20}$/;
+        if (!passwordRegex.test(trimmedPassword)) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character"
+            });
+        }
+
+        user.password = await bcrypt.hash(trimmedPassword, 10);
+        user.resetPasswordOTP = undefined;
+        user.resetPasswordExpires = undefined;
+
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Password changed successfully" });
+
+    } catch (error) {
+        console.error("Reset Change Password Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
 module.exports = {
     signup,
     signin,
     forgotPassword,
     verifyOTP,
-    resetPassword
+    resetPassword,
+    sendChangePasswordOTP,
+    verifyChangePasswordOTP,
+    resetChangePassword
 };

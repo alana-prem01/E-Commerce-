@@ -147,7 +147,7 @@ function AdminLogin() {
                   className="toggle-password-btn"
                   aria-label="Toggle password visibility"
                 >
-                  {showPassword ? <FiEyeOff color="#6B7280" size={18} /> : <FiEye color="#6B7280" size={18} />}
+                  {showPassword ? <FiEyeOff color="var(--text-secondary)" size={18} /> : <FiEye color="var(--text-secondary)" size={18} />}
                 </button>
               </div>
               {passwordError && <div className="error-message">{passwordError}</div>}

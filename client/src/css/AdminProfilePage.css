@@ -53,7 +53,7 @@
   width: 320px;
   height: 48px;
   border-radius: 12px;
-  border: 1px solid #E5E7EB; /* Essential so it's visible */
+  border: 1px solid var(--border-color); /* Essential so it's visible */
   padding: 0 16px;
 }
 
@@ -95,7 +95,7 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background-color: #E5E7EB;
+  background-color: var(--border-color);
   position: relative;
 }
 
@@ -105,7 +105,7 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  background-color: #FFFFFF;
+  background-color: var(--white);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -123,15 +123,15 @@
 
 /* Badges */
 .role-badge {
-  background-color: #FFFFFF;
+  background-color: var(--white);
   color: #14B8A6;
   padding: 4px 12px;
   border-radius: 20px;
 }
 
 .status-badge {
-  background-color: #DCFCE7;
-  color: #16A34A;
+  background-color: var(--bg-success);
+  color: var(--success);
   padding: 4px 12px;
   border-radius: 20px;
 }
@@ -144,9 +144,9 @@
 
 /* Cards & Spacing */
 .admin-card {
-  background-color: #FFFFFF;
+  background-color: var(--white);
   border-radius: 16px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.06);
   padding: 24px;
 }
@@ -173,7 +173,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 32px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-dark);
   margin: 0;
 }
 
@@ -192,7 +192,7 @@
 .admin-name {
   font-size: 28px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--white);
   margin: 0 0 8px 0;
 }
 
@@ -211,7 +211,7 @@
   font-size: 15px;
   font-weight: 400;
   border-radius: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
   padding: 0 16px;
   box-sizing: border-box;
   height: 48px;
@@ -247,7 +247,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 0;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--border-color);
 }
 .security-row:last-child {
   border-bottom: none;
@@ -277,8 +277,8 @@
   width: 260px;
   height: 130px;
   border-radius: 16px;
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
@@ -321,14 +321,14 @@
 }
 
 .activity-time {
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 /* Active Sessions */
 .session-card {
   height: 80px;
   border-radius: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -352,7 +352,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 0;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--border-color);
 }
 .pref-row:last-child {
   border-bottom: none;
@@ -361,7 +361,7 @@
 .theme-toggle, .notification-toggle, .email-alerts-toggle {
   width: 44px;
   height: 24px;
-  background-color: #E5E7EB;
+  background-color: var(--border-color);
   border-radius: 12px;
 }
 .notification-toggle.active {
@@ -390,38 +390,64 @@
   height: 52px;
   width: 160px;
   border-radius: 12px;
-  background-color: #14B8A6;
-  color: #FFFFFF;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 1px solid var(--btn-primary-border);
+  transition: background-color 200ms ease;
+}
+
+.btn-edit-profile:hover {
+  background-color: var(--btn-primary-hover-bg);
 }
 
 .btn-save-changes {
   height: 52px;
   width: 180px;
-  background-color: #2563EB;
+  background-color: var(--btn-primary-bg);
   border-radius: 12px;
-  color: #FFFFFF;
+  color: var(--btn-primary-text);
+  border: 1px solid var(--btn-primary-border);
+  transition: background-color 200ms ease;
+}
+
+.btn-save-changes:hover {
+  background-color: var(--btn-primary-hover-bg);
 }
 
 .btn-cancel {
   height: 52px;
   width: 160px;
-  border: 1px solid #D1D5DB; 
-  background: #FFFFFF;
+  border: 1px solid var(--btn-secondary-border); 
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
   border-radius: 12px;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.btn-cancel:hover {
+  background-color: var(--btn-secondary-hover-bg);
+  color: var(--btn-secondary-hover-text);
 }
 
 .btn-logout {
   height: 52px;
   background-color: #EF4444;
   border-radius: 12px;
-  color: #FFFFFF;
+  color: var(--white);
 }
 
 .btn-change-password {
   height: 40px;
   border-radius: 12px;
-  border: 1px solid #E5E7EB;
-  background: #F8FAFC;
+  border: 1px solid var(--btn-secondary-border);
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.btn-change-password:hover {
+  background-color: var(--btn-secondary-hover-bg);
+  color: var(--btn-secondary-hover-text);
 }
 
 .btn-end-session {

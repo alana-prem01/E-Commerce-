@@ -115,7 +115,7 @@
   font-size: 18px;
 }
 
-.pdp-wishlist-btn:hover, .pdp-wishlist-btn.active { color: #dc2626; transform: scale(1.1); }
+.pdp-wishlist-btn:hover, .pdp-wishlist-btn.active { color: var(--danger); transform: scale(1.1); }
 
 /* Info Column */
 .pdp-info-col { display: flex; flex-direction: column; padding-top: 8px; }
@@ -182,8 +182,8 @@
 }
 
 .pdp-save-badge {
-  background: #dcfce7;
-  color: #16a34a;
+  background: var(--bg-success);
+  color: var(--success);
   font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 700;

@@ -113,7 +113,7 @@ function UserProfile() {
   const getBadgeStyles = (status) => {
     switch (status) {
       case "Delivered":
-        return { bg: "#F3F7F5", text: "#046A5A" };
+        return { bg: "#F3F7F5", text: "var(--primary-color)" };
       case "In Transit":
       case "Shipped":
       case "Out for Delivery":
@@ -125,12 +125,95 @@ function UserProfile() {
       case "Failed":
         return { bg: "#FDF2F2", text: "#E53E3E" };
       default:
-        return { bg: "#F3F7F5", text: "#046A5A" };
+        return { bg: "#F3F7F5", text: "var(--primary-color)" };
     }
   };
 
   const handleOrderClick = (orderId) => {
     alert(`Navigating to order details for: ${orderId}`);
+  };
+
+  // --- Security / Change Password States ---
+  const [securityStep, setSecurityStep] = useState('idle'); // idle | otp | reset | success
+  const [securityOtp, setSecurityOtp] = useState('');
+  const [securityNewPassword, setSecurityNewPassword] = useState('');
+  const [securityConfirmPassword, setSecurityConfirmPassword] = useState('');
+  const [securityError, setSecurityError] = useState('');
+  const [isSecurityLoading, setIsSecurityLoading] = useState(false);
+
+  const handleSendSecurityOTP = async () => {
+    setSecurityError('');
+    setIsSecurityLoading(true);
+    try {
+      const res = await api.post('/auth/change-password/send-otp', {});
+      if (res.success) {
+        setSecurityStep('otp');
+      } else {
+        setSecurityError(res.message || 'Failed to send OTP.');
+      }
+    } catch (err) {
+      setSecurityError(err.message || 'Failed to send OTP.');
+    } finally {
+      setIsSecurityLoading(false);
+    }
+  };
+
+  const handleVerifySecurityOTP = async () => {
+    if (!securityOtp || securityOtp.length !== 6) {
+      setSecurityError('Please enter a valid 6-digit OTP.');
+      return;
+    }
+    setSecurityError('');
+    setIsSecurityLoading(true);
+    try {
+      const res = await api.post('/auth/change-password/verify-otp', { otp: securityOtp });
+      if (res.success) {
+        setSecurityStep('reset');
+      } else {
+        setSecurityError(res.message || 'Invalid or expired OTP.');
+      }
+    } catch (err) {
+      setSecurityError(err.message || 'Invalid or expired OTP.');
+    } finally {
+      setIsSecurityLoading(false);
+    }
+  };
+
+  const handleResetSecurityPassword = async () => {
+    if (securityNewPassword !== securityConfirmPassword) {
+      setSecurityError('Passwords do not match.');
+      return;
+    }
+    if (securityNewPassword.length < 8) {
+      setSecurityError('Password must be at least 8 characters.');
+      return;
+    }
+    setSecurityError('');
+    setIsSecurityLoading(true);
+    try {
+      const res = await api.post('/auth/change-password/reset', {
+        otp: securityOtp,
+        newPassword: securityNewPassword,
+        confirmPassword: securityConfirmPassword,
+      });
+      if (res.success) {
+        setSecurityStep('success');
+      } else {
+        setSecurityError(res.message || 'Failed to change password.');
+      }
+    } catch (err) {
+      setSecurityError(err.message || 'Failed to change password.');
+    } finally {
+      setIsSecurityLoading(false);
+    }
+  };
+
+  const handleCancelSecurity = () => {
+    setSecurityStep('idle');
+    setSecurityOtp('');
+    setSecurityNewPassword('');
+    setSecurityConfirmPassword('');
+    setSecurityError('');
   };
 
   return (
@@ -388,6 +471,103 @@ function UserProfile() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* SECURITY / CHANGE PASSWORD CARD */}
+        <div className="profile-card">
+          <div className="card-header">
+            <h3 className="card-title">Security</h3>
+          </div>
+
+          <div className="card-body-stack">
+            {securityStep === 'idle' && (
+              <>
+                <div>
+                  <span className="label-text">PASSWORD</span>
+                  <div className="value-text value-text-muted">••••••••</div>
+                </div>
+                <div>
+                  <button className="btn-action-outline" onClick={handleSendSecurityOTP} disabled={isSecurityLoading}>
+                    {isSecurityLoading ? 'Sending...' : 'Change Password'}
+                  </button>
+                </div>
+                {securityError && <div className="security-error">{securityError}</div>}
+              </>
+            )}
+
+            {securityStep === 'otp' && (
+              <>
+                <div>
+                  <label className="label-text">ENTER OTP</label>
+                  <p className="value-text-muted" style={{ fontSize: '13px', marginBottom: '10px' }}>
+                    We've sent a 6-digit OTP to {user.email}
+                  </p>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="6-digit OTP"
+                    maxLength={6}
+                    value={securityOtp}
+                    onChange={(e) => setSecurityOtp(e.target.value)}
+                  />
+                </div>
+                <div className="button-group">
+                  <button className="btn-primary" onClick={handleVerifySecurityOTP} disabled={isSecurityLoading}>
+                    {isSecurityLoading ? 'Verifying...' : 'Verify OTP'}
+                  </button>
+                  <button className="btn-secondary" onClick={handleCancelSecurity}>
+                    Cancel
+                  </button>
+                </div>
+                {securityError && <div className="security-error">{securityError}</div>}
+              </>
+            )}
+
+            {securityStep === 'reset' && (
+              <>
+                <div>
+                  <label className="label-text">NEW PASSWORD</label>
+                  <input
+                    type="password"
+                    className="input-field"
+                    placeholder="At least 8 characters"
+                    value={securityNewPassword}
+                    onChange={(e) => setSecurityNewPassword(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label-text">CONFIRM NEW PASSWORD</label>
+                  <input
+                    type="password"
+                    className="input-field"
+                    placeholder="Must match new password"
+                    value={securityConfirmPassword}
+                    onChange={(e) => setSecurityConfirmPassword(e.target.value)}
+                  />
+                </div>
+                <div className="button-group">
+                  <button className="btn-primary" onClick={handleResetSecurityPassword} disabled={isSecurityLoading}>
+                    {isSecurityLoading ? 'Updating...' : 'Update Password'}
+                  </button>
+                  <button className="btn-secondary" onClick={handleCancelSecurity}>
+                    Cancel
+                  </button>
+                </div>
+                {securityError && <div className="security-error">{securityError}</div>}
+              </>
+            )}
+
+            {securityStep === 'success' && (
+              <div className="security-success">
+                Password changed successfully!
+                <div style={{ marginTop: '10px' }}>
+                  <button className="btn-secondary" onClick={handleCancelSecurity}>
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* SIGN OUT BUTTON */}

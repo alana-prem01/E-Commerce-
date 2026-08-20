@@ -25,7 +25,15 @@ const apiFetch = async (endpoint, options = {}) => {
     headers,
   });
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type');
+  let data;
+  if (contentType && contentType.includes('application/json')) {
+    data = await response.json();
+  } else {
+    const textData = await response.text();
+    // Throw a clear error instead of crashing on JSON parse
+    throw new Error(`Server returned a non-JSON response (${response.status}): ` + textData.slice(0, 100));
+  }
 
   if (response.status === 401) {
     // Only intercept 401 if it's not a signin request

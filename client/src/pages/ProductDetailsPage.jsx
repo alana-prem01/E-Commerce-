@@ -53,11 +53,17 @@ export default function ProductDetailsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const [productRes, relatedRes, reviewsRes] = await Promise.all([
+        const [productRes, relatedRes] = await Promise.all([
           api.get(`/products/getsingleproductdetails/${id}`),
-          api.get(`/products/getrelatedproducts/${id}`),
-          api.get(`/products/${id}/reviews`)
+          api.get(`/products/getrelatedproducts/${id}`)
         ]);
+        
+        let reviewsRes = { success: false, reviews: [] };
+        try {
+          reviewsRes = await api.get(`/products/${id}/reviews`);
+        } catch (reviewErr) {
+          console.warn('Could not fetch reviews:', reviewErr.message);
+        }
 
         if (productRes.success) setProduct(productRes.product);
         else setError(productRes.message || 'Product not found');

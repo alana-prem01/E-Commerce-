@@ -5,8 +5,8 @@
     width: 100%;
     min-height: 100vh;
     background: #F8FAFC;
-    font-family: 'Poppins', sans-serif;
-    color: #111827;
+    font-family: var(--body-font);
+    color: var(--text-dark);
 }
 
 /* Sidebar */
@@ -16,8 +16,8 @@
     top: 0;
     width: 260px;
     height: 100vh;
-    background: #FFFFFF;
-    border-right: 1px solid #E5E7EB;
+    background: var(--white);
+    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     z-index: 100;
@@ -28,10 +28,10 @@
     display: flex;
     align-items: center;
     padding: 0 24px;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--heading-font);
     font-size: 24px;
     font-weight: 700;
-    border-bottom: 1px solid #E5E7EB;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .user-list-sidebar-nav {
@@ -44,7 +44,7 @@
 .user-list-nav-item {
     padding: 12px 24px;
     font-size: 14px;
-    color: #6B7280;
+    color: var(--text-secondary);
     cursor: pointer;
     text-decoration: none;
     display: flex;
@@ -70,8 +70,8 @@
 /* Topbar */
 .user-list-topbar {
     height: 72px;
-    background: #FFFFFF;
-    border-bottom: 1px solid #E5E7EB;
+    background: var(--white);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -85,7 +85,7 @@
     display: flex;
     align-items: center;
     background: #F8FAFC;
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 0 16px;
     height: 40px;
@@ -97,7 +97,7 @@
     border: none;
     background: transparent;
     outline: none;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--body-font);
     font-size: 14px;
     width: 100%;
 }
@@ -109,7 +109,7 @@
 }
 
 .user-list-notification {
-    color: #6B7280;
+    color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -137,12 +137,12 @@
 .user-list-profile-name {
     font-size: 14px;
     font-weight: 500;
-    color: #111827;
+    color: var(--text-dark);
 }
 
 .user-list-profile-role {
     font-size: 12px;
-    color: #6B7280;
+    color: var(--text-secondary);
 }
 
 /* Page Content Padding */
@@ -169,17 +169,17 @@
 }
 
 .user-list-page-title {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--heading-font);
     font-size: 32px;
     font-weight: 700;
     margin: 0;
-    color: #111827;
+    color: var(--text-dark);
 }
 
 .user-list-page-description {
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--body-font);
     font-size: 14px;
-    color: #6B7280;
+    color: var(--text-secondary);
     margin: 0;
 }
 
@@ -187,10 +187,10 @@
     width: 120px;
     height: 44px;
     background: #14B8A6;
-    color: #FFFFFF;
+    color: var(--white);
     border-radius: 8px;
     border: none;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--body-font);
     font-size: 14px;
     font-weight: 500;
     display: inline-flex;
@@ -207,11 +207,11 @@
 .user-list-btn-cancel {
     width: 120px;
     height: 44px;
-    background: #E5E7EB;
-    color: #111827;
+    background: var(--border-color);
+    color: var(--text-dark);
     border-radius: 8px;
     border: none;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--body-font);
     font-size: 14px;
     font-weight: 500;
     display: inline-flex;
@@ -222,9 +222,9 @@
 
 /* Card */
 .user-list-card {
-    background: #FFFFFF;
+    background: var(--white);
     border-radius: 16px;
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--border-color);
     box-shadow: 0px 6px 20px rgba(0,0,0,0.08);
     padding: 24px;
     display: flex;
@@ -243,13 +243,13 @@
 .user-list-filter-input,
 .user-list-filter-select {
     height: 40px;
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 0 16px;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--body-font);
     font-size: 14px;
-    color: #111827;
-    background: #FFFFFF;
+    color: var(--text-dark);
+    background: var(--white);
     outline: none;
 }
 
@@ -261,10 +261,10 @@
     height: 40px;
     padding: 0 16px;
     background: transparent;
-    color: #6B7280;
-    border: 1px solid #E5E7EB;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--body-font);
     font-size: 14px;
     cursor: pointer;
 }
@@ -285,21 +285,21 @@
 .user-list-table td {
     text-align: left;
     padding: 0 16px;
-    border-bottom: 1px solid #E5E7EB;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .user-list-table th {
     height: 56px;
     font-size: 14px;
     font-weight: 500;
-    color: #6B7280;
+    color: var(--text-secondary);
 }
 
 .user-list-table td {
     height: 56px;
     font-size: 14px;
     font-weight: 400;
-    color: #111827;
+    color: var(--text-dark);
 }
 
 .user-list-table-avatar {
@@ -320,13 +320,13 @@
 }
 
 .status-active {
-    background: #DCFCE7; /* Light green background */
+    background: var(--bg-success); /* Light green background */
     color: #22C55E;
 }
 
 .status-inactive {
     background: #F3F4F6;
-    color: #6B7280;
+    color: var(--text-secondary);
 }
 
 .user-list-action-btns {
@@ -338,7 +338,7 @@
 .user-list-action-btn {
     background: transparent;
     border: none;
-    color: #6B7280;
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 4px;
     display: flex;
@@ -347,7 +347,7 @@
 }
 
 .user-list-action-btn:hover {
-    color: #111827;
+    color: var(--text-dark);
 }
 
 /* Pagination */
@@ -360,7 +360,7 @@
 
 .user-list-page-info {
     font-size: 14px;
-    color: #6B7280;
+    color: var(--text-secondary);
 }
 
 .user-list-page-controls {
@@ -372,18 +372,18 @@
 .user-list-page-btn {
     height: 32px;
     padding: 0 12px;
-    background: #FFFFFF;
-    border: 1px solid #E5E7EB;
+    background: var(--white);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
-    color: #374151;
+    color: var(--text-medium);
     font-size: 14px;
     cursor: pointer;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--body-font);
 }
 
 .user-list-page-btn.active {
     background: #14B8A6;
-    color: #FFFFFF;
+    color: var(--white);
     border: 1px solid #14B8A6;
 }
 
@@ -395,7 +395,7 @@
 }
 
 .user-list-mobile-card {
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 16px;
     display: flex;
@@ -411,12 +411,12 @@
 
 .user-list-mobile-label {
     font-size: 12px;
-    color: #6B7280;
+    color: var(--text-secondary);
 }
 
 .user-list-mobile-value {
     font-size: 14px;
-    color: #111827;
+    color: var(--text-dark);
     font-weight: 500;
 }
 
@@ -435,7 +435,7 @@
 }
 
 .user-list-dialog {
-    background: #FFFFFF;
+    background: var(--white);
     border-radius: 16px;
     padding: 24px;
     width: 400px;
@@ -447,16 +447,16 @@
 }
 
 .user-list-dialog-title {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--heading-font);
     font-size: 24px;
     font-weight: 600;
     margin: 0;
-    color: #111827;
+    color: var(--text-dark);
 }
 
 .user-list-dialog-body {
     font-size: 14px;
-    color: #6B7280;
+    color: var(--text-secondary);
 }
 
 .user-list-dialog-actions {

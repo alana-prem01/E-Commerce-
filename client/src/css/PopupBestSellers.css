@@ -20,7 +20,7 @@
 .bestsellers-popup-modal {
   width: 100%;
   max-width: 880px;
-  background-color: #ffffff;
+  background-color: var(--white);
   border-radius: 20px;
   overflow: hidden;
   display: grid;
@@ -39,9 +39,9 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--white);
   border: none;
-  color: #134e4a;
+  color: var(--primary-color-dark);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   display: flex;
@@ -61,7 +61,7 @@
   align-items: center;
   justify-content: center;
   min-height: 260px;
-  color: #0b5d50;
+  color: var(--primary-color-hover);
   position: relative;
   overflow: hidden;
 }
@@ -77,9 +77,9 @@
   position: absolute;
   top: 20px;
   left: 20px;
-  background: #0b5d50;
-  color: #ffffff;
-  font-family: 'Poppins', sans-serif;
+  background: var(--primary-color-hover);
+  color: var(--white);
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 12px;
   letter-spacing: 0.5px;
@@ -100,10 +100,10 @@
 
 /* Eyebrow Label */
 .bestsellers-popup-eyebrow {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 14px;
   font-weight: 500;
-  color: #0b5d50;
+  color: var(--primary-color-hover);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0;
@@ -111,21 +111,21 @@
 
 /* Popup Heading */
 .bestsellers-popup-heading {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-size: 40px;
   font-weight: 700;
   line-height: 1.15;
-  color: #134e4a;
+  color: var(--primary-color-dark);
   margin: 0;
 }
 
 /* Popup Description */
 .bestsellers-popup-description {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 16px;
   font-weight: 400;
   line-height: 26px;
-  color: #6b7280;
+  color: var(--text-secondary);
   max-width: 400px;
   margin: 0;
 }
@@ -138,11 +138,11 @@
   gap: 8px;
   height: 52px;
   padding: 16px 36px;
-  background: #0b5d50;
+  background: var(--primary-color-hover);
   border: none;
   border-radius: 8px;
-  color: #ffffff;
-  font-family: 'Poppins', sans-serif;
+  color: var(--white);
+  font-family: var(--body-font);
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
@@ -160,7 +160,7 @@
 
 /* 7. Secondary Dismiss Link */
 .bestsellers-popup-dismiss {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 14px;
   font-weight: 500;
   color: #9ca3af;
@@ -174,7 +174,7 @@
 }
 
 .bestsellers-popup-dismiss:hover {
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 /* ==========================================

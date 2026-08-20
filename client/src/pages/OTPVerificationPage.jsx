@@ -201,7 +201,7 @@ export default function OTPVerificationPage() {
               <div style={{ textAlign: 'center', marginTop: '8px' }}>
                 <span 
                   onClick={handleResendOTP} 
-                  style={{ fontSize: '13px', color: '#0B5D50', cursor: 'pointer', fontWeight: 500 }}
+                  style={{ fontSize: '13px', color: 'var(--primary-color-hover)', cursor: 'pointer', fontWeight: 500 }}
                 >
                   Resend OTP
                 </span>

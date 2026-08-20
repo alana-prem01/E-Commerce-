@@ -2,7 +2,7 @@
 .account-shell {
   width: 100%;
   height: 100vh;
-  background-color: #FAF9F6;
+  background-color: var(--bg-light);
   display: flex;
   flex-direction: row;
   overflow: hidden;
@@ -13,8 +13,8 @@
 .orders-sidebar {
   flex-basis: 260px;
   flex-shrink: 0;
-  background-color: #FFFFFF;
-  border-right: 1px solid #E5E7EB;
+  background-color: var(--white);
+  border-right: 1px solid var(--border-color);
   padding: 32px 20px;
   height: 100%;
   overflow-y: auto;
@@ -25,27 +25,27 @@
 }
 
 .sidebar-brand {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-weight: 700;
   font-size: 22px;
-  color: #014D40;
+  color: var(--secondary-color);
   margin: 0;
 }
 
 .sidebar-subtitle {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 13px;
-  color: #8A8A8A;
+  color: var(--text-muted);
   margin-top: 2px;
   margin-bottom: 24px;
 }
 
 .orders-nav-item {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 15px;
-  color: #014D40;
+  color: var(--secondary-color);
   background-color: #F3F7F5;
   border-radius: 8px;
   padding: 10px 14px;
@@ -62,10 +62,10 @@
 }
 
 .order-card {
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 14px;
-  background-color: #FFFFFF;
+  background-color: var(--white);
   cursor: pointer;
   transition: all 200ms ease;
   display: flex;
@@ -74,8 +74,8 @@
 }
 
 .order-card:hover {
-  border-color: #046A5A;
-  background-color: #FAF9F6;
+  border-color: var(--primary-color);
+  background-color: var(--bg-light);
 }
 
 .order-card-row {
@@ -85,14 +85,14 @@
 }
 
 .order-id {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 13px;
-  color: #014D40;
+  color: var(--secondary-color);
 }
 
 .status-badge {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 11px;
   border-radius: 999px;
@@ -100,17 +100,17 @@
 }
 
 .order-date {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 11px;
-  color: #8A8A8A;
+  color: var(--text-muted);
 }
 
 .order-price {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 13px;
-  color: #2B2B2B;
+  color: var(--body-color);
   margin-top: 4px;
 }
 
@@ -120,9 +120,9 @@
   align-items: center;
   gap: 16px;
   padding: 20px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background-color: #FFFFFF;
+  background-color: var(--white);
 }
 
 .empty-icon {
@@ -130,7 +130,7 @@
   height: 40px;
   border-radius: 50%;
   background-color: #F3F7F5;
-  color: #046A5A;
+  color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -139,10 +139,10 @@
 }
 
 .empty-text {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #8A8A8A;
+  color: var(--text-muted);
 }
 
 /* --- Main Scrollable Column Styling --- */
@@ -156,17 +156,17 @@
 }
 
 .column-heading {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-weight: 700;
   font-size: 28px;
-  color: #014D40;
+  color: var(--secondary-color);
   margin-bottom: 32px;
   margin-top: 0;
 }
 
 .profile-card {
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 28px;
   margin-bottom: 24px;
@@ -180,10 +180,10 @@
 }
 
 .card-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-weight: 700;
   font-size: 20px;
-  color: #014D40;
+  color: var(--secondary-color);
   margin: 0;
 }
 
@@ -224,12 +224,12 @@
 
 /* --- Inputs & Text Elements --- */
 .input-field {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 15px;
-  color: #2B2B2B;
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  color: var(--body-color);
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 10px 12px;
   width: 100%;
@@ -239,15 +239,15 @@
 }
 
 .input-field:focus {
-  border-color: #046A5A;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(4, 106, 90, 0.1);
 }
 
 .label-text {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 13px;
-  color: #8A8A8A;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   display: block;
@@ -255,37 +255,37 @@
 }
 
 .value-text {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 15px;
-  color: #2B2B2B;
+  color: var(--body-color);
 }
 
 .value-text-highlight {
   font-weight: 600;
-  color: #014D40;
+  color: var(--secondary-color);
 }
 
 .value-text-muted {
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 .empty-address-text {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #8A8A8A;
+  color: var(--text-muted);
   margin: 0;
 }
 
 /* --- Buttons --- */
 .btn-primary {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 14px;
-  color: #FFFFFF;
-  background-color: #046A5A;
-  border: none;
+  color: var(--btn-primary-text);
+  background-color: var(--btn-primary-bg);
+  border: 1px solid var(--btn-primary-border);
   border-radius: 8px;
   padding: 9px 20px;
   cursor: pointer;
@@ -293,34 +293,35 @@
 }
 
 .btn-primary:hover {
-  background-color: #014D40;
+  background-color: var(--btn-primary-hover-bg);
 }
 
 .btn-secondary {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 14px;
-  color: #6B7280;
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  color: var(--btn-secondary-text);
+  background-color: var(--btn-secondary-bg);
+  border: 1px solid var(--btn-secondary-border);
   border-radius: 8px;
   padding: 9px 20px;
   cursor: pointer;
-  transition: border-color 200ms ease, color 200ms ease;
+  transition: border-color 200ms ease, color 200ms ease, background-color 200ms ease;
 }
 
 .btn-secondary:hover {
-  border-color: #046A5A;
-  color: #046A5A;
+  border-color: var(--btn-secondary-border);
+  color: var(--btn-secondary-hover-text);
+  background-color: var(--btn-secondary-hover-bg);
 }
 
 .btn-action-outline {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 14px;
-  color: #046A5A;
-  background: transparent;
-  border: 1px solid #046A5A;
+  color: var(--btn-secondary-text);
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--btn-secondary-border);
   border-radius: 8px;
   padding: 8px 18px;
   cursor: pointer;
@@ -328,30 +329,30 @@
 }
 
 .btn-action-outline:hover {
-  background-color: #046A5A;
-  color: #FFFFFF;
+  background-color: var(--btn-secondary-hover-bg);
+  color: var(--btn-secondary-hover-text);
 }
 
 .btn-delete {
   background: none;
   border: none;
   padding: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 13px;
-  color: #DC2626;
+  color: var(--danger);
   cursor: pointer;
   text-decoration: underline;
   margin-top: 12px;
 }
 
 .btn-signout {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 15px;
-  color: #FFFFFF;
-  background-color: #046A5A;
-  border: none;
+  color: var(--btn-primary-text);
+  background-color: var(--btn-primary-bg);
+  border: 1px solid var(--btn-primary-border);
   border-radius: 10px;
   padding: 12px 28px;
   margin-top: 8px;
@@ -360,7 +361,7 @@
 }
 
 .btn-signout:hover {
-  background-color: #014D40;
+  background-color: var(--btn-primary-hover-bg);
 }
 
 /* --- Responsive Breakpoints --- */
@@ -432,4 +433,22 @@
   background: var(--brand-light);
   color: var(--brand-primary);
   border-color: var(--brand-primary);
+}
+
+/* --- Security Card Specific --- */
+.security-error {
+  color: #EF4444;
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.security-success {
+  color: var(--primary-color-hover);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px;
+  background: #F3F7F5;
+  border-radius: 8px;
+  text-align: center;
 }

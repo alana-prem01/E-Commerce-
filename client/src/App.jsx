@@ -19,6 +19,7 @@ import OrderTracking from './pages/OrderTracking';
 import Cart from './pages/Cart';
 import PopupBestSellers from './Components/PopupBestSellers';
 import BestSellerPage from './pages/BestSellerPage';
+import ShopPage from './pages/ShopPage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OTPVerificationPage from './pages/OTPVerificationPage';
@@ -77,6 +78,7 @@ function App() {
           <Routes>
             {/* Public Pages */}
             <Route path="/" element={<Home />} />
+            <Route path="/shop" element={<ShopPage />} />
             <Route path="/best-sellers" element={<BestSellerPage />} />
             <Route path="/product/:id" element={<ProductDetailsPage />} />
             <Route path="/category/:category" element={<Category />} />

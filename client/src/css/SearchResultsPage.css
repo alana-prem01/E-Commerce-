@@ -207,7 +207,7 @@
   z-index: 2;
 }
 
-.search-wishlist-btn:hover, .search-wishlist-btn.active { color: #dc2626; }
+.search-wishlist-btn:hover, .search-wishlist-btn.active { color: var(--danger); }
 
 .no-image-placeholder {
   width: 100%; height: 100%;

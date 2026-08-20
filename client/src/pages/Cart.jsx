@@ -48,22 +48,22 @@ function Cart({ isOpen = true, onClose }) {
   if (isPageMode) {
     return (
       <div className="cart-page-wrapper" style={{ minHeight: '70vh', padding: '2rem 1rem', maxWidth: '900px', margin: '0 auto' }}>
-        <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '2rem', marginBottom: '1.5rem' }}>
-          Your Cart {totalItemCount > 0 && <span style={{ fontSize: '1rem', color: '#6B7280' }}>({totalItemCount} item{totalItemCount !== 1 ? 's' : ''})</span>}
+        <h1 style={{ fontFamily: 'var(--heading-font)', fontSize: '2rem', marginBottom: '1.5rem' }}>
+          Your Cart {totalItemCount > 0 && <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>({totalItemCount} item{totalItemCount !== 1 ? 's' : ''})</span>}
         </h1>
 
         {cartItems.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem 0' }}>
-            <h3 style={{ marginBottom: '1rem', color: '#374151' }}>Your cart is empty</h3>
-            <p style={{ color: '#6B7280', marginBottom: '1.5rem' }}>
+            <h3 style={{ marginBottom: '1rem', color: 'var(--text-medium)' }}>Your cart is empty</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
               Have an account?{' '}
-              <Link to="/login" style={{ color: '#0B5D50', textDecoration: 'underline' }}>Log in</Link>
+              <Link to="/login" style={{ color: 'var(--primary-color-hover)', textDecoration: 'underline' }}>Log in</Link>
               {' '}to check out faster.
             </p>
             <button
               className="continue-shopping-btn"
               onClick={() => navigate('/best-sellers')}
-              style={{ padding: '0.75rem 2rem', background: '#0B5D50', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '1rem' }}
+              style={{ padding: '0.75rem 2rem', background: 'var(--primary-color-hover)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '1rem' }}
             >
               Continue Shopping
             </button>
@@ -73,17 +73,17 @@ function Cart({ isOpen = true, onClose }) {
             {/* Cart Items */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
               {cartItems.map((item) => (
-                <div key={item.id} className="cart-product-card" style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', border: '1px solid #E5E7EB', borderRadius: '10px' }}>
+                <div key={item.id} className="cart-product-card" style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '10px' }}>
                   <Link to={`/product/${item.id}`} style={{ flexShrink: 0 }}>
                     <img src={item.image} alt={item.title} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />
                   </Link>
 
                   <div style={{ flex: 1 }}>
-                    <Link to={`/product/${item.id}`} style={{ fontWeight: '600', color: '#111827', textDecoration: 'none', fontFamily: '"Cormorant Garamond", serif', fontSize: '1.1rem' }}>
+                    <Link to={`/product/${item.id}`} style={{ fontWeight: '600', color: 'var(--text-dark)', textDecoration: 'none', fontFamily: 'var(--heading-font)', fontSize: '1.1rem' }}>
                       {item.title}
                     </Link>
-                    {item.variant && <div style={{ color: '#6B7280', fontSize: '0.85rem', marginTop: '2px' }}>{item.variant}</div>}
-                    <div style={{ color: '#0B5D50', fontWeight: '600', marginTop: '4px' }}>Rs. {Number(item.price).toFixed(2)}</div>
+                    {item.variant && <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '2px' }}>{item.variant}</div>}
+                    <div style={{ color: 'var(--primary-color-hover)', fontWeight: '600', marginTop: '4px' }}>Rs. {Number(item.price).toFixed(2)}</div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem' }}>
                       <div className="quantity-selector" style={{ display: 'flex', alignItems: 'center', border: '1px solid #D1D5DB', borderRadius: '6px', overflow: 'hidden' }}>
@@ -121,7 +121,7 @@ function Cart({ isOpen = true, onClose }) {
                         <FaTrashAlt size={14} />
                       </button>
 
-                      <span style={{ marginLeft: 'auto', fontWeight: '600', color: '#111827' }}>
+                      <span style={{ marginLeft: 'auto', fontWeight: '600', color: 'var(--text-dark)' }}>
                         Rs. {(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>
@@ -132,9 +132,9 @@ function Cart({ isOpen = true, onClose }) {
             </div>
 
             {/* Special Instructions */}
-            <div style={{ marginBottom: '1.5rem', border: '1px solid #E5E7EB', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ marginBottom: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
               <button
-                style={{ width: '100%', padding: '0.75rem 1rem', background: '#F9FAFB', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: '500' }}
+                style={{ width: '100%', padding: '0.75rem 1rem', background: 'var(--bg-lighter)', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: '500' }}
                 onClick={() => setNotesOpen(!notesOpen)}
                 aria-expanded={notesOpen}
               >
@@ -147,20 +147,20 @@ function Cart({ isOpen = true, onClose }) {
                   placeholder="Add delivery notes or order instructions..."
                   value={cartNotes}
                   onChange={(e) => setCartNotes(e.target.value)}
-                  style={{ width: '100%', padding: '0.75rem', border: 'none', borderTop: '1px solid #E5E7EB', outline: 'none', minHeight: '80px', resize: 'vertical' }}
+                  style={{ width: '100%', padding: '0.75rem', border: 'none', borderTop: '1px solid var(--border-color)', outline: 'none', minHeight: '80px', resize: 'vertical' }}
                 />
               )}
             </div>
 
             {/* Order Summary */}
-            <div style={{ background: '#F9FAFB', borderRadius: '10px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ background: 'var(--bg-lighter)', borderRadius: '10px', padding: '1.5rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: '#6B7280' }}>Estimated Total</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Estimated Total</span>
                 <span style={{ fontWeight: '700', fontSize: '1.25rem' }}>Rs. {subtotal.toFixed(2)}</span>
               </div>
               <p style={{ fontSize: '0.8rem', color: '#9CA3AF', marginTop: '0.5rem' }}>
                 Taxes, discounts and shipping calculated at checkout.{' '}
-                <Link to="/shipping-policy" style={{ color: '#0B5D50' }}>Shipping Policy</Link>
+                <Link to="/shipping-policy" style={{ color: 'var(--primary-color-hover)' }}>Shipping Policy</Link>
               </p>
             </div>
 
@@ -169,13 +169,13 @@ function Cart({ isOpen = true, onClose }) {
               <button
                 className="checkout-btn"
                 onClick={handleCheckout}
-                style={{ flex: 1, minWidth: '200px', padding: '0.875rem 2rem', background: '#0B5D50', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: '600' }}
+                style={{ flex: 1, minWidth: '200px', padding: '0.875rem 2rem', background: 'var(--primary-color-hover)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: '600' }}
               >
                 Proceed to Checkout
               </button>
               <button
                 onClick={() => navigate('/best-sellers')}
-                style={{ flex: 1, minWidth: '200px', padding: '0.875rem 2rem', background: 'transparent', color: '#0B5D50', border: '2px solid #0B5D50', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: '600' }}
+                style={{ flex: 1, minWidth: '200px', padding: '0.875rem 2rem', background: 'transparent', color: 'var(--primary-color-hover)', border: '2px solid var(--primary-color-hover)', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: '600' }}
               >
                 Continue Shopping
               </button>

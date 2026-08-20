@@ -5,22 +5,22 @@
 .bsp-page-header {
   text-align: center;
   padding: 48px 20px 24px;
-  background: #FAF9F6;
+  background: var(--bg-light);
 }
 
 .bsp-page-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-weight: 700;
   font-size: 44px;
-  color: #014D40;
+  color: var(--secondary-color);
   margin: 0 0 8px 0;
 }
 
 .bsp-page-subtitle {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 15px;
-  color: #6B7280;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -54,8 +54,8 @@
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 8px 14px;
   cursor: pointer;
@@ -65,20 +65,20 @@
 
 .bsp-price-trigger:hover,
 .bsp-price-trigger.open {
-  border-color: #046A5A;
+  border-color: var(--primary-color);
 }
 
 .bsp-trigger-label {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #2B2B2B;
+  color: var(--body-color);
 }
 
 .bsp-trigger-icon {
   width: 12px;
   height: 7px;
-  color: #046A5A;
+  color: var(--primary-color);
   transition: transform 200ms ease;
   fill: currentColor;
 }
@@ -94,8 +94,8 @@
   left: 0;
   width: 260px;
   z-index: 10;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 16px;
   box-shadow: 0 8px 24px rgba(1,77,64,0.08);
@@ -107,15 +107,15 @@
   border-radius: 6px;
   padding: 7px 9px;
   margin-bottom: 12px;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 11px;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 .bsp-highest-price-value {
   font-weight: bold;
-  color: #046A5A;
+  color: var(--primary-color);
 }
 
 .bsp-min-max-inputs {
@@ -135,21 +135,21 @@
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #2B2B2B;
+  color: var(--body-color);
   pointer-events: none;
 }
 
 .bsp-price-input {
   width: 100%;
   box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #2B2B2B;
-  border: 1px solid #E5E7EB;
+  color: var(--body-color);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 9px 10px 9px 34px;
   outline: none;
@@ -164,35 +164,35 @@
 }
 
 .bsp-price-input:focus {
-  border-color: #046A5A;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(4,106,90,0.1);
 }
 
 .bsp-apply-btn {
   width: 100%;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 13px;
-  color: #FFFFFF;
-  background: #046A5A;
+  color: var(--btn-primary-text);
+  background: var(--btn-primary-bg);
   border-radius: 8px;
   padding: 9px;
-  border: none;
+  border: 1px solid var(--btn-primary-border);
   cursor: pointer;
   transition: background 200ms ease;
   outline: none;
 }
 
 .bsp-apply-btn:hover {
-  background: #014D40;
+  background: var(--btn-primary-hover-bg);
 }
 
 /* Section 6 – Result Count */
 .bsp-result-count {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 /* Section 7 – Toolbar Right (Sort) */
@@ -205,19 +205,19 @@
 }
 
 .bsp-sort-label {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 14px;
-  color: #2B2B2B;
+  color: var(--body-color);
 }
 
 .bsp-sort-select {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 400;
   font-size: 14px;
-  color: #2B2B2B;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  color: var(--body-color);
+  background: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 8px 14px;
   padding-right: 32px;
@@ -230,7 +230,7 @@
 }
 
 .bsp-sort-select:focus {
-  border-color: #046A5A;
+  border-color: var(--primary-color);
 }
 
 /* Section 8 – Product Grid */
@@ -251,7 +251,7 @@
   aspect-ratio: 1/1;
   border-radius: 10px;
   background: #F3F7F5;
-  color: #046A5A;
+  color: var(--primary-color);
   margin-bottom: 12px;
   position: relative;
   overflow: hidden;
@@ -270,9 +270,9 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  background: #014D40;
-  color: #FFFFFF;
-  font-family: 'Poppins', sans-serif;
+  background: var(--secondary-color);
+  color: var(--white);
+  font-family: var(--body-font);
   font-weight: 600;
   font-size: 11px;
   letter-spacing: 0.4px;
@@ -283,18 +283,18 @@
 }
 
 .bsp-product-name {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 16px;
-  color: #2B2B2B;
+  color: var(--body-color);
   margin: 0 0 4px 0;
 }
 
 .bsp-product-price {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 700;
   font-size: 18px;
-  color: #046A5A;
+  color: var(--primary-color);
   margin: 0;
 }
 
@@ -311,29 +311,30 @@
 .bsp-page-btn {
   height: 38px;
   padding: 0 16px;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 14px;
-  color: #2B2B2B;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  color: var(--btn-secondary-text);
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--btn-secondary-border);
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  transition: border-color 200ms ease, color 200ms ease;
+  transition: border-color 200ms ease, color 200ms ease, background-color 200ms ease;
   outline: none;
 }
 
 .bsp-page-btn:hover:not(:disabled) {
-  border-color: #046A5A;
-  color: #046A5A;
+  background: var(--btn-secondary-hover-bg);
+  color: var(--btn-secondary-hover-text);
+  border-color: var(--btn-secondary-border);
 }
 
 .bsp-page-btn:disabled {
   color: #D1D5DB;
-  border-color: #E5E7EB;
+  border-color: var(--border-color);
   cursor: not-allowed;
   pointer-events: none;
 }
@@ -345,10 +346,10 @@
 }
 
 .bsp-page-indicator {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 500;
   font-size: 14px;
-  color: #014D40;
+  color: var(--secondary-color);
 }
 
 /* Responsive Styles */

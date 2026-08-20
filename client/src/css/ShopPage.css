@@ -1,0 +1,420 @@
+/* d:\E-Commerce-Jewellery\E-Commerce-Jewellery\client\src\css\BestSellerPage.css */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Section 1 – Page Header */
+.shop-page-header {
+  text-align: center;
+  padding: 48px 20px 24px;
+  background: var(--bg-light);
+}
+
+.shop-page-title {
+  font-family: var(--heading-font);
+  font-weight: 700;
+  font-size: 44px;
+  color: var(--secondary-color);
+  margin: 0 0 8px 0;
+}
+
+.shop-page-subtitle {
+  font-family: var(--body-font);
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Section 2 – Shell */
+.shop-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+  box-sizing: border-box;
+}
+
+/* Section 3 – Toolbar */
+.shop-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* Section 4 – Price Filter */
+.shop-price-filter-container {
+  position: relative;
+}
+
+.shop-price-trigger {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color 200ms ease;
+  outline: none;
+}
+
+.shop-price-trigger:hover,
+.shop-price-trigger.open {
+  border-color: var(--primary-color);
+}
+
+.shop-trigger-label {
+  font-family: var(--body-font);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--body-color);
+}
+
+.shop-trigger-icon {
+  width: 12px;
+  height: 7px;
+  color: var(--primary-color);
+  transition: transform 200ms ease;
+  fill: currentColor;
+}
+
+.shop-price-trigger.open .shop-trigger-icon {
+  transform: rotate(180deg);
+}
+
+/* Section 5 – Price Popover */
+.shop-price-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 260px;
+  z-index: 10;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(1,77,64,0.08);
+  box-sizing: border-box;
+}
+
+.shop-highest-price-hint {
+  background: #F3F7F5;
+  border-radius: 6px;
+  padding: 7px 9px;
+  margin-bottom: 12px;
+  font-family: var(--body-font);
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.shop-highest-price-value {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.shop-min-max-inputs {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.shop-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.shop-input-prefix {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--body-font);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--body-color);
+  pointer-events: none;
+}
+
+.shop-price-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--body-font);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--body-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 9px 10px 9px 34px;
+  outline: none;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+  -moz-appearance: textfield;
+}
+
+.shop-price-input::-webkit-outer-spin-button,
+.shop-price-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.shop-price-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(4,106,90,0.1);
+}
+
+.shop-apply-btn {
+  width: 100%;
+  font-family: var(--body-font);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--btn-primary-text);
+  background: var(--btn-primary-bg);
+  border-radius: 8px;
+  padding: 9px;
+  border: 1px solid var(--btn-primary-border);
+  cursor: pointer;
+  transition: background 200ms ease;
+  outline: none;
+}
+
+.shop-apply-btn:hover {
+  background: var(--btn-primary-hover-bg);
+}
+
+/* Section 6 – Result Count */
+.shop-result-count {
+  font-family: var(--body-font);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Section 7 – Toolbar Right (Sort) */
+.shop-toolbar-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.shop-sort-label {
+  font-family: var(--body-font);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--body-color);
+}
+
+.shop-sort-select {
+  font-family: var(--body-font);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--body-color);
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 14px;
+  padding-right: 32px;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7' fill='none'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23046A5A' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  outline: none;
+  cursor: pointer;
+}
+
+.shop-sort-select:focus {
+  border-color: var(--primary-color);
+}
+
+/* Section 8 – Product Grid */
+.shop-product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* Section 9 – Product Card */
+.shop-product-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.shop-product-image-container {
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: 10px;
+  background: #F3F7F5;
+  color: var(--primary-color);
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shop-placeholder-icon {
+  width: 48px;
+  height: 48px;
+  opacity: 0.5;
+}
+
+.shop-best-seller-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--secondary-color);
+  color: var(--white);
+  font-family: var(--body-font);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.shop-product-name {
+  font-family: var(--body-font);
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--body-color);
+  margin: 0 0 4px 0;
+}
+
+.shop-product-price {
+  font-family: var(--body-font);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+/* Section 10 – Pagination */
+.shop-pagination {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.shop-page-btn {
+  height: 38px;
+  padding: 0 16px;
+  font-family: var(--body-font);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--btn-secondary-text);
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--btn-secondary-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 200ms ease, color 200ms ease, background-color 200ms ease;
+  outline: none;
+}
+
+.shop-page-btn:hover:not(:disabled) {
+  background: var(--btn-secondary-hover-bg);
+  color: var(--btn-secondary-hover-text);
+  border-color: var(--btn-secondary-border);
+}
+
+.shop-page-btn:disabled {
+  color: #D1D5DB;
+  border-color: var(--border-color);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.shop-btn-icon {
+  width: 12px;
+  height: 12px;
+  color: currentColor;
+}
+
+.shop-page-indicator {
+  font-family: var(--body-font);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--secondary-color);
+}
+
+/* Responsive Styles */
+@media (max-width: 900px) {
+  .shop-product-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .shop-page-header {
+    padding: 32px 16px 16px;
+  }
+  .shop-page-title {
+    font-size: 30px;
+  }
+  .shop-page-subtitle {
+    font-size: 13px;
+  }
+  .shop-shell {
+    padding: 16px 16px 60px;
+  }
+  .shop-toolbar {
+    gap: 10px;
+  }
+  .shop-result-count {
+    font-size: 12px;
+  }
+  .shop-sort-select {
+    font-size: 13px;
+  }
+  .shop-best-seller-tag {
+    font-size: 8px;
+    padding: 3px 7px;
+  }
+  .shop-product-name {
+    font-size: 13px;
+  }
+  .shop-product-price {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 550px) {
+  .shop-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-price-popover {
+    width: 240px;
+  }
+  .shop-pagination {
+    gap: 10px;
+    margin-top: 32px;
+  }
+  .shop-page-btn {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .shop-page-indicator {
+    font-size: 13px;
+  }
+}

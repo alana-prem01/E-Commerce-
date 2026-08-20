@@ -1,7 +1,7 @@
 .single-order-page-wrapper {
     width: 100%;
     min-height: 100vh;
-    background: #F9FAFB;
+    background: var(--bg-lighter);
     display: flex;
     flex-direction: column;
     padding: 24px 32px;
@@ -29,7 +29,7 @@
     font-family: 'Manrope', sans-serif;
     font-size: 14px;
     font-weight: 600;
-    color: #111827;
+    color: var(--text-dark);
     cursor: pointer;
     text-decoration: none;
     align-self: flex-start;
@@ -52,7 +52,7 @@
     font-family: 'Manrope', sans-serif;
     font-size: 26px;
     font-weight: 700;
-    color: #111827;
+    color: var(--text-dark);
     margin: 0;
 }
 
@@ -77,14 +77,14 @@
     align-items: center;
     gap: 6px;
     background: #F3F4F6;
-    color: #374151;
+    color: var(--text-medium);
 }
 
 .single-order-status-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #6B7280;
+    background: var(--text-secondary);
 }
 
 /* Badge colors based on status */
@@ -112,14 +112,14 @@
 .badge-failed { background: #FEF2F2; color: #B91C1C; }
 .badge-failed .single-order-status-dot { background: #EF4444; }
 
-.badge-refunded { background: #F3F4F6; color: #374151; }
-.badge-refunded .single-order-status-dot { background: #6B7280; }
+.badge-refunded { background: #F3F4F6; color: var(--text-medium); }
+.badge-refunded .single-order-status-dot { background: var(--text-secondary); }
 
 
 .single-order-meta-line {
     font-family: 'Manrope', sans-serif;
     font-size: 13px;
-    color: #6B7280;
+    color: var(--text-secondary);
     margin: 4px 0 0 0;
 }
 
@@ -152,8 +152,8 @@
 
 .single-order-section-card {
     width: 100%;
-    background: #FFFFFF;
-    border: 1px solid #E5E7EB;
+    background: var(--white);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 24px;
     box-sizing: border-box;
@@ -169,14 +169,14 @@
     font-family: 'Manrope', sans-serif;
     font-size: 18px;
     font-weight: 700;
-    color: #111827;
+    color: var(--text-dark);
     margin: 0 0 16px 0;
 }
 
 .single-order-status-message {
     font-family: 'Manrope', sans-serif;
     font-size: 13px;
-    color: #6B7280;
+    color: var(--text-secondary);
     line-height: 1.6;
     margin: 12px 0 0 0;
 }
@@ -197,9 +197,9 @@
 .btn-accept-order {
     height: 44px;
     padding: 0 20px;
-    background: #0B5D50;
-    color: #FFFFFF;
-    border: none;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border: 1px solid var(--btn-primary-border);
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
@@ -209,14 +209,19 @@
     cursor: pointer;
     font-family: 'Manrope', sans-serif;
     justify-content: center;
+    transition: background-color 200ms ease;
+}
+
+.btn-accept-order:hover {
+    background-color: var(--btn-primary-hover-bg);
 }
 
 .btn-cancel-order {
     height: 44px;
     padding: 0 20px;
-    background: #FFFFFF;
-    color: #DC2626;
-    border: 1px solid #DC2626;
+    background: var(--white);
+    color: var(--danger);
+    border: 1px solid var(--danger);
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
@@ -232,7 +237,7 @@
     height: 44px;
     padding: 0 20px;
     background: #2563EB;
-    color: #FFFFFF;
+    color: var(--white);
     border: none;
     border-radius: 8px;
     font-size: 14px;
@@ -248,8 +253,8 @@
 .btn-mark-delivered {
     height: 44px;
     padding: 0 20px;
-    background: #16A34A;
-    color: #FFFFFF;
+    background: var(--success);
+    color: var(--white);
     border: none;
     border-radius: 8px;
     font-size: 14px;
@@ -292,25 +297,25 @@
 .single-order-detail-label {
     font-family: 'Manrope', sans-serif;
     font-size: 13px;
-    color: #6B7280;
+    color: var(--text-secondary);
 }
 
 .single-order-detail-value {
     font-family: 'Manrope', sans-serif;
     font-size: 14px;
-    color: #374151;
+    color: var(--text-medium);
 }
 
 .single-order-detail-value.bold {
     font-weight: 600;
-    color: #111827;
+    color: var(--text-dark);
 }
 
 .single-order-detail-address {
     font-family: 'Manrope', sans-serif;
     font-size: 14px;
     line-height: 1.6;
-    color: #374151;
+    color: var(--text-medium);
 }
 
 .single-order-items-list {
@@ -337,13 +342,13 @@
     font-family: 'Manrope', sans-serif;
     font-size: 14px;
     font-weight: 500;
-    color: #111827;
+    color: var(--text-dark);
 }
 
 .single-order-item-qty {
     font-family: 'Manrope', sans-serif;
     font-size: 13px;
-    color: #6B7280;
+    color: var(--text-secondary);
 }
 
 .single-order-summary-list {
@@ -357,11 +362,11 @@
     justify-content: space-between;
     font-family: 'Manrope', sans-serif;
     font-size: 14px;
-    color: #374151;
+    color: var(--text-medium);
 }
 
 .single-order-summary-divider {
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid var(--border-color);
     margin: 8px 0;
 }
 
@@ -371,7 +376,7 @@
     font-family: 'Manrope', sans-serif;
     font-size: 18px;
     font-weight: 700;
-    color: #111827;
+    color: var(--text-dark);
 }
 
 .single-order-payment-status-row {
@@ -391,7 +396,7 @@
     font-family: 'Manrope', sans-serif;
     font-size: 14px;
     font-weight: 600;
-    color: #111827;
+    color: var(--text-dark);
 }
 
 /* Margin utilities for spacing out sections */
@@ -404,10 +409,16 @@
     font-size: 14px;
     font-weight: 600;
     padding: 8px 16px;
-    background: #FFFFFF;
-    color: #374151;
-    border: 1px solid #E5E7EB;
+    background: var(--btn-secondary-bg);
+    color: var(--btn-secondary-text);
+    border: 1px solid var(--btn-secondary-border);
     border-radius: 8px;
     cursor: pointer;
+    transition: background-color 200ms ease, color 200ms ease;
+}
+
+.single-order-print-button:hover {
+    background-color: var(--btn-secondary-hover-bg);
+    color: var(--btn-secondary-hover-text);
 }
 

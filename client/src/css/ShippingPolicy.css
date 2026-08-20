@@ -5,7 +5,7 @@
 /* Full-width Section Container */
 .shipping-policy-section {
   width: 100%;
-  background-color: #ffffff;
+  background-color: var(--white);
   padding: 64px 40px;
   display: flex;
   justify-content: center;
@@ -24,7 +24,7 @@
 
 /* Main Page Title (H1) */
 .shipping-policy-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-size: 40px;
   font-weight: 700;
   color: #005e68;
@@ -34,7 +34,7 @@
 
 /* Section Headings (H2) */
 .shipping-policy-heading {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--heading-font);
   font-size: 32px;
   font-weight: 700;
   color: #005e68;
@@ -54,7 +54,7 @@
 
 /* Paragraph Content */
 .shipping-policy-text {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 16px;
   color: #45484c;
   line-height: 1.8;
@@ -65,7 +65,7 @@
 
 /* Bold Labels and Notices */
 .shipping-policy-bold {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-weight: 700;
   font-size: 16px;
   color: #45484c;
@@ -73,7 +73,7 @@
 
 /* Unordered Lists */
 .shipping-policy-list {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 16px;
   color: #45484c;
   line-height: 1.8;
@@ -94,7 +94,7 @@
 
 /* Hyperlinks */
 .shipping-policy-link {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--body-font);
   font-size: 16px;
   color: #005e68;
   text-decoration: underline;

@@ -306,7 +306,7 @@
   font-weight: 600;
 }
 
-.coupon-status-badge.active { background: #dcfce7; color: #16a34a; }
+.coupon-status-badge.active { background: var(--bg-success); color: var(--success); }
 .coupon-status-badge.inactive { background: var(--gray-100); color: var(--gray-500); }
 
 .coupon-actions { display: flex; align-items: center; gap: 8px; }
@@ -323,7 +323,7 @@
 .coupon-toggle-btn:hover { transform: scale(1.1); }
 
 .coupon-delete-btn {
-  background: #fee2e2;
+  background: var(--bg-danger);
   color: var(--danger);
   border: none;
   width: 30px;

@@ -4,7 +4,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #FFFFFF;
+  background-color: var(--white);
   padding: 32px 80px;
   gap: 32px;
   box-sizing: border-box;
@@ -40,7 +40,7 @@
   font-family: Manrope;
   font-size: 32px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-dark);
 }
 
 @media (min-width: 768px) and (max-width: 1199px) {
@@ -59,7 +59,7 @@
   font-family: Manrope;
   font-size: 15px;
   font-weight: 400;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 @media (max-width: 767px) {
@@ -74,8 +74,8 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 20px;
   box-sizing: border-box;
@@ -101,7 +101,7 @@
   height: 44px;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
-  background: #FFFFFF;
+  background: var(--white);
   padding: 0 16px;
   font-family: Manrope;
   font-size: 14px;
@@ -126,7 +126,7 @@
   height: 44px;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
-  background: #FFFFFF;
+  background: var(--white);
   font-family: Manrope;
   font-size: 14px;
   box-sizing: border-box;
@@ -147,8 +147,8 @@
 /* SECTION 3 — Products Table */
 .plp-table-container {
   width: 100%;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--white);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -177,14 +177,14 @@
 
 .plp-table-header-row {
   height: 56px;
-  background: #F9FAFB;
+  background: var(--bg-lighter);
 }
 
 .plp-table th {
   font-family: Manrope;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-medium);
   text-align: left;
 }
 
@@ -202,7 +202,7 @@
   font-family: Manrope;
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-dark);
 }
 
 .plp-product-name-container {
@@ -220,13 +220,13 @@
   font-family: Manrope;
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-medium);
 }
 
 .plp-category {
   font-family: Manrope;
   font-size: 14px;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 /* Stock Status Badge */
@@ -241,7 +241,7 @@
 }
 
 .plp-stock-in {
-  background: #DCFCE7;
+  background: var(--bg-success);
   color: #15803D;
 }
 
@@ -251,8 +251,8 @@
 }
 
 .plp-stock-out {
-  background: #FEE2E2;
-  color: #DC2626;
+  background: var(--bg-danger);
+  color: var(--danger);
 }
 
 .plp-action-container {
@@ -263,7 +263,7 @@
 .plp-btn-edit {
   width: 38px;
   height: 38px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
@@ -273,13 +273,13 @@
 }
 
 .plp-btn-edit:hover {
-  background: #F9FAFB;
+  background: var(--bg-lighter);
 }
 
 .plp-btn-delete {
   width: 38px;
   height: 38px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
@@ -289,9 +289,9 @@
 }
 
 .plp-btn-delete:hover {
-  background: #FEE2E2;
-  color: #DC2626;
-  border-color: #FEE2E2;
+  background: var(--bg-danger);
+  color: var(--danger);
+  border-color: var(--bg-danger);
 }
 
 /* Pagination */
@@ -321,7 +321,7 @@
 .plp-records-count {
   font-family: Manrope;
   font-size: 14px;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 .plp-pagination-controls {
@@ -341,7 +341,7 @@
   padding: 0 16px;
   border: 1px solid #D1D5DB;
   border-radius: 8px;
-  background: #FFFFFF;
+  background: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -363,14 +363,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FFFFFF;
+  background: var(--white);
   cursor: pointer;
 }
 
 .plp-page-active {
-  background: #0B5D50;
-  color: #FFFFFF;
-  border-color: #0B5D50;
+  background: var(--primary-color-hover);
+  color: var(--white);
+  border-color: var(--primary-color-hover);
 }
 
 @media (max-width: 767px) {
@@ -387,7 +387,7 @@
   justify-content: center;
   padding: 64px 20px;
   gap: 16px;
-  background: #FFFFFF;
+  background: var(--white);
 }
 
 .plp-empty-icon-wrapper {
@@ -395,7 +395,7 @@
   height: 56px;
   border-radius: 50%;
   background: #F3F4F6;
-  color: #0B5D50;
+  color: var(--primary-color-hover);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -405,14 +405,14 @@
   font-family: Manrope;
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-dark);
 }
 
 .plp-empty-subtext {
   font-family: Manrope;
   font-size: 14px;
   font-weight: 400;
-  color: #6B7280;
+  color: var(--text-secondary);
   text-align: center;
   max-width: 320px;
 }
