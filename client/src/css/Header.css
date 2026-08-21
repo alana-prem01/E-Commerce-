@@ -2,7 +2,7 @@
 .top-announcement-bar {
   width: 100%;
   background: var(--brand-primary);
-  color: var(--gold-light);
+  color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10,13 +10,19 @@
   padding: 8px 20px;
   font-family: var(--font-sans);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 1.5px;
   text-transform: uppercase;
 }
 
 .top-announcement-bar .sparkle {
+  color: var(--gold-light);
   font-size: 10px;
+}
+
+.top-announcement-bar p {
+  color: #FFFFFF;
+  margin: 0;
 }
 
 .header-navbar {

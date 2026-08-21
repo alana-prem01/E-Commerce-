@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ["Active", "Inactive"],
+        enum: ["Active", "Inactive", "Blocked"],
         default: "Active"
     },
 
@@ -117,7 +117,15 @@ const userSchema = new mongoose.Schema({
     wishlist: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product'
-    }]
+    }],
+
+    membership: {
+        isPremium: { type: Boolean, default: false },
+        startDate: { type: Date },
+        expiryDate: { type: Date },
+        razorpay_order_id: { type: String },
+        razorpay_payment_id: { type: String }
+    }
 }, {
     timestamps: true
 });

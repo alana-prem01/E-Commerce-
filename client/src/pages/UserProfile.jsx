@@ -1,18 +1,151 @@
 import React, { useState, useEffect } from "react";
 import "../css/UserProfile.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
 
 function UserProfile() {
+  const navigate = useNavigate();
   // --- Auth Check & User Data ---
   useEffect(() => {
-    if (localStorage.getItem("isLoggedIn") !== "true") {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    if (!isLoggedIn) {
       window.location.href = "/login";
+      return;
+    }
+
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const parsedUser = JSON.parse(userStr);
+        if (parsedUser.role === 'Admin') {
+          window.location.href = "/admin-dashboard";
+        }
+      } catch (err) { }
     }
   }, []);
 
   const userStr = localStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : { name: "", email: "" };
+  const initialUser = userStr ? JSON.parse(userStr) : { name: "", email: "" };
+  const [fullUser, setFullUser] = useState(initialUser);
+  const user = fullUser || initialUser;
+
+  // Fetch updated user profile from backend on mount
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const res = await api.get('/profile');
+        if (res.success && res.data) {
+          setFullUser(res.data);
+          localStorage.setItem("user", JSON.stringify(res.data));
+          setContactData({
+            name: res.data.name || "User",
+            email: res.data.email || "user@example.com"
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch fresh user profile:", err);
+      }
+    };
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      fetchUserProfile();
+    }
+  }, []);
+
+  const membership = fullUser?.membership || {};
+  const isPremiumActive = Boolean(
+    membership.isPremium && membership.expiryDate && new Date(membership.expiryDate) > new Date()
+  );
+  const isExpired = Boolean(
+    membership.expiryDate && new Date() > new Date(membership.expiryDate)
+  );
+
+  // --- Premium New Products & Subscription States ---
+  const [newProducts, setNewProducts] = useState([]);
+  const [copiedCoupon, setCopiedCoupon] = useState(false);
+  const [submittingPremium, setSubmittingPremium] = useState(false);
+  const [premiumError, setPremiumError] = useState("");
+
+  useEffect(() => {
+    if (isPremiumActive) {
+      api.get('/membership/new-products')
+        .then(res => {
+          if (res.success) setNewProducts(res.products || []);
+        })
+        .catch(err => console.error("Failed to fetch new products:", err));
+    }
+  }, [isPremiumActive]);
+
+  const handleCopyCoupon = () => {
+    navigator.clipboard.writeText("ELORA15");
+    setCopiedCoupon(true);
+    setTimeout(() => setCopiedCoupon(false), 2000);
+  };
+
+  const handleSubscribePremium = async () => {
+    setPremiumError("");
+    setSubmittingPremium(true);
+    try {
+      const orderRes = await api.post("/membership/create-order", {});
+      if (!orderRes.success || !orderRes.order) {
+        setPremiumError(orderRes.message || "Failed to create membership order.");
+        setSubmittingPremium(false);
+        return;
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderRes.order.amount,
+        currency: orderRes.order.currency,
+        name: 'ELORA Jewellery',
+        description: 'Premium Membership (1 Year - ₹599)',
+        order_id: orderRes.order.id,
+        handler: async function (response) {
+          try {
+            const verifyRes = await api.post('/membership/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyRes.success && verifyRes.user) {
+              setFullUser(verifyRes.user);
+              localStorage.setItem('user', JSON.stringify(verifyRes.user));
+            } else {
+              setPremiumError(verifyRes.message || "Payment verification failed.");
+            }
+          } catch (err) {
+            console.error("Verification error:", err);
+            setPremiumError(err.message || "Verification failed.");
+          } finally {
+            setSubmittingPremium(false);
+          }
+        },
+        prefill: {
+          name: fullUser.name || '',
+          email: fullUser.email || '',
+          contact: fullUser.phone || '',
+        },
+        theme: {
+          color: '#D4AF37',
+        },
+      };
+
+      if (window.Razorpay) {
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (resp) {
+          setPremiumError('Payment failed: ' + (resp.error?.description || 'Cancelled'));
+          setSubmittingPremium(false);
+        });
+        rzp.open();
+      } else {
+        setPremiumError('Razorpay SDK failed to load.');
+        setSubmittingPremium(false);
+      }
+    } catch (err) {
+      setPremiumError(err.message || "Failed to initiate subscription.");
+      setSubmittingPremium(false);
+    }
+  };
 
   // --- Real Orders State ---
   const [orders, setOrders] = useState([]);
@@ -130,7 +263,8 @@ function UserProfile() {
   };
 
   const handleOrderClick = (orderId) => {
-    alert(`Navigating to order details for: ${orderId}`);
+    const selectedOrder = orders.find(o => (o._id === orderId || o.id === orderId));
+    navigate(`/order-tracking/${orderId}`, { state: { orderId, order: selectedOrder } });
   };
 
   // --- Security / Change Password States ---
@@ -223,7 +357,7 @@ function UserProfile() {
         <div>
           <h2 className="sidebar-brand">Elora Jewellery</h2>
           <div className="sidebar-subtitle">My Account</div>
-          <Link to="/ordertracking" className="orders-nav-item">Orders</Link>
+          <Link to="/order-tracking" className="orders-nav-item">Orders</Link>
         </div>
 
         {/* Order List */}
@@ -330,6 +464,109 @@ function UserProfile() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* PREMIUM MEMBERSHIP CARD */}
+        <div className="profile-card">
+          <div className="card-header">
+            <h3 className="card-title">Membership</h3>
+          </div>
+
+          <div className="card-body-stack">
+            {isPremiumActive ? (
+              <>
+                <div>
+                  <span className="label-text">MEMBERSHIP STATUS</span>
+                  <div className="value-text" style={{ color: "#0B5D50", fontWeight: "600" }}>
+                    Premium Member
+                  </div>
+                </div>
+
+                <div>
+                  <span className="label-text">MEMBERSHIP ACTIVE UNTIL</span>
+                  <div className="value-text">
+                    {new Date(membership.expiryDate).toLocaleDateString("en-IN", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric"
+                    })}
+                  </div>
+                </div>
+
+                {/* PREMIUM COUPON SECTION */}
+                <div style={{ marginTop: "12px", padding: "14px", backgroundColor: "#f8f7f4", borderRadius: "8px", border: "1px solid #e2ded7" }}>
+                  <span className="label-text" style={{ color: "#5e3b25", fontWeight: "700" }}>PREMIUM COUPON</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
+                    <div>
+                      <div className="value-text" style={{ fontWeight: "700", fontSize: "15px" }}>
+                        Coupon Code: ELORA15
+                      </div>
+                      <div className="value-text-muted" style={{ fontSize: "13px" }}>
+                        Discount: 15% | Validity: Until {new Date(membership.expiryDate).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" })}
+                      </div>
+                    </div>
+                    <button
+                      className="btn-action-outline"
+                      onClick={handleCopyCoupon}
+                      style={{ padding: "6px 12px", cursor: "pointer", fontSize: "13px" }}
+                    >
+                      {copiedCoupon ? "Copied!" : "Copy Code"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* EXCLUSIVE NEW PRODUCTS SECTION */}
+                {newProducts.length > 0 && (
+                  <div style={{ marginTop: "16px" }}>
+                    <span className="label-text" style={{ color: "#5e3b25", fontWeight: "700" }}>EXCLUSIVE NEW PRODUCTS & UPDATES</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "12px", marginTop: "10px" }}>
+                      {newProducts.map((prod) => (
+                        <Link
+                          key={prod._id || prod.id}
+                          to={`/product/${prod._id || prod.id}`}
+                          style={{ textDecoration: "none", color: "inherit", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px", backgroundColor: "#fff", display: "flex", flexDirection: "column", alignItems: "center" }}
+                        >
+                          <img
+                            src={prod.image || (prod.images && prod.images[0]) || ""}
+                            alt={prod.title || prod.name}
+                            style={{ width: "100%", height: "90px", objectFit: "cover", borderRadius: "6px" }}
+                          />
+                          <div style={{ fontSize: "12px", fontWeight: "600", marginTop: "6px", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%" }}>
+                            {prod.title || prod.name}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#0B5D50", fontWeight: "700", marginTop: "2px" }}>
+                            ₹{Number(prod.price).toLocaleString("en-IN")}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div>
+                  <span className="label-text">MEMBERSHIP STATUS</span>
+                  <div className="value-text" style={{ color: isExpired ? "#E53E3E" : "#666" }}>
+                    {isExpired ? `Expired on ${new Date(membership.expiryDate).toLocaleDateString("en-IN")}` : "Inactive"}
+                  </div>
+                </div>
+                <div className="value-text-muted" style={{ fontSize: "13px" }}>
+                  Join Elora Premium for ₹599/year to receive Free Delivery on orders, a 15% Discount Coupon (ELORA15), and early product updates.
+                </div>
+                <div style={{ marginTop: "10px" }}>
+                  <button
+                    className="btn-primary"
+                    onClick={handleSubscribePremium}
+                    disabled={submittingPremium}
+                  >
+                    {submittingPremium ? "Processing..." : "Subscribe to Premium (₹599/year)"}
+                  </button>
+                </div>
+                {premiumError && <div className="security-error" style={{ marginTop: "8px" }}>{premiumError}</div>}
+              </>
+            )}
+          </div>
         </div>
 
         {/* ADDRESSES CARD */}

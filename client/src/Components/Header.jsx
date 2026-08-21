@@ -21,6 +21,14 @@ function Header() {
   const { totalItemCount } = useCart();
 
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("isLoggedIn") === "true");
+  const [isAdmin, setIsAdmin] = useState(() => {
+    const userStr = localStorage.getItem("user");
+    try {
+      return userStr ? JSON.parse(userStr).role === 'Admin' : false;
+    } catch {
+      return false;
+    }
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
@@ -39,7 +47,15 @@ function Header() {
 
   // Auth change listener
   useEffect(() => {
-    const handle = () => setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+    const handle = () => {
+      setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+      const userStr = localStorage.getItem("user");
+      try {
+        setIsAdmin(userStr ? JSON.parse(userStr).role === 'Admin' : false);
+      } catch {
+        setIsAdmin(false);
+      }
+    };
     window.addEventListener('auth-change', handle);
     return () => window.removeEventListener('auth-change', handle);
   }, []);
@@ -161,7 +177,7 @@ function Header() {
             )}
 
             {/* Profile */}
-            <Link to={isLoggedIn ? "/profile" : "/login"} className={`nav-link-custom icon-btn ${isActive("/profile")}`} title="Profile">
+            <Link to={isLoggedIn ? (isAdmin ? "/admin-dashboard" : "/profile") : "/login"} className={`nav-link-custom icon-btn ${isActive(isAdmin ? "/admin-dashboard" : "/profile")}`} title={isAdmin ? "Admin Dashboard" : "Profile"}>
               <CgProfile className="icon" />
             </Link>
 
@@ -221,7 +237,9 @@ function Header() {
               <hr className="mobile-nav-hr" />
               {isLoggedIn ? (
                 <>
-                  <Link to="/profile" className="mobile-nav-link">My Profile</Link>
+                  <Link to={isAdmin ? "/admin-dashboard" : "/profile"} className="mobile-nav-link">
+                    {isAdmin ? "Admin Dashboard" : "My Profile"}
+                  </Link>
                   <Link to="/wishlist" className="mobile-nav-link">My Wishlist</Link>
                   <Link to="/cart" className="mobile-nav-link">Cart ({totalItemCount})</Link>
                 </>

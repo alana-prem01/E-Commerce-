@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { toast } from 'react-toastify';
+import AdminPagination from '../Components/AdminPagination';
 import '../css/OrderListPage.css';
 
 const OrderListPage = () => {
@@ -10,10 +11,26 @@ const OrderListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [paymentFilter, setPaymentFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  // Reset to page 1 whenever filters or search query change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, paymentFilter]);
+
+  // Scroll to top whenever page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    const mainContainer = document.querySelector('.admin-dashboard-main');
+    if (mainContainer) {
+      mainContainer.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }
+  }, [currentPage]);
 
   const fetchOrders = async () => {
     try {
@@ -49,7 +66,7 @@ const OrderListPage = () => {
   };
 
   // Filter orders based on search, status and payment
-  const displayedOrders = (orders || []).filter(order => {
+  const filteredOrders = (orders || []).filter(order => {
     const customerName = order.user ? order.user.name : (order.contactEmail || 'Guest');
     const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           order._id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -59,6 +76,11 @@ const OrderListPage = () => {
 
     return matchesSearch && matchesStatus && matchesPayment;
   });
+
+  const totalPages = Math.ceil(filteredOrders.length / PAGE_SIZE) || 1;
+  const activePage = Math.min(currentPage, totalPages);
+  const startIndex = (activePage - 1) * PAGE_SIZE;
+  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + PAGE_SIZE);
 
   return (
     <div className="mb-4">
@@ -105,7 +127,7 @@ const OrderListPage = () => {
       </div>
 
       {/* Orders Table */}
-      <div className="admin-card admin-table-container">
+      <div className="admin-card admin-table-container" style={{ paddingBottom: 0 }}>
         {loading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--admin-text-muted)' }}>Loading orders...</div>
         ) : (
@@ -122,8 +144,8 @@ const OrderListPage = () => {
               </tr>
             </thead>
             <tbody>
-              {displayedOrders.length > 0 ? (
-                displayedOrders.map(order => {
+              {paginatedOrders.length > 0 ? (
+                paginatedOrders.map(order => {
                   const customerName = order.user ? order.user.name : (order.contactEmail || 'Guest');
                   const amount = order.pricing?.total || 0;
                   const paymentStatusClass = order.paymentStatus === 'Paid' ? 'admin-badge-success' : 
@@ -193,10 +215,14 @@ const OrderListPage = () => {
           </table>
         )}
         
-        {!loading && displayedOrders.length > 0 && (
-          <div style={{ padding: '16px', borderTop: '1px solid var(--admin-border)', color: 'var(--admin-text-muted)', fontSize: '0.875rem' }}>
-            Showing {displayedOrders.length} order(s)
-          </div>
+        {/* Pagination Controls for Orders */}
+        {!loading && (
+          <AdminPagination
+            currentPage={activePage}
+            totalItems={filteredOrders.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
         )}
       </div>
     </div>

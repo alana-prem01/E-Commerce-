@@ -53,7 +53,7 @@ function Home() {
   // Best Sellers State from Backend
   const [bestSellers, setBestSellers] = useState([]);
   const [loadingBestSellers, setLoadingBestSellers] = useState(true);
-  
+
   React.useEffect(() => {
     const fetchHomeBestSellers = async () => {
       try {
@@ -81,19 +81,18 @@ function Home() {
 
   return (
     <div className="home-wrapper">
-      
+
       {/* 1. Immersive Hero Section */}
-      <section className="classic-hero" style={{ backgroundImage: `url('/banner.jpg')` }}>
-        <div className="hero-overlay-gradient"></div>
+      <section className="classic-hero" style={{ backgroundImage: `url('/banner2.jpg')` }}>
         <div className="hero-content-full">
           <div className="hero-text-container">
-            <h1 className="hero-title">Timeless Elegance,<br/>Crafted for You</h1>
+            <h1 className="hero-title">Timeless <span style={{color: '#B77A24'}}>Elegance,</span><br />Crafted for You</h1>
             <div className="hero-divider-small">
               <div className="line"></div>
               <span className="diamond">✦</span>
             </div>
             <p className="hero-desc">
-              Exquisite jewellery that celebrates every<br/>moment of your life.
+              Exquisite jewellery that celebrates every<br />moment of your life.
             </p>
             <div className="hero-buttons">
               <button className="btn-solid" onClick={() => navigate("/best-sellers")}>
@@ -122,13 +121,36 @@ function Home() {
         </div>
       </section>
 
+      {/* Premium Membership Marquee */}
+      <section className="premium-marquee-section">
+        <div className="marquee-track">
+          {/* Duplicate content to create seamless infinite loop */}
+          {[...Array(4)].map((_, i) => (
+            <div className="marquee-content" key={i}>
+              <span className="marquee-separator">✦</span>
+              <span className="marquee-highlight">JOIN ELORA PREMIUM MEMBERSHIP</span>
+              <span className="marquee-separator">✦</span>
+              <span className="marquee-highlight">15% OFF EVERY PURCHASE FOR 1 YEAR</span>
+              <span className="marquee-separator">✦</span>
+              <span className="marquee-highlight">FREE DELIVERY UNLOCKED</span>
+              <span className="marquee-separator">✦</span>
+              <span className="marquee-main">GET NOTIFIED WHEN <span className="marquee-highlight">NEW PRODUCTS LAUNCH</span></span>
+            </div>
+          ))}
+        </div>
+      </section>
 
 
       {/* 3. Best Sellers */}
       <section className="home-section classic-bestsellers-section">
-        <div className="section-header-center">
-          <h2 className="classic-section-title">BEST SELLERS <span className="sparkle">✨</span></h2>
-          <p className="section-subtitle">Our most loved pieces</p>
+        <div className="section-header-center relative-header">
+          <div className="header-titles">
+            <h2 className="classic-section-title">BEST SELLERS <span className="sparkle">✨</span></h2>
+            <p className="section-subtitle">Our most loved pieces</p>
+          </div>
+          <button className="header-right-cta" onClick={() => navigate("/best-sellers")}>
+            VIEW ALL COLLECTIONS
+          </button>
         </div>
 
         <div className="classic-product-grid">
@@ -158,11 +180,7 @@ function Home() {
             ))
           )}
         </div>
-        <div className="view-all-wrapper">
-          <button className="classic-btn-outline" onClick={() => navigate("/best-sellers")}>
-            View All Creations
-          </button>
-        </div>
+
       </section>
 
       {/* 4. Shop By Category */}
@@ -189,11 +207,11 @@ function Home() {
       </section>
 
       {/* 5. Our Story */}
-      <section className="home-section classic-story-section">
-        <div className="story-split">
-          <div className="story-text">
-            <p className="story-subtitle">OUR STORY</p>
-            <h2 className="story-title">Crafted with Passion,<br/>Inspired by Tradition</h2>
+      <section className="classic-story-section">
+        <div className="story-content-container">
+          <div className="story-text-column">
+            <h4 className="story-subtitle">OUR STORY</h4>
+            <h2 className="story-title">Crafted with Passion,<br />Inspired by <span className="story-highlight-gold">Tradition</span></h2>
             <div className="story-divider-small">
               <div className="line"></div>
               <span className="diamond">✦</span>
@@ -204,12 +222,9 @@ function Home() {
             <p className="story-paragraph">
               We blend traditional artistry with modern elegance to create jewellery that celebrates you.
             </p>
-            <button className="btn-solid" onClick={() => navigate("/about")}>
+            <button className="story-btn-outline" onClick={() => navigate("/about")}>
               DISCOVER OUR JOURNEY
             </button>
-          </div>
-          <div className="story-image">
-             <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=1000" alt="Craftsmanship" />
           </div>
         </div>
       </section>

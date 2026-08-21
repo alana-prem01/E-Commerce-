@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  LineChart, Line, AreaChart, Area, BarChart, Bar,
+  AreaChart, Area, BarChart, Bar,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer
+  Tooltip, ResponsiveContainer
 } from 'recharts';
 import { api } from '../utils/api';
 import '../css/AdminDashboard.css';
 
-const COLORS = ['var(--primary-color-hover)', '#D4AF37', '#2563EB', 'var(--danger)', '#7C3AED', '#EA580C'];
+const THEME_PRIMARY = '#046a5a';
+const COLORS = ['#046a5a', '#D4AF37', '#2563EB', '#DC2626', '#7C3AED', '#EA580C', '#059669'];
 
 const STATUS_COLORS = {
   Pending: '#D97706',
   Processing: '#EA580C',
   Shipped: '#2563EB',
   'Out for Delivery': '#7C3AED',
-  Delivered: 'var(--success)',
-  Cancelled: 'var(--danger)'
+  Delivered: '#16A34A',
+  Cancelled: '#DC2626'
 };
 
 const DashboardOverview = () => (
@@ -26,14 +27,16 @@ const DashboardOverview = () => (
   </div>
 );
 
-const StatisticsCards = ({ stats }) => (
+const StatisticsCards = ({ stats, loading }) => (
   <div className="admin-grid-4 mb-4">
     <div className="admin-card" style={{ marginBottom: 0 }}>
       <div className="d-flex align-items-center gap-3">
         <div style={{ background: 'var(--admin-info-bg)', color: 'var(--admin-info)', padding: '12px', borderRadius: '8px', fontSize: '24px' }}>📦</div>
         <div>
           <div style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Total Orders</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-main)' }}>{stats?.totalOrders || 0}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-main)' }}>
+            {loading ? '...' : (stats?.totalOrders ?? 0)}
+          </div>
         </div>
       </div>
     </div>
@@ -42,7 +45,9 @@ const StatisticsCards = ({ stats }) => (
         <div style={{ background: 'var(--admin-success-bg)', color: 'var(--admin-success)', padding: '12px', borderRadius: '8px', fontSize: '24px' }}>💰</div>
         <div>
           <div style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Total Revenue</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-main)' }}>₹{stats?.totalRevenue?.toLocaleString('en-IN') || 0}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-main)' }}>
+            {loading ? '...' : `₹${(stats?.totalRevenue || 0).toLocaleString('en-IN')}`}
+          </div>
         </div>
       </div>
     </div>
@@ -51,7 +56,9 @@ const StatisticsCards = ({ stats }) => (
         <div style={{ background: 'var(--admin-warning-bg)', color: 'var(--admin-warning)', padding: '12px', borderRadius: '8px', fontSize: '24px' }}>💎</div>
         <div>
           <div style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Total Products</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-main)' }}>{stats?.totalProducts || 0}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-main)' }}>
+            {loading ? '...' : (stats?.totalProducts ?? 0)}
+          </div>
         </div>
       </div>
     </div>
@@ -60,7 +67,9 @@ const StatisticsCards = ({ stats }) => (
         <div style={{ background: '#F3E8FF', color: '#7E22CE', padding: '12px', borderRadius: '8px', fontSize: '24px' }}>👥</div>
         <div>
           <div style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>Total Users</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-main)' }}>{stats?.totalUsers || 0}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-main)' }}>
+            {loading ? '...' : (stats?.totalUsers ?? 0)}
+          </div>
         </div>
       </div>
     </div>
@@ -79,19 +88,27 @@ const RecentOrders = ({ orders }) => (
           <th>Order ID</th><th>Customer</th><th>Date</th><th>Amount</th><th>Status</th>
         </tr></thead>
         <tbody>
-          {orders && orders.length > 0 ? orders.map((order, i) => (
-            <tr key={i}>
-              <td>#{order.orderId?.substring(order.orderId.length - 6).toUpperCase() || 'N/A'}</td>
-              <td>{order.customer}</td>
-              <td>{new Date(order.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-              <td>₹{order.amount?.toLocaleString('en-IN')}</td>
-              <td>
-                <span className={`admin-badge badge-${order.status?.toLowerCase().replace(' ', '-') || 'pending'}`}>
-                  {order.status}
-                </span>
-              </td>
-            </tr>
-          )) : (<tr><td colSpan="5" style={{ textAlign: 'center', color: '#9CA3AF' }}>No recent orders</td></tr>)}
+          {orders && orders.length > 0 ? orders.map((order, i) => {
+            const displayId = order.orderId ? `#${order.orderId.substring(order.orderId.length - 6).toUpperCase()}` : 'N/A';
+            const dateStr = order.date ? new Date(order.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+            const statusClass = order.status ? order.status.toLowerCase().replace(/\s+/g, '-') : 'pending';
+
+            return (
+              <tr key={order.orderId || i}>
+                <td>{displayId}</td>
+                <td>{order.customer}</td>
+                <td>{dateStr}</td>
+                <td>₹{(order.amount || 0).toLocaleString('en-IN')}</td>
+                <td>
+                  <span className={`admin-badge badge-${statusClass}`}>
+                    {order.status || 'Pending'}
+                  </span>
+                </td>
+              </tr>
+            );
+          }) : (
+            <tr><td colSpan="5" style={{ textAlign: 'center', color: '#9CA3AF', padding: '24px' }}>No recent orders</td></tr>
+          )}
         </tbody>
       </table>
     </div>
@@ -109,7 +126,7 @@ const TopSellingProducts = ({ products }) => (
         <thead><tr><th>Product</th><th>Sold</th><th>Revenue</th></tr></thead>
         <tbody>
           {products && products.length > 0 ? products.map((p, i) => (
-            <tr key={i}>
+            <tr key={p.productId || i}>
               <td>
                 <div className="admin-product-cell">
                   <div className="admin-product-thumb">
@@ -119,9 +136,11 @@ const TopSellingProducts = ({ products }) => (
                 </div>
               </td>
               <td>{p.sold}</td>
-              <td>₹{p.revenue?.toLocaleString('en-IN')}</td>
+              <td>₹{(p.revenue || 0).toLocaleString('en-IN')}</td>
             </tr>
-          )) : (<tr><td colSpan="3" style={{ textAlign: 'center', color: '#9CA3AF' }}>No data available</td></tr>)}
+          )) : (
+            <tr><td colSpan="3" style={{ textAlign: 'center', color: '#9CA3AF', padding: '24px' }}>No data available</td></tr>
+          )}
         </tbody>
       </table>
     </div>
@@ -139,7 +158,7 @@ const LowStockProducts = ({ products }) => (
         <thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Status</th></tr></thead>
         <tbody>
           {products && products.length > 0 ? products.map((p, i) => (
-            <tr key={i}>
+            <tr key={p.productId || i}>
               <td>
                 <div className="admin-product-cell">
                   <div className="admin-product-thumb"></div>
@@ -148,36 +167,28 @@ const LowStockProducts = ({ products }) => (
               </td>
               <td>{p.sku}</td>
               <td><strong style={{ color: p.stock === 0 ? 'var(--danger)' : '#EA580C' }}>{p.stock}</strong></td>
-              <td><span className="admin-badge badge-lowstock">{p.stock === 0 ? 'Out of Stock' : 'Low Stock'}</span></td>
+              <td><span className="admin-badge badge-lowstock">{p.status}</span></td>
             </tr>
-          )) : (<tr><td colSpan="4" style={{ textAlign: 'center', color: 'var(--success)' }}>✅ All products well stocked</td></tr>)}
+          )) : (
+            <tr><td colSpan="4" style={{ textAlign: 'center', color: 'var(--success)', padding: '24px' }}>✅ All products well stocked</td></tr>
+          )}
         </tbody>
       </table>
     </div>
   </div>
 );
 
-// Revenue Chart
-const RevenueChart = ({ orders }) => {
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return {
-      day: d.toLocaleDateString('en-IN', { weekday: 'short' }),
-      date: d.toDateString(),
-      revenue: 0,
-      orders: 0
-    };
-  });
-
-  orders?.forEach(order => {
-    const orderDate = new Date(order.date).toDateString();
-    const dayEntry = last7Days.find(d => d.date === orderDate);
-    if (dayEntry) {
-      dayEntry.revenue += order.amount || 0;
-      dayEntry.orders += 1;
-    }
-  });
+// 2. Revenue — Last 7 Days Graph
+const RevenueChart = ({ data = [] }) => {
+  const chartData = data && data.length > 0 ? data : [
+    { date: 'Day 1', revenue: 0 },
+    { date: 'Day 2', revenue: 0 },
+    { date: 'Day 3', revenue: 0 },
+    { date: 'Day 4', revenue: 0 },
+    { date: 'Day 5', revenue: 0 },
+    { date: 'Day 6', revenue: 0 },
+    { date: 'Day 7', revenue: 0 }
+  ];
 
   return (
     <div className="admin-card chart-card">
@@ -185,39 +196,55 @@ const RevenueChart = ({ orders }) => {
         <h3 className="admin-card-title">Revenue — Last 7 Days</h3>
       </div>
       <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={last7Days} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
           <defs>
             <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--primary-color-hover)" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="var(--primary-color-hover)" stopOpacity={0} />
+              <stop offset="5%" stopColor={THEME_PRIMARY} stopOpacity={0.35} />
+              <stop offset="95%" stopColor={THEME_PRIMARY} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `₹${v}`} />
-          <Tooltip formatter={(val) => [`₹${val.toLocaleString('en-IN')}`, 'Revenue']} />
-          <Area type="monotone" dataKey="revenue" stroke="var(--primary-color-hover)" strokeWidth={2.5} fill="url(#revenueGrad)" />
+          <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#6B7280' }} />
+          <YAxis
+            tick={{ fontSize: 12, fill: '#6B7280' }}
+            tickFormatter={(val) => `₹${val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}`}
+          />
+          <Tooltip
+            formatter={(val) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Revenue']}
+            labelFormatter={(label) => `Date: ${label}`}
+            contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}
+          />
+          <Area
+            type="monotone"
+            dataKey="revenue"
+            stroke={THEME_PRIMARY}
+            strokeWidth={2.5}
+            fill="url(#revenueGrad)"
+          />
         </AreaChart>
       </ResponsiveContainer>
     </div>
   );
 };
 
-// Orders by Status Pie Chart
-const OrderStatusChart = ({ orders }) => {
-  const statusCounts = {};
-  orders?.forEach(o => {
-    statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
-  });
+// 3. Orders by Status Pie Chart
+const OrderStatusChart = ({ data = [], totalOrders = 0 }) => {
+  const chartData = (data || []).filter(item => item.count > 0);
 
-  const data = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+  if (chartData.length === 0 || totalOrders === 0) {
+    return (
+      <div className="admin-card chart-card">
+        <div className="admin-card-header">
+          <h3 className="admin-card-title">Orders by Status</h3>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 220, color: '#9CA3AF', fontSize: '14px' }}>
+          No order data yet
+        </div>
+      </div>
+    );
+  }
 
-  if (data.length === 0) return (
-    <div className="admin-card chart-card">
-      <div className="admin-card-header"><h3 className="admin-card-title">Orders by Status</h3></div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 220, color: '#9CA3AF' }}>No order data yet</div>
-    </div>
-  );
+  const effectiveTotal = totalOrders || chartData.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
     <div className="admin-card chart-card">
@@ -226,35 +253,74 @@ const OrderStatusChart = ({ orders }) => {
       </div>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
-          <Pie data={data} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-            {data.map((entry, i) => (
-              <Cell key={i} fill={STATUS_COLORS[entry.name] || COLORS[i % COLORS.length]} />
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            outerRadius={75}
+            dataKey="count"
+            nameKey="status"
+            label={({ status, count }) => {
+              const pct = effectiveTotal > 0 ? ((count / effectiveTotal) * 100).toFixed(0) : 0;
+              return `${status} ${pct}%`;
+            }}
+            labelLine={false}
+          >
+            {chartData.map((entry, i) => (
+              <Cell
+                key={`cell-${i}`}
+                fill={STATUS_COLORS[entry.status] || COLORS[i % COLORS.length]}
+              />
             ))}
           </Pie>
-          <Tooltip />
+          <Tooltip
+            formatter={(value, name) => [
+              `${value} order${value > 1 ? 's' : ''} (${((value / effectiveTotal) * 100).toFixed(1)}%)`,
+              name
+            ]}
+            contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>
   );
 };
 
-// Top Products Bar Chart
-const TopProductsChart = ({ products }) => {
-  if (!products || products.length === 0) return null;
-  const data = products.slice(0, 5).map(p => ({ name: p.name?.length > 15 ? p.name.substring(0, 15) + '…' : p.name, sold: p.sold, revenue: p.revenue }));
+// 4. Top Categories by Units Sold Bar Chart
+const TopCategoriesChart = ({ categories = [] }) => {
+  if (!categories || categories.length === 0) {
+    return (
+      <div className="admin-card chart-card">
+        <div className="admin-card-header">
+          <h3 className="admin-card-title">Top Categories by Units Sold</h3>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 220, color: '#9CA3AF', fontSize: '14px' }}>
+          No category sales data yet
+        </div>
+      </div>
+    );
+  }
+
+  const data = categories.slice(0, 5).map(c => ({
+    name: c.category || 'General',
+    unitsSold: c.unitsSold || 0
+  }));
 
   return (
     <div className="admin-card chart-card">
       <div className="admin-card-header">
-        <h3 className="admin-card-title">Top Products by Units Sold</h3>
+        <h3 className="admin-card-title">Top Categories by Units Sold</h3>
       </div>
       <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 40 }}>
+        <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" />
-          <YAxis tick={{ fontSize: 12 }} />
-          <Tooltip />
-          <Bar dataKey="sold" fill="#D4AF37" radius={[4, 4, 0, 0]} />
+          <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6B7280' }} />
+          <YAxis tick={{ fontSize: 12, fill: '#6B7280' }} allowDecimals={false} />
+          <Tooltip
+            formatter={(val) => [`${val} unit${val > 1 ? 's' : ''} sold`, 'Units Sold']}
+            contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}
+          />
+          <Bar dataKey="unitsSold" fill="#D4AF37" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -263,7 +329,13 @@ const TopProductsChart = ({ products }) => {
 
 const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
-    overview: {}, recentOrders: [], topSellingProducts: [], lowStockProducts: []
+    overview: {},
+    revenueLast7Days: [],
+    ordersByStatus: [],
+    topCategories: [],
+    recentOrders: [],
+    topSellingProducts: [],
+    lowStockProducts: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -271,42 +343,84 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const response = await api.get('/dashboard');
-        if (response.success) setDashboardData(response.data);
-        else setError('Failed to fetch dashboard data');
+        if (response.success && response.data) {
+          setDashboardData(response.data);
+        } else {
+          setError(response.message || 'Failed to fetch dashboard data');
+        }
       } catch (err) {
+        console.error('Error loading Admin Dashboard:', err);
         setError(err.message || 'Error fetching dashboard data');
       } finally {
         setLoading(false);
       }
     };
+
     fetchDashboardData();
   }, []);
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--primary-color-hover)' }}>Loading Dashboard...</div>;
-  if (error) return <div style={{ padding: '20px', color: 'var(--danger)' }}>Error: {error}</div>;
+  if (loading) {
+    return (
+      <div style={{ padding: '60px 20px', textAlign: 'center', color: THEME_PRIMARY, fontSize: '16px', fontWeight: 500 }}>
+        Loading Dashboard Statistics...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+        <div style={{ color: 'var(--danger)', fontSize: '18px', fontWeight: 600, marginBottom: '12px' }}>
+          Failed to load dashboard statistics
+        </div>
+        <p style={{ color: 'var(--admin-text-muted)', fontSize: '14px', marginBottom: '20px' }}>{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: '8px 20px',
+            backgroundColor: THEME_PRIMARY,
+            color: '#fff',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: 500
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
       <DashboardOverview />
-      <StatisticsCards stats={dashboardData.overview} />
+      <StatisticsCards stats={dashboardData.overview} loading={loading} />
 
-      {/* Charts Row */}
+      {/* Charts Row: Revenue (Last 7 Days) & Orders by Status */}
       <div className="admin-grid-2 mb-4">
-        <RevenueChart orders={dashboardData.recentOrders} />
-        <OrderStatusChart orders={dashboardData.recentOrders} />
+        <RevenueChart data={dashboardData.revenueLast7Days} />
+        <OrderStatusChart
+          data={dashboardData.ordersByStatus}
+          totalOrders={dashboardData.overview?.totalOrders || 0}
+        />
       </div>
 
-      {dashboardData.topSellingProducts?.length > 0 && (
-        <div className="mb-4">
-          <TopProductsChart products={dashboardData.topSellingProducts} />
-        </div>
-      )}
+      {/* Top Categories by Units Sold Chart */}
+      <div className="mb-4">
+        <TopCategoriesChart categories={dashboardData.topCategories} />
+      </div>
 
+      {/* Data Tables Row: Recent Orders & Top Selling Products */}
       <div className="admin-grid-2 mb-4">
         <RecentOrders orders={dashboardData.recentOrders} />
         <TopSellingProducts products={dashboardData.topSellingProducts} />
       </div>
+
+      {/* Low Stock Alert Table */}
       <LowStockProducts products={dashboardData.lowStockProducts} />
     </>
   );

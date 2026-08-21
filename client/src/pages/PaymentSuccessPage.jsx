@@ -1,9 +1,36 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../css/PaymentSuccessPage.css';
 
 const PaymentSuccessPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Retrieve actual completed order details from router state or localStorage fallback
+  const lastOrderStr = localStorage.getItem('lastCompletedOrder');
+  const lastOrder = lastOrderStr ? JSON.parse(lastOrderStr) : null;
+  const order = location.state?.order || lastOrder;
+
+  // Format real values dynamically
+  const rawId = order?._id || order?.id || '';
+  const orderIdDisplay = rawId ? `#${rawId.toString().slice(-8).toUpperCase()}` : '#ORD-PENDING';
+  
+  const txnIdDisplay = order?.paymentDetails?.razorpay_payment_id || order?.paymentDetails?.transactionId || 'N/A';
+  
+  const paymentMethodDisplay = order?.paymentDetails?.payment_method || 'Razorpay';
+  
+  const totalAmount = order?.pricing?.total ?? order?.total ?? 0;
+  const amountDisplay = `₹${Number(totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const orderDate = order?.createdAt ? new Date(order.createdAt) : new Date();
+  const dateDisplay = orderDate.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
 
   return (
     <div className="psp-overlay-container" id="success-popup">
@@ -36,29 +63,29 @@ const PaymentSuccessPage = () => {
         <div className="psp-details-card">
           <div className="psp-detail-row">
             <span className="psp-detail-label">Order ID</span>
-            <span className="psp-detail-value">#ORD-293847</span>
+            <span className="psp-detail-value">{orderIdDisplay}</span>
           </div>
           <div className="psp-detail-row">
             <span className="psp-detail-label">Transaction ID</span>
-            <span className="psp-detail-value">TXN-987654321</span>
+            <span className="psp-detail-value">{txnIdDisplay}</span>
           </div>
           <div className="psp-detail-row">
             <span className="psp-detail-label">Payment Method</span>
-            <span className="psp-detail-value">Credit Card</span>
+            <span className="psp-detail-value">{paymentMethodDisplay}</span>
           </div>
           <div className="psp-detail-row">
             <span className="psp-detail-label">Amount Paid</span>
-            <span className="psp-detail-value">$129.99</span>
+            <span className="psp-detail-value">{amountDisplay}</span>
           </div>
           <div className="psp-detail-row">
             <span className="psp-detail-label">Payment Date &amp; Time</span>
-            <span className="psp-detail-value">Aug 6, 2026, 10:45 AM</span>
+            <span className="psp-detail-value">{dateDisplay}</span>
           </div>
         </div>
 
         {/* Section 5 – Action Buttons */}
         <div className="psp-button-container">
-          <button className="psp-primary-button" id="view-order-btn">View Order</button>
+          <button className="psp-primary-button" id="view-order-btn" onClick={() => navigate('/profile')}>View Order</button>
           <button className="psp-secondary-button" id="continue-shopping-btn" onClick={() => navigate('/')}>Continue Shopping</button>
         </div>
 

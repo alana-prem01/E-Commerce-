@@ -16,14 +16,68 @@ const razorpay = new Razorpay({
 // @access  Public
 exports.createOrder = async (req, res) => {
   try {
-    const { amount, currency = 'INR' } = req.body;
+    const { amount, currency = 'INR', subtotal, couponCode } = req.body;
 
-    if (!amount) {
-      return res.status(400).json({ success: false, message: 'Amount is required' });
+    let finalAmount = amount || 0;
+
+    // Secure calculation if subtotal is provided
+    if (subtotal !== undefined) {
+      let isPremiumUser = false;
+      let token;
+      
+      // Extract Bearer token if present
+      if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        token = req.headers.authorization.split(' ')[1];
+      }
+      
+      if (token) {
+        try {
+          const jwt = require('jsonwebtoken');
+          const User = require('../models/UserSchema');
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          const user = await User.findById(decoded.id);
+          
+          if (user && user.membership) {
+            isPremiumUser = user.membership.isPremium && 
+                            user.membership.expiryDate && 
+                            new Date(user.membership.expiryDate) > new Date();
+          }
+        } catch (err) {
+          console.error("Token verification failed in createOrder", err);
+        }
+      }
+
+      const shippingCost = isPremiumUser ? 0 : 65;
+      const tax = subtotal > 0 ? 110 : 0;
+      let discountAmount = 0;
+
+      // Handle ELORA15 Coupon specifically
+      if (couponCode === 'ELORA15' && isPremiumUser) {
+        discountAmount = Math.round((subtotal * 15) / 100);
+      } else if (couponCode) {
+        // Handle other standard coupons
+        const Coupon = require('../models/CouponSchema');
+        const coupon = await Coupon.findOne({ code: couponCode.trim().toUpperCase(), isActive: true });
+        if (coupon && new Date() <= new Date(coupon.expiresAt) && subtotal >= coupon.minOrderAmount) {
+          if (coupon.discountType === 'percent') {
+            discountAmount = (subtotal * coupon.discountValue) / 100;
+            if (coupon.maxDiscount) discountAmount = Math.min(discountAmount, coupon.maxDiscount);
+          } else {
+            discountAmount = Math.min(coupon.discountValue, subtotal);
+          }
+          discountAmount = Math.round(discountAmount);
+        }
+      }
+
+      finalAmount = Math.max(0, subtotal + shippingCost + tax - discountAmount);
+    }
+
+    if (!finalAmount) {
+      return res.status(400).json({ success: false, message: 'Amount could not be calculated or is 0' });
     }
 
     const options = {
-      amount: amount * 100, // Razorpay amount is in paise
+      amount: finalAmount * 100, // Razorpay amount is in paise
       currency,
       receipt: `receipt_order_${Date.now()}`,
       payment_capture: 1,

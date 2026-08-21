@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getUserProfile, updateUserProfile } = require('../controllers/userController');
-const { getMyOrders } = require('../controllers/orderController');
+const { getMyOrders, getMyOrderById } = require('../controllers/orderController');
 const { getWishlist, toggleWishlist } = require('../controllers/wishlistController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -14,6 +14,9 @@ router.route('/')
 
 router.route('/orders')
     .get(getMyOrders);
+
+router.route('/orders/:id')
+    .get(getMyOrderById);
 
 // Wishlist routes
 router.get('/wishlist', getWishlist);

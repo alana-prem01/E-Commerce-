@@ -262,7 +262,7 @@ const AddProductPage = () => {
               </div>
             </div>
             
-            <div className="d-flex gap-3" style={{ marginTop: 'auto' }}>
+            <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
               <button type="button" onClick={() => navigate('/products')} className="admin-btn admin-btn-outline" style={{ flex: 1 }}>Cancel</button>
               <button type="submit" disabled={isSubmitting} className="admin-btn admin-btn-primary" style={{ flex: 1 }}>
                 {isSubmitting ? 'Adding...' : 'Add Product'}

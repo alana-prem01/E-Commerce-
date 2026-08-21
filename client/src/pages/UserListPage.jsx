@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { api } from '../utils/api';
 import { toast } from 'react-toastify';
+import AdminPagination from '../Components/AdminPagination';
 import '../css/UserListPage.css';
 
 const UserListPage = () => {
@@ -10,21 +11,31 @@ const UserListPage = () => {
     
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(1);
+    const PAGE_SIZE = 10;
     
     // Modal states
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [showViewModal, setShowViewModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
-
-    const userStr = localStorage.getItem("user");
-    const loggedInUser = userStr ? JSON.parse(userStr) : null;
 
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    // Reset to page 1 whenever filters or search change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, roleFilter, statusFilter]);
+
+    // Scroll to top whenever page changes
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        const mainContainer = document.querySelector('.admin-dashboard-main');
+        if (mainContainer) {
+            mainContainer.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }
+    }, [currentPage]);
 
     const fetchUsers = async () => {
         try {
@@ -54,11 +65,10 @@ const UserListPage = () => {
         });
     }, [users, searchQuery, roleFilter, statusFilter]);
 
-    const handleReset = () => {
-        setSearchQuery('');
-        setRoleFilter('');
-        setStatusFilter('');
-    };
+    const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE) || 1;
+    const activePage = Math.min(currentPage, totalPages);
+    const startIndex = (activePage - 1) * PAGE_SIZE;
+    const paginatedUsers = filteredUsers.slice(startIndex, startIndex + PAGE_SIZE);
 
     const handleDeleteClick = (user) => {
         setSelectedUser(user);
@@ -82,14 +92,18 @@ const UserListPage = () => {
         }
     };
 
-    const handleViewClick = (user) => {
-        setSelectedUser(user);
-        setShowViewModal(true);
-    };
-
-    const handleEditClick = (user) => {
-        setSelectedUser(user);
-        setShowEditModal(true);
+    const toggleUserStatus = async (user) => {
+        const newStatus = user.status === 'Blocked' ? 'Active' : 'Blocked';
+        try {
+            const res = await api.put(`/users/${user._id}`, { status: newStatus });
+            if (res.success) {
+                toast.success(`User ${newStatus === 'Blocked' ? 'blocked' : 'unblocked'} successfully`);
+                setUsers(users.map(u => u._id === user._id ? { ...u, status: newStatus } : u));
+            }
+        } catch (error) {
+            console.error('Error updating user status:', error);
+            toast.error(error.message || 'Failed to update user status');
+        }
     };
 
     const handleAddClick = () => {
@@ -98,8 +112,6 @@ const UserListPage = () => {
 
     const closeModals = () => {
         setShowAddModal(false);
-        setShowEditModal(false);
-        setShowViewModal(false);
         setShowDeleteModal(false);
         setSelectedUser(null);
     };
@@ -131,7 +143,7 @@ const UserListPage = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <select 
-                    className="admin-select"
+                    className="admin-select" 
                     style={{ flex: '0 1 150px' }}
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
@@ -141,7 +153,7 @@ const UserListPage = () => {
                     <option value="User">User</option>
                 </select>
                 <select 
-                    className="admin-select"
+                    className="admin-select" 
                     style={{ flex: '0 1 150px' }}
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
@@ -150,13 +162,10 @@ const UserListPage = () => {
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                 </select>
-                <button className="admin-btn admin-btn-outline" onClick={handleReset}>
-                    Reset
-                </button>
             </div>
 
             {/* Users Table */}
-            <div className="admin-card admin-table-container mb-4">
+            <div className="admin-card admin-table-container" style={{ paddingBottom: 0 }}>
                 {loading ? (
                     <div style={{ padding: '40px', textAlign: 'center', color: 'var(--admin-text-muted)' }}>Loading users...</div>
                 ) : (
@@ -174,8 +183,8 @@ const UserListPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredUsers.length > 0 ? (
-                                filteredUsers.map(user => {
+                            {paginatedUsers.length > 0 ? (
+                                paginatedUsers.map(user => {
                                     const statusClass = user.status?.toLowerCase() === 'active' ? 'admin-badge-success' : 'admin-badge-danger';
                                     return (
                                         <tr key={user._id}>
@@ -204,11 +213,17 @@ const UserListPage = () => {
                                             </td>
                                             <td style={{ textAlign: 'right' }}>
                                                 <div className="d-flex justify-content-center gap-2" style={{ justifyContent: 'flex-end' }}>
-                                                    <button className="admin-btn admin-btn-outline" style={{ padding: '6px' }} title="View" onClick={() => handleViewClick(user)}>
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                    </button>
-                                                    <button className="admin-btn admin-btn-outline" style={{ padding: '6px' }} title="Edit" onClick={() => handleEditClick(user)}>
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                                    <button 
+                                                        className={`admin-btn ${user.status === 'Blocked' ? 'admin-btn-outline' : 'admin-btn-warning'}`}
+                                                        style={{ padding: '6px' }}
+                                                        title={user.status === 'Blocked' ? 'Unblock' : 'Block'}
+                                                        onClick={() => toggleUserStatus(user)}
+                                                    >
+                                                        {user.status === 'Blocked' ? (
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h4l2-2h4l2 2h4l2-2h4"/><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+                                                        ) : (
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                                                        )}
                                                     </button>
                                                     <button className="admin-btn admin-btn-danger" style={{ padding: '6px' }} title="Delete" onClick={() => handleDeleteClick(user)}>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
@@ -240,15 +255,18 @@ const UserListPage = () => {
                     </table>
                 )}
                 
-                {!loading && filteredUsers.length > 0 && (
-                    <div style={{ padding: '16px', borderTop: '1px solid var(--admin-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem' }}>Showing {filteredUsers.length} of {users.length} user(s)</span>
-                    </div>
+                {/* Pagination Controls */}
+                {!loading && (
+                    <AdminPagination
+                        currentPage={activePage}
+                        totalItems={filteredUsers.length}
+                        pageSize={PAGE_SIZE}
+                        onPageChange={(page) => setCurrentPage(page)}
+                    />
                 )}
             </div>
 
-            {/* Modals for Functional Mocking */}
-            {/* Keeping simple styling for modals so they look good in the new system too. Using simple fixed absolute overlays. */}
+            {/* Delete Modal */}
             {showDeleteModal && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
                     <div className="admin-card" style={{ width: '400px', maxWidth: '90%' }}>
@@ -257,44 +275,6 @@ const UserListPage = () => {
                         <div className="d-flex gap-3 justify-content-center" style={{ justifyContent: 'flex-end' }}>
                             <button className="admin-btn admin-btn-outline" onClick={closeModals}>Cancel</button>
                             <button className="admin-btn admin-btn-danger" onClick={confirmDelete}>Delete</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showAddModal && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-                    <div className="admin-card" style={{ width: '400px', maxWidth: '90%' }}>
-                        <h3 style={{ fontSize: '1.25rem', margin: '0 0 16px 0', color: 'var(--admin-text-main)' }}>Add User</h3>
-                        <p style={{ color: 'var(--admin-text-muted)', marginBottom: '24px' }}>Add a new user form would go here.</p>
-                        <div className="d-flex gap-3 justify-content-center" style={{ justifyContent: 'flex-end' }}>
-                            <button className="admin-btn admin-btn-outline" onClick={closeModals}>Cancel</button>
-                            <button className="admin-btn admin-btn-primary" onClick={closeModals}>Save</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showEditModal && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-                    <div className="admin-card" style={{ width: '400px', maxWidth: '90%' }}>
-                        <h3 style={{ fontSize: '1.25rem', margin: '0 0 16px 0', color: 'var(--admin-text-main)' }}>Edit User</h3>
-                        <p style={{ color: 'var(--admin-text-muted)', marginBottom: '24px' }}>Edit form for {selectedUser?.name} would go here.</p>
-                        <div className="d-flex gap-3 justify-content-center" style={{ justifyContent: 'flex-end' }}>
-                            <button className="admin-btn admin-btn-outline" onClick={closeModals}>Cancel</button>
-                            <button className="admin-btn admin-btn-primary" onClick={closeModals}>Save</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showViewModal && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-                    <div className="admin-card" style={{ width: '400px', maxWidth: '90%' }}>
-                        <h3 style={{ fontSize: '1.25rem', margin: '0 0 16px 0', color: 'var(--admin-text-main)' }}>View User</h3>
-                        <p style={{ color: 'var(--admin-text-muted)', marginBottom: '24px' }}>Viewing details for {selectedUser?.name}.</p>
-                        <div className="d-flex gap-3 justify-content-center" style={{ justifyContent: 'flex-end' }}>
-                            <button className="admin-btn admin-btn-primary" onClick={closeModals}>Close</button>
                         </div>
                     </div>
                 </div>

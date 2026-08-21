@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url('https://img.magnific.com/premium-photo/green-mandala-background_905450-16905.jpg?semt=ais_hybrid&w=740&q=80');
+  background-image: url('/ourstory.jpg');
   background-size: cover;
   background-position: center;
 }

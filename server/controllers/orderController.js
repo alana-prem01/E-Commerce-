@@ -203,9 +203,41 @@ const getMyOrders = async (req, res) => {
   }
 };
 
+// @desc    Get logged in user single order by ID
+// @route   GET /api/profile/orders/:id
+// @access  Private
+const getMyOrderById = async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Invalid Order ID' });
+    }
+
+    const query = { _id: req.params.id };
+    if (req.user.role !== 'Admin') {
+      query.user = req.user._id;
+    }
+
+    const order = await Order.findOne(query);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error('Error in getMyOrderById:', error);
+    if (error.kind === 'ObjectId') {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
 module.exports = {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
-  getMyOrders
+  getMyOrders,
+  getMyOrderById
 };

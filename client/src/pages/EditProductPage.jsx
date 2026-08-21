@@ -325,8 +325,7 @@ const EditProductPage = () => {
               </div>
             )}
             
-            <div className="d-flex gap-3 flex-wrap mt-2">
-              <button type="button" onClick={handleDelete} className="admin-btn admin-btn-danger" style={{ flex: '1 1 100%' }}>Delete Product</button>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '24px' }}>
               <button type="button" onClick={() => navigate('/products')} className="admin-btn admin-btn-outline" style={{ flex: 1 }}>Cancel</button>
               <button type="submit" disabled={isSubmitting} className="admin-btn admin-btn-primary" style={{ flex: 1 }}>
                 {isSubmitting ? 'Saving...' : 'Save Changes'}

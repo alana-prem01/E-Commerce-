@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useCart } from '../utils/CartContext';
@@ -79,8 +79,40 @@ export default function CheckoutPage() {
     country: '', firstName: '', lastName: '', address: '', city: '', state: '', pinCode: '', phone: ''
   });
 
+  const [isPremiumUser, setIsPremiumUser] = useState(false);
+
+  useEffect(() => {
+    // 1. Initial check from localStorage for fast initial render
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const loggedUser = JSON.parse(userStr);
+        const initialIsPremium = Boolean(
+          loggedUser?.membership?.isPremium &&
+          loggedUser?.membership?.expiryDate &&
+          new Date(loggedUser.membership.expiryDate) > new Date()
+        );
+        setIsPremiumUser(initialIsPremium);
+      } catch (err) {}
+    }
+    
+    // 2. Fetch fresh user profile from backend to ensure accurate membership status
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      api.get('/profile').then(res => {
+        if (res.success && res.data) {
+          localStorage.setItem("user", JSON.stringify(res.data));
+          const freshMembership = res.data.membership || {};
+          const freshIsPremium = Boolean(
+            freshMembership.isPremium && freshMembership.expiryDate && new Date(freshMembership.expiryDate) > new Date()
+          );
+          setIsPremiumUser(freshIsPremium);
+        }
+      }).catch(err => console.error("Failed to fetch fresh user profile:", err));
+    }
+  }, []);
+
   const currentSubtotal = subtotal || 0;
-  const shippingCost = shippingMethod === 'standard' ? 5 : 15;
+  const shippingCost = isPremiumUser ? 0 : 65;
   const tax = currentSubtotal > 0 ? 110 : 0;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const finalAmount = Math.max(0, currentSubtotal + shippingCost + tax - discount);
@@ -105,17 +137,20 @@ export default function CheckoutPage() {
     setApplyingCoupon(true);
     setCouponError('');
     try {
-      const res = await axios.post('/api/coupons/apply', {
+      const res = await api.post('/coupons/apply', {
         code: couponCode,
         orderAmount: currentSubtotal
       });
-      if (res.data.success) {
-        setAppliedCoupon(res.data.coupon);
+      if (res.success) {
+        setAppliedCoupon(res.coupon);
         setCouponCode('');
-        toast.success(res.data.message);
+        toast.success(res.message || 'Coupon applied successfully');
+      } else {
+        setCouponError(res.message || 'Failed to apply coupon');
+        setAppliedCoupon(null);
       }
     } catch (err) {
-      setCouponError(err.response?.data?.message || 'Failed to apply coupon');
+      setCouponError(err.message || 'Failed to apply coupon');
       setAppliedCoupon(null);
     } finally {
       setApplyingCoupon(false);
@@ -161,7 +196,9 @@ export default function CheckoutPage() {
 
       // 1. Create Razorpay order via backend
       const orderData = await api.post('/payment/create-order', {
-        amount: finalAmount,
+        amount: finalAmount, // legacy fallback
+        subtotal: currentSubtotal,
+        couponCode: appliedCoupon ? appliedCoupon.code : null,
         currency: 'INR'
       });
 
@@ -207,7 +244,10 @@ export default function CheckoutPage() {
             if (verifyData.success) {
               toast.success('Payment successful!');
               clearCart();
-              navigate('/payment-success');
+              if (verifyData.order) {
+                localStorage.setItem('lastCompletedOrder', JSON.stringify(verifyData.order));
+              }
+              navigate('/payment-success', { state: { order: verifyData.order } });
             } else {
               toast.error('Payment verification failed');
             }
@@ -441,45 +481,38 @@ export default function CheckoutPage() {
             </div>
             <div className="checkout-price-row">
               <span>Shipping</span>
-              <span>${shippingMethod === 'standard' ? '5.00' : '15.00'}</span>
+              <span>{isPremiumUser ? 'FREE (Premium Member)' : `$${shippingCost.toFixed(2)}`}</span>
             </div>
             <div className="checkout-price-row">
               <span>Tax</span>
               <span>${tax.toFixed(2)}</span>
             </div>
             
-            {/* Coupon Section */}
-            <div className="checkout-coupon-section" style={{ margin: '16px 0', padding: '16px', backgroundColor: 'var(--bg-lighter)', borderRadius: '8px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Discount Code</h3>
-              {appliedCoupon ? (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#e8f5f3', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--primary-color-hover)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: 600, color: 'var(--primary-color-hover)' }}>{appliedCoupon.code}</span>
-                  </div>
-                  <button onClick={handleRemoveCoupon} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '18px' }}>&times;</button>
-                </div>
-              ) : (
+            {/* Coupon Section - Only visible to Premium Users */}
+            {isPremiumUser && (
+              <div className="checkout-coupon-section" style={{ margin: '16px 0', padding: '16px', backgroundColor: 'var(--bg-lighter)', borderRadius: '8px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Discount Code</h3>
                 <div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <input 
                       type="text" 
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      placeholder="Enter code" 
+                      placeholder="Enter code / ELORA15" 
                       style={{ flex: 1, padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
                     />
                     <button 
                       onClick={handleApplyCoupon}
                       disabled={applyingCoupon || !couponCode.trim()}
-                      style={{ padding: '8px 16px', backgroundColor: couponCode.trim() ? 'var(--primary-color-hover)' : 'var(--border-color)', color: couponCode.trim() ? 'white' : '#9ca3af', border: 'none', borderRadius: '6px', cursor: couponCode.trim() ? 'pointer' : 'not-allowed', fontWeight: 500 }}
+                      style={{ padding: '8px 16px', backgroundColor: couponCode.trim() ? 'var(--primary-color)' : 'var(--border-color)', color: couponCode.trim() ? 'white' : '#9ca3af', border: 'none', borderRadius: '6px', cursor: couponCode.trim() ? 'pointer' : 'not-allowed', fontWeight: 500 }}
                     >
                       {applyingCoupon ? 'Applying...' : 'Apply'}
                     </button>
                   </div>
                   {couponError && <p style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '6px' }}>{couponError}</p>}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {discount > 0 && (
               <div className="checkout-price-row checkout-price-discount" style={{ color: 'var(--success)', fontWeight: 500 }}>

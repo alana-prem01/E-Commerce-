@@ -1,65 +1,129 @@
-import React, { useState } from "react";
-import {FaFacebookF,FaInstagram,FaWhatsapp,FaTwitter,FaMapMarkerAlt,FaPhoneAlt,FaEnvelope,} from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaFacebookF, FaInstagram, FaWhatsapp, FaTwitter, FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, } from "react-icons/fa";
 import "../css/Footer.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 
 function Footer() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.email) setEmail(user.email);
+      } catch (err) { }
+    }
+  }, []);
+
   const handleSubscribe = async (e) => {
     e.preventDefault();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true" && localStorage.getItem("accessToken");
 
-    if (!email || !emailRegex.test(email.trim())) {
-      setEmailError("Please enter a valid email address.");
-      setEmailSuccess(false);
+    if (!isLoggedIn) {
+      navigate("/login");
       return;
     }
 
     setEmailError("");
+    setEmailSuccess(false);
     setSubmitting(true);
 
     try {
-      const res = await api.post("/newsletter/subscribe", { email: email.trim() });
-      if (res.success) {
-        setEmailSuccess(true);
-        setEmail("");
+      // 1. Create Razorpay order for ₹599 membership
+      const orderRes = await api.post("/membership/create-order", {});
+
+      if (!orderRes.success || !orderRes.order) {
+        setEmailError(orderRes.message || "Failed to create membership order.");
+        setSubmitting(false);
+        return;
+      }
+
+      const userStr = localStorage.getItem("user");
+      const loggedUser = userStr ? JSON.parse(userStr) : {};
+
+      // 2. Open Razorpay payment checkout
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderRes.order.amount,
+        currency: orderRes.order.currency,
+        name: 'ELORA Jewellery',
+        description: 'Premium Membership (1 Year - ₹599)',
+        order_id: orderRes.order.id,
+        handler: async function (response) {
+          try {
+            // 3. Verify Payment on Backend
+            const verifyRes = await api.post('/membership/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyRes.success) {
+              if (verifyRes.user) {
+                localStorage.setItem('user', JSON.stringify(verifyRes.user));
+              }
+              setEmailSuccess(true);
+              navigate('/profile');
+            } else {
+              setEmailError(verifyRes.message || "Payment verification failed.");
+            }
+          } catch (verifyErr) {
+            console.error("Membership verification error:", verifyErr);
+            setEmailError(verifyErr.message || "Payment verification failed.");
+          } finally {
+            setSubmitting(false);
+          }
+        },
+        prefill: {
+          name: loggedUser.name || '',
+          email: loggedUser.email || email,
+          contact: loggedUser.phone || '',
+        },
+        theme: {
+          color: '#D4AF37',
+        },
+      };
+
+      if (window.Razorpay) {
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          setEmailError('Payment failed: ' + (response.error?.description || 'Payment was cancelled.'));
+          setSubmitting(false);
+        });
+        rzp.open();
       } else {
-        setEmailError(res.message || "Failed to subscribe.");
-        setEmailSuccess(false);
+        setEmailError('Razorpay SDK failed to load. Please check your connection.');
+        setSubmitting(false);
       }
     } catch (err) {
-      if (err.message && err.message.includes("already subscribed")) {
-        setEmailError("Email is already subscribed.");
-      } else {
-        setEmailSuccess(true);
-        setEmail("");
-      }
-    } finally {
+      console.error("Subscription error:", err);
+      setEmailError(err.message || "Failed to initiate subscription.");
       setSubmitting(false);
     }
   };
 
   return (
     <footer className="footer-container">
-      
-      {/* Newsletter Section */}
+
+      {/* Newsletter / Premium Membership Section */}
       <div className="footer-newsletter-section">
         <div className="newsletter-icon-wrap">
           <FaEnvelope size={24} color="#5e3b25" />
         </div>
         <div className="newsletter-text-wrap">
-          <h3 className="newsletter-heading">STAY CONNECTED <span className="sparkle">✨</span></h3>
-          <p className="newsletter-sub">Subscribe to get special offers, latest updates, and more.</p>
+          <h3 className="newsletter-heading">PREMIUM MEMBERSHIP <span className="sparkle">✨</span></h3>
+          <p className="newsletter-sub">Premium Membership — ₹599/year. Enjoy Free Delivery & 15% OFF.</p>
         </div>
         <form className="footer-newsletter-form" onSubmit={handleSubscribe}>
-          <input 
-            type="email" 
-            placeholder="Enter your email" 
+          <input
+            type="email"
+            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -69,7 +133,7 @@ function Footer() {
         </form>
       </div>
       {emailError && <div className="newsletter-msg error">{emailError}</div>}
-      {emailSuccess && <div className="newsletter-msg success">Subscribed successfully!</div>}
+      {emailSuccess && <div className="newsletter-msg success">Premium Membership active! Redirecting to profile...</div>}
 
       <div className="footer-divider-top" />
 
@@ -137,7 +201,7 @@ function Footer() {
       {/* Bottom Bar */}
       <div className="footer-bottom">
         <p className="footer-copyright">
-          © {new Date().getFullYear()} Elora Jewellery. All Rights Reserved.
+          © 2024 Elora Jewellery. All Rights Reserved.
         </p>
       </div>
     </footer>

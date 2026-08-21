@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { toast } from 'react-toastify';
+import AdminPagination from '../Components/AdminPagination';
 import '../css/ProductListPage.css';
 
 const ProductListPage = () => {
@@ -10,11 +11,27 @@ const ProductListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [stockFilter, setStockFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  // Reset to page 1 whenever filters or search query change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter, stockFilter]);
+
+  // Scroll to top whenever page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    const mainContainer = document.querySelector('.admin-dashboard-main');
+    if (mainContainer) {
+      mainContainer.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }
+  }, [currentPage]);
 
   const fetchProducts = async () => {
     try {
@@ -51,7 +68,7 @@ const ProductListPage = () => {
   };
 
   // Filter products based on search, category and stock
-  const displayedProducts = products.filter(product => {
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.productName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           product._id.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -64,6 +81,11 @@ const ProductListPage = () => {
 
     return matchesSearch && matchesCategory && matchesStock;
   });
+
+  const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE) || 1;
+  const activePage = Math.min(currentPage, totalPages);
+  const startIndex = (activePage - 1) * PAGE_SIZE;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + PAGE_SIZE);
 
   return (
     <div className="mb-4">
@@ -107,7 +129,7 @@ const ProductListPage = () => {
       </div>
 
       {/* Products Table */}
-      <div className="admin-card admin-table-container">
+      <div className="admin-card admin-table-container" style={{ paddingBottom: 0 }}>
         {loading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--admin-text-muted)' }}>Loading products...</div>
         ) : (
@@ -122,8 +144,8 @@ const ProductListPage = () => {
               </tr>
             </thead>
             <tbody>
-              {displayedProducts.length > 0 ? (
-                displayedProducts.map((product) => {
+              {paginatedProducts.length > 0 ? (
+                paginatedProducts.map((product) => {
                   const isLowStock = product.stockQuantity > 0 && product.stockQuantity < 10;
                   const isOutOfStock = product.stockQuantity === 0;
                   const stockClass = isOutOfStock ? 'admin-badge-danger' : (isLowStock ? 'admin-badge-warning' : 'admin-badge-success');
@@ -185,10 +207,14 @@ const ProductListPage = () => {
           </table>
         )}
         
-        {!loading && displayedProducts.length > 0 && (
-          <div style={{ padding: '16px', borderTop: '1px solid var(--admin-border)', color: 'var(--admin-text-muted)', fontSize: '0.875rem' }}>
-            Showing {displayedProducts.length} product(s)
-          </div>
+        {/* Pagination Controls */}
+        {!loading && (
+          <AdminPagination
+            currentPage={activePage}
+            totalItems={filteredProducts.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
         )}
       </div>
     </div>

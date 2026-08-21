@@ -194,6 +194,13 @@ const signin = async (req, res) => {
             });
         }
 
+        if (user.status === 'Blocked') {
+            return res.status(403).json({
+                success: false,
+                message: "Your account has been blocked. Please contact support."
+            });
+        }
+
         const isMatch = await bcrypt.compare(
             trimmedPassword,
             user.password
@@ -228,7 +235,8 @@ const signin = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                membership: user.membership
             }
         });
 

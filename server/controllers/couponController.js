@@ -1,8 +1,10 @@
 const Coupon = require('../models/CouponSchema');
+const jwt = require('jsonwebtoken');
+const User = require('../models/UserSchema');
 
 // @desc    Apply coupon code
 // @route   POST /api/coupons/apply
-// @access  Public
+// @access  Public (Requires Auth for Premium Coupons)
 const applyCoupon = async (req, res) => {
   try {
     const { code, orderAmount } = req.body;
@@ -11,7 +13,59 @@ const applyCoupon = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Coupon code is required' });
     }
 
-    const coupon = await Coupon.findOne({ code: code.trim().toUpperCase(), isActive: true });
+    const formattedCode = code.trim().toUpperCase();
+
+    // Special validation for ELORA15 coupon
+    if (formattedCode === 'ELORA15') {
+      let token;
+      if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        token = req.headers.authorization.split(' ')[1];
+      }
+
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          message: 'Please log in to use the Premium Member coupon (ELORA15).'
+        });
+      }
+
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+
+        if (!user) {
+          return res.status(401).json({ success: false, message: 'User not found' });
+        }
+
+        const membership = user.membership || {};
+        const isPremiumActive = membership.isPremium && membership.expiryDate && new Date(membership.expiryDate) > new Date();
+
+        if (!isPremiumActive) {
+          return res.status(400).json({
+            success: false,
+            message: 'The ELORA15 coupon is available exclusively to active Premium Members.'
+          });
+        }
+      } catch (err) {
+        return res.status(401).json({ success: false, message: 'Authentication required for Premium coupon.' });
+      }
+    }
+
+    let coupon = await Coupon.findOne({ code: formattedCode, isActive: true });
+
+    // If code is ELORA15 and not yet in DB, dynamically create it with 15% discount
+    if (!coupon && formattedCode === 'ELORA15') {
+      const farFutureDate = new Date();
+      farFutureDate.setFullYear(farFutureDate.getFullYear() + 10);
+      coupon = await Coupon.create({
+        code: 'ELORA15',
+        discountType: 'percent',
+        discountValue: 15,
+        minOrderAmount: 0,
+        expiresAt: farFutureDate,
+        isActive: true
+      });
+    }
 
     if (!coupon) {
       return res.status(404).json({ success: false, message: 'Invalid or expired coupon code' });

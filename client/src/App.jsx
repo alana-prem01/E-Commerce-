@@ -38,6 +38,7 @@ import ProtectedRoute from './utils/ProtectedRoute';
 import SearchResultsPage from './pages/SearchResultsPage';
 import WishlistPage from './pages/WishlistPage';
 import CouponManagementPage from './pages/CouponManagementPage';
+import PremiumSubscribersPage from './pages/PremiumSubscribersPage';
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { CartProvider } from './utils/CartContext';
@@ -46,10 +47,15 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const adminRoutes = [
     '/admin-dashboard', '/admin-profile', '/products', '/add-product',
-    '/edit-product', '/orders', '/order', '/users', '/user-details', '/coupons',
+    '/edit-product', '/orders', '/order/', '/users', '/user-details', '/coupons', '/premium-subscribers',
   ];
 
-  const isAdminRoute = adminRoutes.some(route => location.pathname.startsWith(route));
+  const isAdminRoute = adminRoutes.some(route => {
+    if (route.endsWith('/')) {
+      return location.pathname.startsWith(route);
+    }
+    return location.pathname === route || location.pathname.startsWith(`${route}/`);
+  });
 
   if (isAdminRoute) {
     return (
@@ -104,6 +110,9 @@ function App() {
             <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="/ordertracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+            <Route path="/ordertracking/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+            <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+            <Route path="/order-tracking/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
             <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
 
             {/* Protected Admin Pages */}
@@ -117,6 +126,7 @@ function App() {
             <Route path="/users" element={<PrivateRoute role="Admin"><UserListPage /></PrivateRoute>} />
             <Route path="/user-details/:id" element={<PrivateRoute role="Admin"><SingleUserDetailsPage /></PrivateRoute>} />
             <Route path="/coupons" element={<PrivateRoute role="Admin"><CouponManagementPage /></PrivateRoute>} />
+            <Route path="/premium-subscribers" element={<PrivateRoute role="Admin"><PremiumSubscribersPage /></PrivateRoute>} />
           </Routes>
         </Layout>
       </CartProvider>

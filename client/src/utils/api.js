@@ -1,7 +1,14 @@
 // Centralized API helper for all backend calls
-// Uses VITE_API_URL (set in .env) for the deployed Render backend.
-// Falls back to '/api' so the local Vite dev-proxy still works if the var is absent.
-const API_BASE = (import.meta.env.VITE_API_URL || '') + '/api';
+// In development mode (npm run dev), points to local server (http://localhost:5000/api)
+// In production mode, uses VITE_API_URL for the deployed Render backend.
+const getApiBase = () => {
+  if (import.meta.env.DEV) {
+    return 'http://localhost:5000/api';
+  }
+  return (import.meta.env.VITE_API_URL || '') + '/api';
+};
+
+const API_BASE = getApiBase();
 
 // Get auth token from localStorage
 const getToken = () => localStorage.getItem('accessToken');

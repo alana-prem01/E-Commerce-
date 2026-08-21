@@ -4,10 +4,10 @@
   --admin-surface: var(--white);
   --admin-primary: #D4AF37;
   --admin-primary-hover: #c4a132;
-  --admin-text-main: var(--text-dark);
+  --admin-text-main: var(--text-dark, #1f2937);
   --admin-text-muted: #4B5563;
   --admin-text-light: #9CA3AF;
-  --admin-border: var(--border-color);
+  --admin-border: var(--border-color, #e5e7eb);
   --admin-border-focus: #9ca3af;
   
   --admin-success: #10B981;
@@ -36,14 +36,22 @@
 }
 
 .admin-dashboard-main {
-  padding: 24px;
-  margin-top: 64px; /* for fixed navbar */
+  margin-top: 0;
+  padding: 0;
+  flex: 1;
+}
+
+.admin-page-content {
+  padding: 24px 32px 48px 32px;
 }
 
 @media (max-width: 768px) {
   .admin-dashboard-main {
+    margin-top: 0;
+    padding: 0;
+  }
+  .admin-page-content {
     padding: 16px;
-    margin-top: 56px;
   }
 }
 
