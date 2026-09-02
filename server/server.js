@@ -75,8 +75,8 @@ app.get("/", (req, res) => {
 // Create admin user once DB is connected (in background)
 connectDB().then(() => createAdmin()).catch(() => {});
 
-// Start server locally if not in production
-if (process.env.NODE_ENV !== "production") {
+// Start server (for Render & Local)
+if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
