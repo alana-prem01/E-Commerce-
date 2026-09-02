@@ -51,18 +51,21 @@ function Home() {
   };
 
   // Best Sellers State from Backend
-  const [bestSellers, setBestSellers] = useState([]);
-  const [loadingBestSellers, setLoadingBestSellers] = useState(true);
+  const [bestSellers, setBestSellers] = useState(PRODUCTS.slice(0, 4));
+  const [loadingBestSellers, setLoadingBestSellers] = useState(false);
 
   React.useEffect(() => {
     const fetchHomeBestSellers = async () => {
       try {
         const data = await api.get('/products/getbestsellers?limit=4');
-        if (data.success) {
-          setBestSellers(data.products || []);
+        if (data.success && data.products && data.products.length > 0) {
+          setBestSellers(data.products);
+        } else {
+          setBestSellers(PRODUCTS.slice(0, 4));
         }
       } catch (error) {
         console.error("Failed to load best sellers for home page", error);
+        setBestSellers(PRODUCTS.slice(0, 4));
       } finally {
         setLoadingBestSellers(false);
       }
