@@ -167,15 +167,15 @@ const editProduct = async (req, res) => {
     if (description) product.description = description;
     if (category) product.category = category;
     if (price) product.price = Number(price);
-    
+
     if (compareAtPrice !== undefined && compareAtPrice !== null && compareAtPrice !== '') {
       product.compareAtPrice = Number(compareAtPrice);
     } else if (compareAtPrice === '') {
       product.compareAtPrice = undefined; // Allow clearing the compare price
     }
-    
+
     if (stockQuantity !== undefined) product.stockQuantity = Number(stockQuantity);
-    
+
     if (isBestSeller !== undefined) {
       product.isBestSeller = isBestSeller === 'true' || isBestSeller === true;
     }
@@ -267,13 +267,13 @@ const getProductsByCategory = async (req, res) => {
 const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const product = await Product.findByIdAndDelete(id);
-    
+
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
-    
+
     res.status(200).json({
       success: true,
       message: 'Product deleted successfully'
@@ -294,12 +294,12 @@ const getCategories = async (req, res) => {
     const categoriesAggr = await Product.aggregate([
       { $group: { _id: "$category", count: { $sum: 1 } } }
     ]);
-    
+
     const formattedCategories = categoriesAggr.map(c => ({
       name: c._id,
       count: c.count
     }));
-    
+
     const allCategories = ['Rings', 'Necklaces', 'Bracelets', 'Earrings', 'Bangles', 'Jhumkas'];
     const finalCategories = allCategories.map(cat => {
       const found = formattedCategories.find(c => c.name === cat);
@@ -308,7 +308,7 @@ const getCategories = async (req, res) => {
         count: found ? found.count : 0
       };
     });
-    
+
     res.status(200).json({ success: true, categories: finalCategories });
   } catch (error) {
     console.error('Error fetching categories:', error);

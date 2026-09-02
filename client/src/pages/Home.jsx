@@ -86,7 +86,7 @@ function Home() {
       <section className="classic-hero" style={{ backgroundImage: `url('/banner2.jpg')` }}>
         <div className="hero-content-full">
           <div className="hero-text-container">
-            <h1 className="hero-title">Timeless <span style={{color: '#B77A24'}}>Elegance,</span><br />Crafted for You</h1>
+            <h1 className="hero-title">Timeless <span style={{ color: '#B77A24' }}>Elegance,</span><br />Crafted for You</h1>
             <div className="hero-divider-small">
               <div className="line"></div>
               <span className="diamond">✦</span>
