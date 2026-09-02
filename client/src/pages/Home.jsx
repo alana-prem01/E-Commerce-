@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowRight, FaStar, FaRegHeart, FaShippingFast, FaShieldAlt, FaUndo, FaHeadset } from "react-icons/fa";
 import { useCart } from "../utils/CartContext";
-import { CATEGORIES } from "../utils/productsData";
+import { CATEGORIES, PRODUCTS } from "../utils/productsData";
 import api from "../utils/api";
 import "../css/Home.css";
 
