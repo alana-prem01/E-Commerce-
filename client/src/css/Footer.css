@@ -120,6 +120,11 @@
 /* ==========================================
    Main Footer Content
    ========================================== */
+.footer-top-wrapper {
+  background-color: #F9DCBB;
+  width: 100%;
+}
+
 .footer-top {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1.5fr;

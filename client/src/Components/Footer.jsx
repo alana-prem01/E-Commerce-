@@ -138,62 +138,64 @@ function Footer() {
       <div className="footer-divider-top" />
 
       {/* Main Footer Content */}
-      <div className="footer-top">
-        {/* Brand Column */}
-        <div className="footer-brand-col">
-          <div className="text-logo">
-            <span className="logo-title">ELORA</span>
-            <span className="logo-subtitle">JEWELLERY</span>
+      <div className="footer-top-wrapper">
+        <div className="footer-top">
+          {/* Brand Column */}
+          <div className="footer-brand-col">
+            <div className="text-logo">
+              <span className="logo-title">ELORA</span>
+              <span className="logo-subtitle">JEWELLERY</span>
+            </div>
+            <p className="footer-tagline">
+              Timeless jewellery crafted with passion and precision. Designed to make every moment special.
+            </p>
+            <div className="footer-social-row">
+              <a href="#" className="social-icon-link"><FaInstagram size={16} /></a>
+              <a href="#" className="social-icon-link"><FaFacebookF size={16} /></a>
+              <a href="#" className="social-icon-link"><FaTwitter size={16} /></a>
+              <a href="#" className="social-icon-link"><FaWhatsapp size={16} /></a>
+            </div>
           </div>
-          <p className="footer-tagline">
-            Timeless jewellery crafted with passion and precision. Designed to make every moment special.
-          </p>
-          <div className="footer-social-row">
-            <a href="#" className="social-icon-link"><FaInstagram size={16} /></a>
-            <a href="#" className="social-icon-link"><FaFacebookF size={16} /></a>
-            <a href="#" className="social-icon-link"><FaTwitter size={16} /></a>
-            <a href="#" className="social-icon-link"><FaWhatsapp size={16} /></a>
-          </div>
-        </div>
 
-        {/* Quick Links Column */}
-        <div>
-          <h4 className="footer-heading">QUICK LINKS</h4>
-          <div className="footer-links-list">
-            <Link to="/" className="footer-link-item">Home</Link>
-            <Link to="/best-sellers" className="footer-link-item">Shop</Link>
-            <Link to="/category/necklaces" className="footer-link-item">Collections</Link>
-            <Link to="/about" className="footer-link-item">About Us</Link>
-            <Link to="/contact" className="footer-link-item">Contact</Link>
+          {/* Quick Links Column */}
+          <div>
+            <h4 className="footer-heading">QUICK LINKS</h4>
+            <div className="footer-links-list">
+              <Link to="/" className="footer-link-item">Home</Link>
+              <Link to="/best-sellers" className="footer-link-item">Shop</Link>
+              <Link to="/category/necklaces" className="footer-link-item">Collections</Link>
+              <Link to="/about" className="footer-link-item">About Us</Link>
+              <Link to="/contact" className="footer-link-item">Contact</Link>
+            </div>
           </div>
-        </div>
 
-        {/* Customer Care Column */}
-        <div>
-          <h4 className="footer-heading">CUSTOMER CARE</h4>
-          <div className="footer-links-list">
-            <Link to="/shipping-policy" className="footer-link-item">Shipping Policy</Link>
-            <Link to="/refund-policy" className="footer-link-item">Return Policy</Link>
-            <Link to="/privacy-policy" className="footer-link-item">Terms & Conditions</Link>
-            <Link to="/privacy-policy" className="footer-link-item">Privacy Policy</Link>
-            <Link to="/about" className="footer-link-item">FAQ</Link>
+          {/* Customer Care Column */}
+          <div>
+            <h4 className="footer-heading">CUSTOMER CARE</h4>
+            <div className="footer-links-list">
+              <Link to="/shipping-policy" className="footer-link-item">Shipping Policy</Link>
+              <Link to="/refund-policy" className="footer-link-item">Return Policy</Link>
+              <Link to="/privacy-policy" className="footer-link-item">Terms & Conditions</Link>
+              <Link to="/privacy-policy" className="footer-link-item">Privacy Policy</Link>
+              <Link to="/about" className="footer-link-item">FAQ</Link>
+            </div>
           </div>
-        </div>
 
-        {/* Contact Us Column */}
-        <div>
-          <h4 className="footer-heading">CONTACT US</h4>
-          <div className="contact-item-row">
-            <FaPhoneAlt className="contact-icon" />
-            <span className="contact-text">+91 98765 43210</span>
-          </div>
-          <div className="contact-item-row">
-            <FaEnvelope className="contact-icon" />
-            <span className="contact-text">support@elorajewellery.com</span>
-          </div>
-          <div className="contact-item-row">
-            <FaMapMarkerAlt className="contact-icon" />
-            <span className="contact-text">Kerala, India</span>
+          {/* Contact Us Column */}
+          <div>
+            <h4 className="footer-heading">CONTACT US</h4>
+            <div className="contact-item-row">
+              <FaPhoneAlt className="contact-icon" />
+              <span className="contact-text">+91 98765 43210</span>
+            </div>
+            <div className="contact-item-row">
+              <FaEnvelope className="contact-icon" />
+              <span className="contact-text">support@elorajewellery.com</span>
+            </div>
+            <div className="contact-item-row">
+              <FaMapMarkerAlt className="contact-icon" />
+              <span className="contact-text">Kerala, India</span>
+            </div>
           </div>
         </div>
       </div>

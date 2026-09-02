@@ -169,7 +169,7 @@ export default function SearchResultsPage() {
                         {inWishlist ? <FaHeart /> : <FaRegHeart />}
                       </button>
                       {product.productImage
-                        ? <img src={product.productImage} alt={product.productName} />
+                        ? <img src={product.productImage} alt={product.productName} loading="lazy" decoding="async" />
                         : <div className="no-image-placeholder">💎</div>
                       }
                     </div>

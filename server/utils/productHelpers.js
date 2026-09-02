@@ -15,10 +15,14 @@ const fetchProductsWithFilters = async (baseQuery, queryParams) => {
 
   // Sort options
   let sortObj = { createdAt: -1 };
-  if (sort === 'price-low-high') {
+  if (sort === 'price-low-high' || sort === 'Price Low to High') {
     sortObj = { price: 1 };
-  } else if (sort === 'date-new-old') {
+  } else if (sort === 'price-high-low' || sort === 'Price High to Low') {
+    sortObj = { price: -1 };
+  } else if (sort === 'date-new-old' || sort === 'Date New to Old') {
     sortObj = { createdAt: -1 };
+  } else if (sort === 'best-selling' || sort === 'Best Selling') {
+    sortObj = { isBestSeller: -1, createdAt: -1 };
   }
 
   // Pagination
@@ -26,15 +30,17 @@ const fetchProductsWithFilters = async (baseQuery, queryParams) => {
   const limitNumber = parseInt(limit, 10) || 24;
   const skip = (pageNumber - 1) * limitNumber;
 
-  const products = await Product.find(query)
-    .sort(sortObj)
-    .skip(skip)
-    .limit(limitNumber);
+  // Execute database operations concurrently with lean projections
+  const [products, totalCount, highestPriceProduct] = await Promise.all([
+    Product.find(query)
+      .sort(sortObj)
+      .skip(skip)
+      .limit(limitNumber)
+      .lean(),
+    Product.countDocuments(query),
+    Product.findOne(baseQuery).sort({ price: -1 }).select('price').lean()
+  ]);
 
-  const totalCount = await Product.countDocuments(query);
-
-  // Calculate highest price among the base set to help the frontend set max slider bounds
-  const highestPriceProduct = await Product.findOne(baseQuery).sort({ price: -1 });
   const highestPrice = highestPriceProduct ? highestPriceProduct.price : 0;
 
   return {

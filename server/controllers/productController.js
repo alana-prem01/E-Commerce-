@@ -89,13 +89,17 @@ const addProduct = async (req, res) => {
 // GET /api/products/allproducts
 const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find({}).sort({ createdAt: -1 }); // Fetch all, newest first
-    
-    res.status(200).json({
-      success: true,
-      count: products.length,
-      products
-    });
+    if (req.query.all === 'true') {
+      const products = await Product.find({}).sort({ createdAt: -1 }).lean();
+      return res.status(200).json({
+        success: true,
+        count: products.length,
+        products
+      });
+    }
+
+    const result = await fetchProductsWithFilters({}, req.query);
+    res.status(200).json(result);
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({
@@ -196,7 +200,7 @@ const editProduct = async (req, res) => {
 // GET /api/products/:id
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).lean();
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -210,7 +214,7 @@ const getProductById = async (req, res) => {
 // GET /api/products/:id/related
 const getRelatedProducts = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).lean();
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -219,7 +223,7 @@ const getRelatedProducts = async (req, res) => {
     const relatedProducts = await Product.find({
       category: product.category,
       _id: { $ne: product._id }
-    }).limit(4);
+    }).limit(4).lean();
 
     res.status(200).json({ success: true, count: relatedProducts.length, products: relatedProducts });
   } catch (error) {
@@ -335,7 +339,7 @@ const searchProducts = async (req, res) => {
     const skip = (pageNumber - 1) * limitNumber;
 
     const [products, total] = await Promise.all([
-      Product.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNumber),
+      Product.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNumber).lean(),
       Product.countDocuments(query)
     ]);
 

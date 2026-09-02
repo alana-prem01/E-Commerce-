@@ -8,7 +8,7 @@ export const PRODUCTS = [
     price: 499,
     formattedPrice: "$499",
     rating: 5,
-    image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&q=80&w=400",
+    image: "/Rings.png",
     description: "Meticulously crafted 18K gold ring featuring a brilliant solitaire diamond.",
     details: [
       { label: "Material", value: "18K Gold" },
@@ -26,7 +26,7 @@ export const PRODUCTS = [
     price: 899,
     formattedPrice: "$899",
     rating: 5,
-    image: "https://manubhai.in/wp-content/uploads/2025/09/DJBD17342-3.jpg",
+    image: "/necklase.png",
     description: "Elegant 22K handcrafted gold bangles with intricate heritage engraving.",
     details: [
       { label: "Material", value: "22K Yellow Gold" },
@@ -44,7 +44,7 @@ export const PRODUCTS = [
     price: 1299,
     formattedPrice: "$1,299",
     rating: 5,
-    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=400",
+    image: "/bracelets.png",
     description: "Stunning emerald pendant necklace paired with a delicate gold chain.",
     details: [
       { label: "Material", value: "18K Yellow Gold" },
@@ -62,7 +62,7 @@ export const PRODUCTS = [
     price: 299,
     formattedPrice: "$299",
     rating: 4,
-    image: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&q=80&w=400",
+    image: "/earrings.png",
     description: "Classic freshwater cultured pearl drop earrings in polished sterling silver.",
     details: [
       { label: "Material", value: "Sterling Silver" },
@@ -80,7 +80,7 @@ export const PRODUCTS = [
     price: 349,
     formattedPrice: "$349",
     rating: 5,
-    image: "https://m.media-amazon.com/images/I/71sqP5i4brL._AC_UY1100_.jpg",
+    image: "/bangles.png",
     description: "Contemporary 925 sterling silver cuff bracelet with sleek minimalist polish.",
     details: [
       { label: "Material", value: "925 Sterling Silver" },
@@ -98,7 +98,7 @@ export const PRODUCTS = [
     price: 420,
     formattedPrice: "$420",
     rating: 5,
-    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=400",
+    image: "/jhumkas.png",
     description: "Graceful rose gold heart pendant accented with sparkling pavé zircon.",
     details: [
       { label: "Material", value: "14K Rose Gold" },
@@ -143,12 +143,12 @@ export const PRODUCTS = [
 ];
 
 export const CATEGORIES = [
-  { id: 1, name: "Rings", slug: "rings", count: "120+ Products", image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&q=80&w=200" },
-  { id: 2, name: "Necklaces", slug: "necklaces", count: "150+ Products", image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&q=80&w=200" },
-  { id: 3, name: "Bracelets", slug: "bracelets", count: "75+ Products", image: "https://m.media-amazon.com/images/I/71sqP5i4brL._AC_UY1100_.jpg" },
-  { id: 4, name: "Earrings", slug: "earrings", count: "200+ Products", image: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&q=80&w=200" },
-  { id: 5, name: "Bangles", slug: "bangles", count: "85+ Products", image: "https://manubhai.in/wp-content/uploads/2025/09/DJBD17342-3.jpg" },
-  { id: 6, name: "Jhumkas", slug: "jhumkas", count: "95+ Products", image: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&q=80&w=200" },
+  { id: 1, name: "Rings", slug: "rings", count: "120+ Products", image: "/Rings.png" },
+  { id: 2, name: "Necklaces", slug: "necklaces", count: "150+ Products", image: "/necklase.png" },
+  { id: 3, name: "Bracelets", slug: "bracelets", count: "75+ Products", image: "/bracelets.png" },
+  { id: 4, name: "Earrings", slug: "earrings", count: "200+ Products", image: "/earrings.png" },
+  { id: 5, name: "Bangles", slug: "bangles", count: "85+ Products", image: "/bangles.png" },
+  { id: 6, name: "Jhumkas", slug: "jhumkas", count: "95+ Products", image: "/jhumkas.png" },
 ];
 
 export const getProductById = (id) => {

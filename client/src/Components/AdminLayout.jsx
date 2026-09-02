@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FiGrid, FiPackage, FiLayers, FiShoppingBag, FiUsers, FiUser, FiLogOut, FiMenu, FiX, FiTag, FiStar } from 'react-icons/fi';
+import { FiGrid, FiPackage, FiLayers, FiShoppingBag, FiUsers, FiUser, FiLogOut, FiMenu, FiX, FiTag, FiStar, FiMail } from 'react-icons/fi';
 import AdminNavbar from './AdminNavbar';
 import '../css/AdminDashboard.css';
 import '../css/admin-core.css';
@@ -59,6 +59,7 @@ const AdminLayout = ({ children }) => {
         { label: 'Products', icon: <FiPackage size={20} />, path: '/products' },
         { label: 'Orders', icon: <FiShoppingBag size={20} />, path: '/orders' },
         { label: 'Users', icon: <FiUsers size={20} />, path: '/users' },
+        { label: 'Messages', icon: <FiMail size={20} />, path: '/admin-messages' },
         { label: 'Premium', icon: <FiStar size={20} />, path: '/premium-subscribers' },
         { label: 'Coupons', icon: <FiTag size={20} />, path: '/coupons' },
         { label: 'Profile', icon: <FiUser size={20} />, path: '/admin-profile' },
@@ -74,6 +75,7 @@ const AdminLayout = ({ children }) => {
         if (path.startsWith('/order/')) return 'Order Details';
         if (path === '/users') return 'Users';
         if (path.startsWith('/user-details')) return 'User Details';
+        if (path === '/admin-messages') return 'Contact Messages';
         if (path === '/premium-subscribers') return 'Premium Subscribers';
         if (path === '/admin-profile') return 'Profile';
         if (path === '/coupons') return 'Coupon Management';
@@ -87,6 +89,7 @@ const AdminLayout = ({ children }) => {
         if (itemLabel === 'Categories') return false;
         if (itemLabel === 'Orders') return path === '/orders' || path.startsWith('/order/');
         if (itemLabel === 'Users') return path === '/users' || path.startsWith('/user-details');
+        if (itemLabel === 'Messages') return path === '/admin-messages';
         if (itemLabel === 'Premium') return path === '/premium-subscribers';
         if (itemLabel === 'Coupons') return path === '/coupons';
         if (itemLabel === 'Profile') return path === '/admin-profile';

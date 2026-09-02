@@ -39,6 +39,7 @@ import SearchResultsPage from './pages/SearchResultsPage';
 import WishlistPage from './pages/WishlistPage';
 import CouponManagementPage from './pages/CouponManagementPage';
 import PremiumSubscribersPage from './pages/PremiumSubscribersPage';
+import ContactMessagesPage from './pages/ContactMessagesPage';
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { CartProvider } from './utils/CartContext';
@@ -47,7 +48,7 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const adminRoutes = [
     '/admin-dashboard', '/admin-profile', '/products', '/add-product',
-    '/edit-product', '/orders', '/order/', '/users', '/user-details', '/coupons', '/premium-subscribers',
+    '/edit-product', '/orders', '/order/', '/users', '/user-details', '/coupons', '/premium-subscribers', '/admin-messages',
   ];
 
   const isAdminRoute = adminRoutes.some(route => {
@@ -127,6 +128,7 @@ function App() {
             <Route path="/user-details/:id" element={<PrivateRoute role="Admin"><SingleUserDetailsPage /></PrivateRoute>} />
             <Route path="/coupons" element={<PrivateRoute role="Admin"><CouponManagementPage /></PrivateRoute>} />
             <Route path="/premium-subscribers" element={<PrivateRoute role="Admin"><PremiumSubscribersPage /></PrivateRoute>} />
+            <Route path="/admin-messages" element={<PrivateRoute role="Admin"><ContactMessagesPage /></PrivateRoute>} />
           </Routes>
         </Layout>
       </CartProvider>

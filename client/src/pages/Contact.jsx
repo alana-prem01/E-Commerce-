@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { api } from '../utils/api';
 import '../css/Contact.css';
 
 function Contact({ heroBgImage }) {
@@ -9,14 +10,39 @@ function Contact({ heroBgImage }) {
     comment: '',
   });
 
+  const [submitting, setSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form Submitted:', formData);
+    setSuccessMsg('');
+    setErrorMsg('');
+
+    if (!formData.name || !formData.email || !formData.comment) {
+      setErrorMsg('Please fill in all required fields.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await api.post('/contact', formData);
+      if (res.success) {
+        setSuccessMsg(res.message || 'Your message has been sent successfully. We will get back to you soon!');
+        setFormData({ name: '', email: '', phone: '', comment: '' });
+      } else {
+        setErrorMsg(res.message || 'Failed to send message.');
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to send message. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -87,6 +113,19 @@ function Contact({ heroBgImage }) {
       <section className="drop-message-section">
         <div className="form-card">
           <h2 className="form-heading">Drop Us a Message.</h2>
+
+          {successMsg && (
+            <div style={{ padding: "12px 16px", backgroundColor: "#E6F4EA", color: "#137333", borderRadius: "8px", fontSize: "14px", fontWeight: 500, marginBottom: "16px", textAlign: "center" }}>
+              {successMsg}
+            </div>
+          )}
+
+          {errorMsg && (
+            <div style={{ padding: "12px 16px", backgroundColor: "#FCE8E6", color: "#C5221F", borderRadius: "8px", fontSize: "14px", fontWeight: 500, marginBottom: "16px", textAlign: "center" }}>
+              {errorMsg}
+            </div>
+          )}
+
           <form className="contact-form" onSubmit={handleSubmit}>
             <div className="name-email-row">
               <div className="field-share">
@@ -139,8 +178,8 @@ function Contact({ heroBgImage }) {
               required
             />
 
-            <button type="submit" className="submit-btn">
-              Send Message.
+            <button type="submit" className="submit-btn" disabled={submitting}>
+              {submitting ? "Sending..." : "Send Message."}
             </button>
           </form>
         </div>

@@ -51,6 +51,18 @@ const userSchema = new mongoose.Schema({
         pinCode: { type: String, trim: true }
     },
 
+    addresses: [{
+        fullName: { type: String, trim: true },
+        phone: { type: String, trim: true },
+        house: { type: String, trim: true },
+        street: { type: String, trim: true },
+        city: { type: String, trim: true },
+        state: { type: String, trim: true },
+        pinCode: { type: String, trim: true },
+        country: { type: String, trim: true, default: "India" },
+        isDefault: { type: Boolean, default: false }
+    }],
+
     lastLogin: {
         type: Date
     },

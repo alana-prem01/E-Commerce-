@@ -57,6 +57,7 @@ const mountRoutes = (basePath) => {
   app.use(`${basePath}/newsletter`, require("./routes/newsletterRoutes"));
   app.use(`${basePath}/coupons`, require("./routes/couponRoutes"));
   app.use(`${basePath}/membership`, require("./routes/membershipRoutes"));
+  app.use(`${basePath}/contact`, require("./routes/contactRoutes"));
 };
 
 // Mount routes for both environments (Vercel strips /api in some configurations)

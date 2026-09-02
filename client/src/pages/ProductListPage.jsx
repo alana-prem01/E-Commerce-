@@ -36,7 +36,7 @@ const ProductListPage = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/products/allproducts');
+      const res = await api.get('/products/allproducts?all=true');
       if (res.success) {
         setProducts(res.products || []);
       }
@@ -156,7 +156,7 @@ const ProductListPage = () => {
                       <td style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem' }}>#{product._id.substring(0, 8).toUpperCase()}</td>
                       <td>
                         <div className="d-flex align-items-center gap-3">
-                          <img className="admin-img-thumb" src={product.productImage || "https://placehold.co/48x48"} alt={product.productName} />
+                          <img className="admin-img-thumb" src={product.productImage || "https://placehold.co/48x48"} alt={product.productName} loading="lazy" decoding="async" />
                           <span style={{ fontWeight: 500, color: 'var(--admin-text-main)' }}>{product.productName}</span>
                         </div>
                       </td>

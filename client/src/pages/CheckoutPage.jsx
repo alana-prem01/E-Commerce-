@@ -80,6 +80,27 @@ export default function CheckoutPage() {
   });
 
   const [isPremiumUser, setIsPremiumUser] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('');
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+
+  const applySavedAddressToForm = (addr) => {
+    if (!addr) return;
+    const nameParts = (addr.fullName || '').trim().split(' ');
+    const fName = nameParts[0] || '';
+    const lName = nameParts.slice(1).join(' ') || '';
+
+    setShipping({
+      country: addr.country === 'United States' ? 'US' : 'IN',
+      firstName: fName,
+      lastName: lName,
+      address: [addr.house, addr.street].filter(Boolean).join(', '),
+      city: addr.city || '',
+      state: addr.state || '',
+      pinCode: addr.pinCode || '',
+      phone: addr.phone || ''
+    });
+  };
 
   useEffect(() => {
     // 1. Initial check from localStorage for fast initial render
@@ -87,6 +108,7 @@ export default function CheckoutPage() {
     if (userStr) {
       try {
         const loggedUser = JSON.parse(userStr);
+        if (loggedUser.email) setEmail(loggedUser.email);
         const initialIsPremium = Boolean(
           loggedUser?.membership?.isPremium &&
           loggedUser?.membership?.expiryDate &&
@@ -96,20 +118,46 @@ export default function CheckoutPage() {
       } catch (err) {}
     }
     
-    // 2. Fetch fresh user profile from backend to ensure accurate membership status
+    // 2. Fetch fresh user profile & saved addresses from backend
     if (localStorage.getItem("isLoggedIn") === "true") {
-      api.get('/profile').then(res => {
-        if (res.success && res.data) {
-          localStorage.setItem("user", JSON.stringify(res.data));
-          const freshMembership = res.data.membership || {};
+      setLoadingAddresses(true);
+      Promise.all([
+        api.get('/profile'),
+        api.get('/profile/addresses')
+      ]).then(([profileRes, addrRes]) => {
+        if (profileRes.success && profileRes.data) {
+          localStorage.setItem("user", JSON.stringify(profileRes.data));
+          if (profileRes.data.email) setEmail(profileRes.data.email);
+          const freshMembership = profileRes.data.membership || {};
           const freshIsPremium = Boolean(
             freshMembership.isPremium && freshMembership.expiryDate && new Date(freshMembership.expiryDate) > new Date()
           );
           setIsPremiumUser(freshIsPremium);
         }
-      }).catch(err => console.error("Failed to fetch fresh user profile:", err));
+
+        if (addrRes.success && addrRes.addresses && addrRes.addresses.length > 0) {
+          setSavedAddresses(addrRes.addresses);
+          const def = addrRes.addresses.find(a => a.isDefault) || addrRes.addresses[0];
+          setSelectedAddressId(def._id);
+          applySavedAddressToForm(def);
+        }
+      }).catch(err => console.error("Failed to fetch fresh profile/addresses:", err))
+      .finally(() => setLoadingAddresses(false));
     }
   }, []);
+
+  const handleSelectAddressChange = (e) => {
+    const val = e.target.value;
+    setSelectedAddressId(val);
+    if (val === 'new') {
+      setShipping({
+        country: 'IN', firstName: '', lastName: '', address: '', city: '', state: '', pinCode: '', phone: ''
+      });
+    } else {
+      const selected = savedAddresses.find(a => a._id === val);
+      if (selected) applySavedAddressToForm(selected);
+    }
+  };
 
   const currentSubtotal = subtotal || 0;
   const shippingCost = isPremiumUser ? 0 : 65;
@@ -162,6 +210,29 @@ export default function CheckoutPage() {
     toast.info('Coupon removed');
   };
 
+  const saveShippingAddressToDb = async () => {
+    if (localStorage.getItem("isLoggedIn") === "true" && (saveAddress || savedAddresses.length === 0)) {
+      try {
+        const fullName = `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim();
+        if (fullName && shipping.phone && shipping.city && shipping.pinCode) {
+          await api.post('/profile/addresses', {
+            fullName,
+            phone: shipping.phone,
+            house: shipping.address || '',
+            street: '',
+            city: shipping.city,
+            state: shipping.state || '',
+            pinCode: shipping.pinCode,
+            country: shipping.country === 'US' ? 'United States' : 'India',
+            isDefault: savedAddresses.length === 0
+          });
+        }
+      } catch (err) {
+        console.error("Auto-save address error:", err);
+      }
+    }
+  };
+
   const handlePay = async () => {
     const err = validateEmail(email);
     if (err) {
@@ -174,8 +245,12 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Persist entered address to DB user profile
+    await saveShippingAddressToDb();
+
     if (paymentMethod === 'cod') {
       toast.success('Order placed successfully via Cash on Delivery!');
+      clearCart();
       navigate('/');
       return;
     }
@@ -318,8 +393,99 @@ export default function CheckoutPage() {
           {/* Section 4 – Shipping Address */}
           <div className="checkout-card">
             <h2 className="checkout-section-title">Shipping Address</h2>
+
+            {savedAddresses.length > 0 && (
+              <div style={{ marginBottom: "20px" }}>
+                <p style={{ fontSize: "14px", fontWeight: 600, color: "#3A2010", marginBottom: "10px" }}>
+                  Use Saved Delivery Address:
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {savedAddresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr._id;
+                    return (
+                      <div
+                        key={addr._id}
+                        onClick={() => {
+                          setSelectedAddressId(addr._id);
+                          applySavedAddressToForm(addr);
+                        }}
+                        style={{
+                          border: isSelected ? "2px solid #0B5D50" : "1px solid #e2ded7",
+                          backgroundColor: isSelected ? "#F3F7F5" : "#fff",
+                          borderRadius: "8px",
+                          padding: "12px 14px",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "10px",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="savedAddressRadio"
+                          checked={isSelected}
+                          onChange={() => {}}
+                          style={{ marginTop: "3px", cursor: "pointer" }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, fontSize: "14px", color: "#3A2010", display: "flex", alignItems: "center", gap: "8px" }}>
+                            {addr.fullName}
+                            {addr.isDefault && (
+                              <span style={{ fontSize: "10px", backgroundColor: "#0B5D50", color: "#fff", padding: "2px 6px", borderRadius: "10px", fontWeight: 500 }}>
+                                Default
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: "13px", color: "#555", marginTop: "2px" }}>
+                            {[addr.house, addr.street].filter(Boolean).join(", ")}, {addr.city}, {addr.state} - {addr.pinCode}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#777", marginTop: "2px" }}>
+                            Phone: {addr.phone}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Option for new address */}
+                  <div
+                    onClick={() => {
+                      setSelectedAddressId('new');
+                      setShipping({
+                        country: 'IN', firstName: '', lastName: '', address: '', city: '', state: '', pinCode: '', phone: ''
+                      });
+                    }}
+                    style={{
+                      border: selectedAddressId === 'new' ? "2px solid #0B5D50" : "1px solid #e2ded7",
+                      backgroundColor: selectedAddressId === 'new' ? "#F3F7F5" : "#fff",
+                      borderRadius: "8px",
+                      padding: "12px 14px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px"
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="savedAddressRadio"
+                      checked={selectedAddressId === 'new'}
+                      onChange={() => {}}
+                      style={{ cursor: "pointer" }}
+                    />
+                    <span style={{ fontWeight: 600, fontSize: "14px", color: "#3A2010" }}>
+                      + Enter a new delivery address
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Address Form (pre-filled or empty depending on selection) */}
             <AddressForm data={shipping} setData={setShipping} />
-            <div className="checkout-checkbox-wrapper">
+
+            <div className="checkout-checkbox-wrapper" style={{ marginTop: "14px" }}>
               <input 
                 type="checkbox" 
                 className="checkout-checkbox" 
@@ -327,7 +493,9 @@ export default function CheckoutPage() {
                 checked={saveAddress} 
                 onChange={(e) => setSaveAddress(e.target.checked)} 
               />
-              <label htmlFor="saveAddress" className="checkout-checkbox-label">Save this information for next time</label>
+              <label htmlFor="saveAddress" className="checkout-checkbox-label">
+                Save this delivery address to my user profile for future orders
+              </label>
             </div>
           </div>
 

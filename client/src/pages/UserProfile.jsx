@@ -59,21 +59,29 @@ function UserProfile() {
     membership.expiryDate && new Date() > new Date(membership.expiryDate)
   );
 
-  // --- Premium New Products & Subscription States ---
+  // --- Dynamic New Products & Updates (From Database) ---
   const [newProducts, setNewProducts] = useState([]);
+  const [loadingNewProducts, setLoadingNewProducts] = useState(true);
   const [copiedCoupon, setCopiedCoupon] = useState(false);
   const [submittingPremium, setSubmittingPremium] = useState(false);
   const [premiumError, setPremiumError] = useState("");
 
   useEffect(() => {
-    if (isPremiumActive) {
-      api.get('/membership/new-products')
-        .then(res => {
-          if (res.success) setNewProducts(res.products || []);
-        })
-        .catch(err => console.error("Failed to fetch new products:", err));
-    }
-  }, [isPremiumActive]);
+    const fetchNewProducts = async () => {
+      try {
+        setLoadingNewProducts(true);
+        const res = await api.get('/products/allproducts?page=1&limit=4');
+        if (res.success && (res.products || res.data)) {
+          setNewProducts(res.products || res.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch new products:", err);
+      } finally {
+        setLoadingNewProducts(false);
+      }
+    };
+    fetchNewProducts();
+  }, []);
 
   const handleCopyCoupon = () => {
     navigator.clipboard.writeText("ELORA15");
@@ -171,75 +179,224 @@ function UserProfile() {
     }
   }, []);
 
-  // --- Contact Card States ---
+  // --- Contact Card States (DB Connected) ---
   const [isEditingContact, setIsEditingContact] = useState(false);
+  const [isSavingContact, setIsSavingContact] = useState(false);
+  const [contactError, setContactError] = useState("");
+  const [contactSuccess, setContactSuccess] = useState("");
   const [contactData, setContactData] = useState({
     name: user.name || "User",
     email: user.email || "user@example.com",
   });
   const [tempContact, setTempContact] = useState({ ...contactData });
 
+  // Sync contactData when fullUser changes
+  useEffect(() => {
+    if (fullUser) {
+      setContactData({
+        name: fullUser.name || "User",
+        email: fullUser.email || "user@example.com"
+      });
+    }
+  }, [fullUser]);
+
   const handleEditContactClick = () => {
-    setTempContact({ ...contactData });
+    setTempContact({ name: contactData.name, email: contactData.email });
+    setContactError("");
+    setContactSuccess("");
     setIsEditingContact(true);
   };
 
-  const handleSaveContact = () => {
-    setContactData({ ...tempContact });
-    setIsEditingContact(false);
+  const handleSaveContact = async () => {
+    setContactError("");
+    setContactSuccess("");
+
+    if (!tempContact.name || tempContact.name.trim().length < 2) {
+      setContactError("Full Name must be at least 2 characters.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!tempContact.email || !emailRegex.test(tempContact.email.trim())) {
+      setContactError("Please enter a valid email address.");
+      return;
+    }
+
+    setIsSavingContact(true);
+    try {
+      const res = await api.put('/profile', {
+        name: tempContact.name.trim(),
+        email: tempContact.email.trim()
+      });
+
+      if (res.success && res.data) {
+        setContactData({
+          name: res.data.name,
+          email: res.data.email
+        });
+        setFullUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data));
+        setIsEditingContact(false);
+        setContactSuccess("Profile updated successfully!");
+        setTimeout(() => setContactSuccess(""), 4000);
+      } else {
+        setContactError(res.message || "Failed to update profile.");
+      }
+    } catch (err) {
+      setContactError(err.message || "Failed to update profile.");
+    } finally {
+      setIsSavingContact(false);
+    }
   };
 
   const handleCancelContact = () => {
     setIsEditingContact(false);
+    setContactError("");
   };
 
-  // --- Address Card States (Empty | Form | Filled) ---
-  const [addressMode, setAddressMode] = useState("Empty"); // 'Empty', 'Form', or 'Filled'
-  const [savedAddress, setSavedAddress] = useState(null);
+  // --- Address Management (DB Connected) ---
+  const [userAddresses, setUserAddresses] = useState([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
+  const [addressMode, setAddressMode] = useState("List"); // 'List' or 'Form'
+  const [editingAddressId, setEditingAddressId] = useState(null);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
+  const [addressError, setAddressError] = useState("");
+  const [addressSuccess, setAddressSuccess] = useState("");
   const [addressForm, setAddressForm] = useState({
     fullName: "",
     phone: "",
-    line1: "",
-    line2: "",
+    house: "",
+    street: "",
     city: "",
     state: "",
     pinCode: "",
+    country: "India",
+    isDefault: false
   });
 
-  const handleOpenAddressForm = () => {
-    if (savedAddress) {
-      setAddressForm({ ...savedAddress });
-    } else {
-      setAddressForm({
-        fullName: "",
-        phone: "",
-        line1: "",
-        line2: "",
-        city: "",
-        state: "",
-        pinCode: "",
-      });
+  const fetchUserAddresses = async () => {
+    try {
+      setLoadingAddresses(true);
+      const res = await api.get('/profile/addresses');
+      if (res.success && res.addresses) {
+        setUserAddresses(res.addresses);
+      }
+    } catch (err) {
+      console.error("Failed to fetch addresses:", err);
+    } finally {
+      setLoadingAddresses(false);
     }
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      fetchUserAddresses();
+    }
+  }, []);
+
+  const handleOpenNewAddressForm = () => {
+    setEditingAddressId(null);
+    setAddressForm({
+      fullName: contactData.name || "",
+      phone: "",
+      house: "",
+      street: "",
+      city: "",
+      state: "",
+      pinCode: "",
+      country: "India",
+      isDefault: userAddresses.length === 0
+    });
+    setAddressError("");
     setAddressMode("Form");
   };
 
-  const handleSaveAddress = (e) => {
-    e.preventDefault();
-    setSavedAddress({ ...addressForm });
-    setAddressMode("Filled");
+  const handleEditAddress = (addr) => {
+    setEditingAddressId(addr._id);
+    setAddressForm({
+      fullName: addr.fullName || "",
+      phone: addr.phone || "",
+      house: addr.house || "",
+      street: addr.street || "",
+      city: addr.city || "",
+      state: addr.state || "",
+      pinCode: addr.pinCode || "",
+      country: addr.country || "India",
+      isDefault: Boolean(addr.isDefault)
+    });
+    setAddressError("");
+    setAddressMode("Form");
   };
 
-  const handleCancelAddress = () => {
-    if (savedAddress) {
-      setAddressMode("Filled");
-    } else {
-      setAddressMode("Empty");
+  const handleSaveAddress = async (e) => {
+    e.preventDefault();
+    setAddressError("");
+    setAddressSuccess("");
+    setIsSavingAddress(true);
+
+    try {
+      let res;
+      if (editingAddressId) {
+        res = await api.put(`/profile/addresses/${editingAddressId}`, addressForm);
+      } else {
+        res = await api.post('/profile/addresses', addressForm);
+      }
+
+      if (res.success && res.addresses) {
+        setUserAddresses(res.addresses);
+        setAddressMode("List");
+        setEditingAddressId(null);
+        setAddressSuccess(editingAddressId ? "Address updated successfully!" : "Address saved successfully!");
+        setTimeout(() => setAddressSuccess(""), 4000);
+      } else {
+        setAddressError(res.message || "Failed to save address.");
+      }
+    } catch (err) {
+      setAddressError(err.message || "Failed to save address.");
+    } finally {
+      setIsSavingAddress(false);
     }
   };
 
-  const handleDeleteAddress = () => {
-    setSavedAddress(null);
-    setAddressMode("Empty");
+  const handleDeleteAddress = async (addressId) => {
+    if (!window.confirm("Are you sure you want to delete this address?")) return;
+    setAddressError("");
+    setAddressSuccess("");
+    try {
+      const res = await api.delete(`/profile/addresses/${addressId}`);
+      if (res.success && res.addresses) {
+        setUserAddresses(res.addresses);
+        setAddressSuccess("Address deleted successfully!");
+        setTimeout(() => setAddressSuccess(""), 4000);
+      } else {
+        setAddressError(res.message || "Failed to delete address.");
+      }
+    } catch (err) {
+      setAddressError(err.message || "Failed to delete address.");
+    }
+  };
+
+  const handleSetDefaultAddress = async (addressId) => {
+    setAddressError("");
+    setAddressSuccess("");
+    try {
+      const res = await api.put(`/profile/addresses/${addressId}/default`);
+      if (res.success && res.addresses) {
+        setUserAddresses(res.addresses);
+        setAddressSuccess("Default address updated!");
+        setTimeout(() => setAddressSuccess(""), 4000);
+      } else {
+        setAddressError(res.message || "Failed to set default address.");
+      }
+    } catch (err) {
+      setAddressError(err.message || "Failed to set default address.");
+    }
+  };
+
+  const handleCancelAddress = () => {
+    setAddressMode("List");
+    setEditingAddressId(null);
+    setAddressError("");
   };
 
   // --- Helper Status Badge Color Generator ---
@@ -421,6 +578,18 @@ function UserProfile() {
             )}
           </div>
 
+          {contactSuccess && (
+            <div style={{ padding: "8px 12px", backgroundColor: "#E6F4EA", color: "#137333", borderRadius: "6px", fontSize: "13px", marginBottom: "12px", fontWeight: 500 }}>
+              {contactSuccess}
+            </div>
+          )}
+
+          {contactError && (
+            <div style={{ padding: "8px 12px", backgroundColor: "#FCE8E6", color: "#C5221F", borderRadius: "6px", fontSize: "13px", marginBottom: "12px", fontWeight: 500 }}>
+              {contactError}
+            </div>
+          )}
+
           {!isEditingContact ? (
             /* VIEW MODE */
             <div className="card-body-stack">
@@ -455,10 +624,10 @@ function UserProfile() {
                 />
               </div>
               <div className="button-group">
-                <button className="btn-primary" onClick={handleSaveContact}>
-                  Save
+                <button className="btn-primary" onClick={handleSaveContact} disabled={isSavingContact}>
+                  {isSavingContact ? "Saving..." : "Save"}
                 </button>
-                <button className="btn-secondary" onClick={handleCancelContact}>
+                <button className="btn-secondary" onClick={handleCancelContact} disabled={isSavingContact}>
                   Cancel
                 </button>
               </div>
@@ -514,34 +683,6 @@ function UserProfile() {
                     </button>
                   </div>
                 </div>
-
-                {/* EXCLUSIVE NEW PRODUCTS SECTION */}
-                {newProducts.length > 0 && (
-                  <div style={{ marginTop: "16px" }}>
-                    <span className="label-text" style={{ color: "#5e3b25", fontWeight: "700" }}>EXCLUSIVE NEW PRODUCTS & UPDATES</span>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "12px", marginTop: "10px" }}>
-                      {newProducts.map((prod) => (
-                        <Link
-                          key={prod._id || prod.id}
-                          to={`/product/${prod._id || prod.id}`}
-                          style={{ textDecoration: "none", color: "inherit", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px", backgroundColor: "#fff", display: "flex", flexDirection: "column", alignItems: "center" }}
-                        >
-                          <img
-                            src={prod.image || (prod.images && prod.images[0]) || ""}
-                            alt={prod.title || prod.name}
-                            style={{ width: "100%", height: "90px", objectFit: "cover", borderRadius: "6px" }}
-                          />
-                          <div style={{ fontSize: "12px", fontWeight: "600", marginTop: "6px", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%" }}>
-                            {prod.title || prod.name}
-                          </div>
-                          <div style={{ fontSize: "12px", color: "#0B5D50", fontWeight: "700", marginTop: "2px" }}>
-                            ₹{Number(prod.price).toLocaleString("en-IN")}
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </>
             ) : (
               <>
@@ -566,27 +707,66 @@ function UserProfile() {
                 {premiumError && <div className="security-error" style={{ marginTop: "8px" }}>{premiumError}</div>}
               </>
             )}
+
+            {/* EXCLUSIVE NEW PRODUCTS SECTION */}
+            <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #eee" }}>
+              <span className="label-text" style={{ color: "#5e3b25", fontWeight: "700" }}>EXCLUSIVE NEW PRODUCTS & UPDATES</span>
+              {loadingNewProducts ? (
+                <div style={{ fontSize: "13px", color: "#666", padding: "12px 0" }}>Loading latest arrivals...</div>
+              ) : newProducts.length > 0 ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "12px", marginTop: "10px" }}>
+                  {newProducts.map((prod) => (
+                    <Link
+                      key={prod._id || prod.id}
+                      to={`/product/${prod._id || prod.id}`}
+                      style={{ textDecoration: "none", color: "inherit", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px", backgroundColor: "#fff", display: "flex", flexDirection: "column", alignItems: "center" }}
+                    >
+                      <img
+                        src={prod.productImage || prod.image || (prod.images && prod.images[0]) || ""}
+                        alt={prod.productName || prod.title || prod.name}
+                        style={{ width: "100%", height: "90px", objectFit: "cover", borderRadius: "6px" }}
+                      />
+                      <div style={{ fontSize: "12px", fontWeight: "600", marginTop: "6px", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%" }}>
+                        {prod.productName || prod.title || prod.name}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#0B5D50", fontWeight: "700", marginTop: "2px" }}>
+                        ₹{Number(prod.price).toLocaleString("en-IN")}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize: "13px", color: "#888", padding: "10px 0" }}>No new products available at the moment.</div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* ADDRESSES CARD */}
         <div className="profile-card">
           <div className="card-header">
-            <h3 className="card-title">Address</h3>
+            <h3 className="card-title">Address Management</h3>
 
-            {addressMode !== "Form" && (
-              <button className="btn-action-outline" onClick={handleOpenAddressForm}>
-                {addressMode === "Empty" ? "Add" : "Update"}
+            {addressMode === "List" && (
+              <button className="btn-action-outline" onClick={handleOpenNewAddressForm}>
+                + Add Address
               </button>
             )}
           </div>
 
-          {/* State 1: EMPTY STATE */}
-          {addressMode === "Empty" && (
-            <p className="empty-address-text">No addresses added</p>
+          {addressSuccess && (
+            <div style={{ padding: "8px 12px", backgroundColor: "#E6F4EA", color: "#137333", borderRadius: "6px", fontSize: "13px", marginBottom: "12px", fontWeight: 500 }}>
+              {addressSuccess}
+            </div>
           )}
 
-          {/* State 2: ADDRESS FORM */}
+          {addressError && (
+            <div style={{ padding: "8px 12px", backgroundColor: "#FCE8E6", color: "#C5221F", borderRadius: "6px", fontSize: "13px", marginBottom: "12px", fontWeight: 500 }}>
+              {addressError}
+            </div>
+          )}
+
+          {/* ADDRESS FORM MODE */}
           {addressMode === "Form" && (
             <form onSubmit={handleSaveAddress} className="form-grid">
               <div className="form-row">
@@ -602,7 +782,7 @@ function UserProfile() {
                   />
                 </div>
                 <div className="form-col-flex">
-                  <label className="label-text">PHONE</label>
+                  <label className="label-text">PHONE NUMBER</label>
                   <input
                     type="tel"
                     placeholder="Phone number"
@@ -614,27 +794,27 @@ function UserProfile() {
                 </div>
               </div>
 
-              <div>
-                <label className="label-text">ADDRESS LINE 1</label>
-                <input
-                  type="text"
-                  placeholder="Street address"
-                  className="input-field"
-                  required
-                  value={addressForm.line1}
-                  onChange={(e) => setAddressForm({ ...addressForm, line1: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="label-text">ADDRESS LINE 2 (OPTIONAL)</label>
-                <input
-                  type="text"
-                  placeholder="Apartment, suite, etc."
-                  className="input-field"
-                  value={addressForm.line2}
-                  onChange={(e) => setAddressForm({ ...addressForm, line2: e.target.value })}
-                />
+              <div className="form-row">
+                <div className="form-col-flex">
+                  <label className="label-text">HOUSE / FLAT / BUILDING</label>
+                  <input
+                    type="text"
+                    placeholder="Flat / Building name, No."
+                    className="input-field"
+                    value={addressForm.house}
+                    onChange={(e) => setAddressForm({ ...addressForm, house: e.target.value })}
+                  />
+                </div>
+                <div className="form-col-flex">
+                  <label className="label-text">STREET / AREA</label>
+                  <input
+                    type="text"
+                    placeholder="Street, locality, area"
+                    className="input-field"
+                    value={addressForm.street}
+                    onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
+                  />
+                </div>
               </div>
 
               <div className="form-row">
@@ -660,8 +840,11 @@ function UserProfile() {
                     onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div className="form-row">
                 <div className="form-col-flex">
-                  <label className="label-text">PIN CODE</label>
+                  <label className="label-text">POSTAL / PIN CODE</label>
                   <input
                     type="text"
                     placeholder="PIN code"
@@ -671,42 +854,111 @@ function UserProfile() {
                     onChange={(e) => setAddressForm({ ...addressForm, pinCode: e.target.value })}
                   />
                 </div>
+                <div className="form-col-flex">
+                  <label className="label-text">COUNTRY</label>
+                  <input
+                    type="text"
+                    placeholder="Country"
+                    className="input-field"
+                    required
+                    value={addressForm.country}
+                    onChange={(e) => setAddressForm({ ...addressForm, country: e.target.value })}
+                  />
+                </div>
               </div>
 
-              <div className="button-group-form">
-                <button type="submit" className="btn-primary">
-                  Save Address
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+                <input
+                  type="checkbox"
+                  id="isDefaultAddress"
+                  checked={addressForm.isDefault}
+                  onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
+                  style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                />
+                <label htmlFor="isDefaultAddress" style={{ fontSize: "13px", cursor: "pointer", color: "#555" }}>
+                  Set as default shipping address
+                </label>
+              </div>
+
+              <div className="button-group-form" style={{ marginTop: "12px" }}>
+                <button type="submit" className="btn-primary" disabled={isSavingAddress}>
+                  {isSavingAddress ? "Saving..." : editingAddressId ? "Update Address" : "Save Address"}
                 </button>
-                <button type="button" className="btn-secondary" onClick={handleCancelAddress}>
+                <button type="button" className="btn-secondary" onClick={handleCancelAddress} disabled={isSavingAddress}>
                   Cancel
                 </button>
               </div>
             </form>
           )}
 
-          {/* State 3: FILLED STATE */}
-          {addressMode === "Filled" && savedAddress && (
-            <div className="card-body-stack">
-              <div className="value-text value-text-highlight">
-                {savedAddress.fullName}
-              </div>
-              <div className="value-text value-text-muted">
-                {savedAddress.line1}
-                {savedAddress.line2 ? `, ${savedAddress.line2}` : ""}
-              </div>
-              <div className="value-text value-text-muted">
-                {savedAddress.city}, {savedAddress.state} - {savedAddress.pinCode}
-              </div>
-              <div className="value-text value-text-muted">
-                Phone: {savedAddress.phone}
-              </div>
+          {/* ADDRESS LIST MODE */}
+          {addressMode === "List" && (
+            loadingAddresses ? (
+              <div style={{ fontSize: "14px", color: "#666", padding: "12px 0" }}>Loading saved addresses...</div>
+            ) : userAddresses.length === 0 ? (
+              <p className="empty-address-text">No addresses saved yet. Click "+ Add Address" to add one.</p>
+            ) : (
+              <div className="card-body-stack">
+                {userAddresses.map((addr) => (
+                  <div
+                    key={addr._id}
+                    style={{
+                      border: addr.isDefault ? "1.5px solid #0B5D50" : "1px solid #e2ded7",
+                      backgroundColor: addr.isDefault ? "#F3F7F5" : "#fff",
+                      borderRadius: "8px",
+                      padding: "14px 16px",
+                      marginBottom: "10px",
+                      position: "relative"
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div className="value-text value-text-highlight" style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
+                          {addr.fullName}
+                          {addr.isDefault && (
+                            <span style={{ fontSize: "11px", backgroundColor: "#0B5D50", color: "#fff", padding: "2px 8px", borderRadius: "12px", fontWeight: 500 }}>
+                              Default Address
+                            </span>
+                          )}
+                        </div>
+                        <div className="value-text value-text-muted" style={{ marginTop: "4px", fontSize: "13px" }}>
+                          {[addr.house, addr.street].filter(Boolean).join(", ")}
+                        </div>
+                        <div className="value-text value-text-muted" style={{ fontSize: "13px" }}>
+                          {addr.city}, {addr.state} - {addr.pinCode}, {addr.country || "India"}
+                        </div>
+                        <div className="value-text value-text-muted" style={{ fontSize: "13px", marginTop: "2px" }}>
+                          Phone: {addr.phone}
+                        </div>
+                      </div>
+                    </div>
 
-              <div>
-                <button onClick={handleDeleteAddress} className="btn-delete">
-                  Delete Address
-                </button>
+                    <div style={{ display: "flex", gap: "10px", marginTop: "12px", borderTop: "1px solid #f0f0f0", paddingTop: "8px" }}>
+                      <button
+                        onClick={() => handleEditAddress(addr)}
+                        style={{ border: "none", background: "none", color: "#0B5D50", cursor: "pointer", fontSize: "13px", fontWeight: 600, padding: 0 }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAddress(addr._id)}
+                        style={{ border: "none", background: "none", color: "#E53E3E", cursor: "pointer", fontSize: "13px", fontWeight: 600, padding: 0 }}
+                      >
+                        Delete
+                      </button>
+                      {!addr.isDefault && (
+                        <button
+                          onClick={() => handleSetDefaultAddress(addr._id)}
+                          style={{ border: "none", background: "none", color: "#5e3b25", cursor: "pointer", fontSize: "13px", fontWeight: 500, padding: 0, marginLeft: "auto" }}
+                        >
+                          Set as Default
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            )
           )}
         </div>
 

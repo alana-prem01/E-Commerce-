@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowRight, FaStar, FaShippingFast, FaShieldAlt, FaUndo, FaHeadset } from "react-icons/fa";
+import { FaArrowRight, FaStar, FaRegHeart, FaShippingFast, FaShieldAlt, FaUndo, FaHeadset } from "react-icons/fa";
 import { useCart } from "../utils/CartContext";
 import { CATEGORIES } from "../utils/productsData";
 import api from "../utils/api";
@@ -163,12 +163,12 @@ function Home() {
               <div key={product._id} className="classic-product-card" onClick={() => navigate(`/product/${product._id}`)}>
                 <div className="product-image-wrap">
                   {product.productImage ? (
-                    <img src={product.productImage} alt={product.productName} />
+                    <img src={product.productImage} alt={product.productName} loading="lazy" decoding="async" />
                   ) : (
                     <div className="no-image">No Image</div>
                   )}
-                  <button className="heart-btn">
-                    <FaStar size={16} color="#5e3b25" /> {/* Placeholder for heart icon, image shows a heart outline */}
+                  <button className="heart-btn" onClick={(e) => e.stopPropagation()}>
+                    <FaRegHeart size={18} color="#3F2A1B" />
                   </button>
                 </div>
                 <div className="product-details">

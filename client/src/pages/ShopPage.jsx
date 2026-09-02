@@ -22,7 +22,10 @@ export default function ShopPage() {
   const itemsPerPage = 24;
 
   // Data State
-  const [allProducts, setAllProducts] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [highestPrice, setHighestPrice] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -39,16 +42,25 @@ export default function ShopPage() {
   }, []);
 
   useEffect(() => {
-    fetchAllProducts();
-  }, []);
+    fetchProducts();
+  }, [currentPage, sortOption, appliedMinPrice, appliedMaxPrice]);
 
-  const fetchAllProducts = async () => {
+  const fetchProducts = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.get('/products/allproducts');
+      let endpoint = `/products/allproducts?page=${currentPage}&limit=${itemsPerPage}&sort=${encodeURIComponent(sortOption)}`;
+      if (appliedMinPrice !== null && appliedMinPrice !== '') endpoint += `&minPrice=${appliedMinPrice}`;
+      if (appliedMaxPrice !== null && appliedMaxPrice !== '') endpoint += `&maxPrice=${appliedMaxPrice}`;
+
+      const data = await api.get(endpoint);
       if (data.success) {
-        setAllProducts(data.products || []);
+        setProducts(data.products || []);
+        setTotalCount(data.totalCount !== undefined ? data.totalCount : (data.count || 0));
+        setTotalPages(data.totalPages || 1);
+        if (data.highestPrice !== undefined) {
+          setHighestPrice(data.highestPrice);
+        }
       } else {
         setError('Unable to load products. Please try again.');
       }
@@ -85,45 +97,6 @@ export default function ShopPage() {
     setSortOption(e.target.value);
     setCurrentPage(1);
   };
-
-  // Derived state based on filters and sorting
-  let filteredProducts = [...allProducts];
-
-  // Apply Price Filter
-  if (appliedMinPrice !== null) {
-    filteredProducts = filteredProducts.filter(p => p.price >= appliedMinPrice);
-  }
-  if (appliedMaxPrice !== null) {
-    filteredProducts = filteredProducts.filter(p => p.price <= appliedMaxPrice);
-  }
-
-  // Apply Sorting
-  filteredProducts.sort((a, b) => {
-    if (sortOption === 'Price Low to High') {
-      return a.price - b.price;
-    } else if (sortOption === 'Price High to Low') {
-      return b.price - a.price;
-    } else if (sortOption === 'Date New to Old') {
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    } else if (sortOption === 'Best Selling') {
-      // Assuming best sellers logic means fallback to date if not explicit
-      // We can sort by best seller flag if it exists, otherwise leave it
-      if (a.isBestSeller && !b.isBestSeller) return -1;
-      if (!a.isBestSeller && b.isBestSeller) return 1;
-      return 0;
-    }
-    return 0;
-  });
-
-  // Pagination
-  const totalCount = filteredProducts.length;
-  const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
-  const highestPrice = allProducts.length > 0 ? Math.max(...allProducts.map(p => p.price)) : 0;
-  
-  const displayProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   const isPriceApplied = appliedMinPrice !== null && appliedMaxPrice !== null;
   const priceLabel = isPriceApplied 
@@ -226,13 +199,13 @@ export default function ShopPage() {
             <div className="shop-error-state" style={{ padding: '40px 0', textAlign: 'center', color: '#EF4444', fontFamily: 'var(--body-font)' }}>
               {error}
             </div>
-          ) : displayProducts.length === 0 ? (
+          ) : products.length === 0 ? (
             <div className="shop-empty-state" style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-secondary)', fontFamily: 'var(--body-font)' }}>
               No products found matching your criteria.
             </div>
           ) : (
             <div className="shop-product-grid">
-              {displayProducts.map(product => (
+              {products.map(product => (
                 /* Section 9 – Product Card */
                 <div
                   key={product._id}
@@ -242,7 +215,7 @@ export default function ShopPage() {
                 >
                   <div className="shop-product-image-container">
                     {product.productImage ? (
-                      <img src={product.productImage} alt={product.productName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={product.productImage} alt={product.productName} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <svg className="shop-placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>

@@ -63,20 +63,53 @@ const apiFetch = async (endpoint, options = {}) => {
   return data;
 };
 
+// Lightweight in-memory cache for GET requests
+const apiCache = new Map();
+const CACHE_TTL_MS = 20000; // 20 seconds
+
+const clearProductCache = () => {
+  for (const key of apiCache.keys()) {
+    if (key.includes('/products')) {
+      apiCache.delete(key);
+    }
+  }
+};
+
 // Convenience methods
 export const api = {
-  get: (endpoint) => apiFetch(endpoint),
-  post: (endpoint, body) =>
-    apiFetch(endpoint, {
+  get: async (endpoint, useCache = true) => {
+    const isProductGet = endpoint.includes('/products');
+    if (useCache && isProductGet) {
+      const cached = apiCache.get(endpoint);
+      if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+        return cached.data;
+      }
+    }
+    const data = await apiFetch(endpoint);
+    if (isProductGet) {
+      apiCache.set(endpoint, { data, timestamp: Date.now() });
+    }
+    return data;
+  },
+  post: async (endpoint, body) => {
+    if (endpoint.includes('/products')) clearProductCache();
+    return apiFetch(endpoint, {
       method: 'POST',
       body: body instanceof FormData ? body : JSON.stringify(body),
-    }),
-  put: (endpoint, body) =>
-    apiFetch(endpoint, {
+    });
+  },
+  put: async (endpoint, body) => {
+    if (endpoint.includes('/products')) clearProductCache();
+    return apiFetch(endpoint, {
       method: 'PUT',
       body: body instanceof FormData ? body : JSON.stringify(body),
-    }),
-  delete: (endpoint) => apiFetch(endpoint, { method: 'DELETE' }),
+    });
+  },
+  delete: async (endpoint) => {
+    if (endpoint.includes('/products')) clearProductCache();
+    return apiFetch(endpoint, { method: 'DELETE' });
+  },
+  clearCache: clearProductCache
 };
 
 export default api;
