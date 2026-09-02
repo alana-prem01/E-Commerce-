@@ -18,11 +18,15 @@ app.use(helmet({
 
 const allowedOrigins = process.env.CLIENT_URL
   ? [process.env.CLIENT_URL, "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5174", "http://localhost:5174"]
-  : ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5174", "http://localhost:5174"];
+  : null; // null = allow all origins when CLIENT_URL is not set
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    // If no CLIENT_URL set, allow all origins
+    if (!allowedOrigins) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
