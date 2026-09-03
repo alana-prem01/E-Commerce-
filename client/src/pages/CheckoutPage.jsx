@@ -8,17 +8,17 @@ import '../css/CheckoutPage.css';
 const AddressForm = ({ data, setData }) => (
   <div className="checkout-form-grid">
     <div className="checkout-input-group w-full">
-      <select className="checkout-select" value={data.country} onChange={e => setData({...data, country: e.target.value})}>
+      <select className="checkout-select" value={data.country} onChange={e => setData({ ...data, country: e.target.value })}>
         <option value="" disabled>Country/Region</option>
         <option value="IN">India</option>
         <option value="US">United States</option>
       </select>
     </div>
     <div className="checkout-input-group w-half">
-      <input className="checkout-input" placeholder="First Name" value={data.firstName} onChange={e => setData({...data, firstName: e.target.value})} />
+      <input className="checkout-input" placeholder="First Name" value={data.firstName} onChange={e => setData({ ...data, firstName: e.target.value })} />
     </div>
     <div className="checkout-input-group w-half">
-      <input className="checkout-input" placeholder="Last Name" value={data.lastName} onChange={e => setData({...data, lastName: e.target.value})} />
+      <input className="checkout-input" placeholder="Last Name" value={data.lastName} onChange={e => setData({ ...data, lastName: e.target.value })} />
     </div>
     <div className="checkout-input-group w-full">
       <div className="checkout-input-wrapper">
@@ -26,28 +26,28 @@ const AddressForm = ({ data, setData }) => (
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
-        <input className="checkout-input with-icon" placeholder="Address" value={data.address} onChange={e => setData({...data, address: e.target.value})} />
+        <input className="checkout-input with-icon" placeholder="Address" value={data.address} onChange={e => setData({ ...data, address: e.target.value })} />
       </div>
     </div>
     <div className="checkout-input-group w-half">
-      <input className="checkout-input" placeholder="City" value={data.city} onChange={e => setData({...data, city: e.target.value})} />
+      <input className="checkout-input" placeholder="City" value={data.city} onChange={e => setData({ ...data, city: e.target.value })} />
     </div>
     <div className="checkout-input-group w-quarter">
-      <select className="checkout-select" value={data.state} onChange={e => setData({...data, state: e.target.value})}>
+      <select className="checkout-select" value={data.state} onChange={e => setData({ ...data, state: e.target.value })}>
         <option value="" disabled>State</option>
         <option value="MH">MH</option>
         <option value="DL">DL</option>
       </select>
     </div>
     <div className="checkout-input-group w-quarter">
-      <input className="checkout-input" placeholder="PIN Code" value={data.pinCode} onChange={e => setData({...data, pinCode: e.target.value})} />
+      <input className="checkout-input" placeholder="PIN Code" value={data.pinCode} onChange={e => setData({ ...data, pinCode: e.target.value })} />
     </div>
     <div className="checkout-input-group w-full">
       <div className="checkout-input-wrapper">
         <svg className="checkout-input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
         </svg>
-        <input className="checkout-input with-icon" placeholder="Phone Number" value={data.phone} onChange={e => setData({...data, phone: e.target.value})} />
+        <input className="checkout-input with-icon" placeholder="Phone Number" value={data.phone} onChange={e => setData({ ...data, phone: e.target.value })} />
       </div>
     </div>
   </div>
@@ -63,7 +63,7 @@ export default function CheckoutPage() {
   const [saveAddress, setSaveAddress] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
@@ -115,9 +115,9 @@ export default function CheckoutPage() {
           new Date(loggedUser.membership.expiryDate) > new Date()
         );
         setIsPremiumUser(initialIsPremium);
-      } catch (err) {}
+      } catch (err) { }
     }
-    
+
     // 2. Fetch fresh user profile & saved addresses from backend
     if (localStorage.getItem("isLoggedIn") === "true") {
       setLoadingAddresses(true);
@@ -142,7 +142,7 @@ export default function CheckoutPage() {
           applySavedAddressToForm(def);
         }
       }).catch(err => console.error("Failed to fetch fresh profile/addresses:", err))
-      .finally(() => setLoadingAddresses(false));
+        .finally(() => setLoadingAddresses(false));
     }
   }, []);
 
@@ -306,12 +306,12 @@ export default function CheckoutPage() {
               shippingAddress: shipping,
               billingAddress: billingAddressType === 'same' ? shipping : billing,
               orderItems: formattedOrderItems,
-              pricing: { 
+              pricing: {
                 subtotal: currentSubtotal,
                 shipping: shippingCost,
                 tax: tax,
                 discount: discount,
-                total: finalAmount 
+                total: finalAmount
               },
               user: userId
             });
@@ -342,8 +342,8 @@ export default function CheckoutPage() {
       };
 
       const rzp = new window.Razorpay(options);
-      
-      rzp.on('payment.failed', function (response){
+
+      rzp.on('payment.failed', function (response) {
         toast.error('Payment failed: ' + response.error.description);
       });
 
@@ -361,7 +361,7 @@ export default function CheckoutPage() {
       <div className="checkout-container">
         {/* LEFT SECTION */}
         <div className="checkout-left-section">
-          
+
           {/* Section 2 – Page Header */}
           <div>
             <h1 className="checkout-page-title">Checkout</h1>
@@ -378,9 +378,9 @@ export default function CheckoutPage() {
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
-                <input 
-                  className="checkout-input with-icon" 
-                  type="email" 
+                <input
+                  className="checkout-input with-icon"
+                  type="email"
                   placeholder="Email Address"
                   value={email}
                   onChange={handleEmailChange}
@@ -425,7 +425,7 @@ export default function CheckoutPage() {
                           type="radio"
                           name="savedAddressRadio"
                           checked={isSelected}
-                          onChange={() => {}}
+                          onChange={() => { }}
                           style={{ marginTop: "3px", cursor: "pointer" }}
                         />
                         <div style={{ flex: 1 }}>
@@ -471,7 +471,7 @@ export default function CheckoutPage() {
                       type="radio"
                       name="savedAddressRadio"
                       checked={selectedAddressId === 'new'}
-                      onChange={() => {}}
+                      onChange={() => { }}
                       style={{ cursor: "pointer" }}
                     />
                     <span style={{ fontWeight: 600, fontSize: "14px", color: "#3A2010" }}>
@@ -486,12 +486,12 @@ export default function CheckoutPage() {
             <AddressForm data={shipping} setData={setShipping} />
 
             <div className="checkout-checkbox-wrapper" style={{ marginTop: "14px" }}>
-              <input 
-                type="checkbox" 
-                className="checkout-checkbox" 
-                id="saveAddress" 
-                checked={saveAddress} 
-                onChange={(e) => setSaveAddress(e.target.checked)} 
+              <input
+                type="checkbox"
+                className="checkout-checkbox"
+                id="saveAddress"
+                checked={saveAddress}
+                onChange={(e) => setSaveAddress(e.target.checked)}
               />
               <label htmlFor="saveAddress" className="checkout-checkbox-label">
                 Save this delivery address to my user profile for future orders
@@ -502,8 +502,8 @@ export default function CheckoutPage() {
           {/* Section 5 – Shipping Method */}
           <div className="checkout-card">
             <h2 className="checkout-section-title">Shipping Method</h2>
-            
-            <div 
+
+            <div
               className={`checkout-shipping-card ${shippingMethod === 'standard' ? 'selected' : ''}`}
               onClick={() => setShippingMethod('standard')}
             >
@@ -520,7 +520,7 @@ export default function CheckoutPage() {
               <div className="checkout-shipping-price">$5.00</div>
             </div>
 
-            <div 
+            <div
               className={`checkout-shipping-card ${shippingMethod === 'express' ? 'selected' : ''}`}
               onClick={() => setShippingMethod('express')}
             >
@@ -549,7 +549,7 @@ export default function CheckoutPage() {
               All transactions are secure and encrypted.
             </div>
 
-            <div 
+            <div
               className={`checkout-payment-card ${paymentMethod === 'card' ? 'selected' : ''}`}
               onClick={() => setPaymentMethod('card')}
             >
@@ -560,14 +560,14 @@ export default function CheckoutPage() {
               </svg>
               <div className="checkout-payment-name">Credit Card (Razorpay)</div>
             </div>
-            
+
             {paymentMethod === 'card' && (
               <div className="checkout-payment-info-card" style={{ marginBottom: '16px' }}>
                 You will be redirected to Razorpay securely to complete your purchase.
               </div>
             )}
 
-            <div 
+            <div
               className={`checkout-payment-card ${paymentMethod === 'cod' ? 'selected' : ''}`}
               onClick={() => setPaymentMethod('cod')}
             >
@@ -585,25 +585,25 @@ export default function CheckoutPage() {
             <h2 className="checkout-section-title">Billing Address</h2>
             <div className="checkout-billing-radio-group">
               <label className="checkout-billing-radio-wrapper">
-                <input 
-                  type="radio" 
-                  className="checkout-payment-radio" 
-                  checked={billingAddressType === 'same'} 
+                <input
+                  type="radio"
+                  className="checkout-payment-radio"
+                  checked={billingAddressType === 'same'}
                   onChange={() => setBillingAddressType('same')}
                 />
                 <span className="checkout-checkbox-label">Same as shipping address</span>
               </label>
               <label className="checkout-billing-radio-wrapper">
-                <input 
-                  type="radio" 
-                  className="checkout-payment-radio" 
-                  checked={billingAddressType === 'different'} 
+                <input
+                  type="radio"
+                  className="checkout-payment-radio"
+                  checked={billingAddressType === 'different'}
                   onChange={() => setBillingAddressType('different')}
                 />
                 <span className="checkout-checkbox-label">Use a different billing address</span>
               </label>
             </div>
-            
+
             {billingAddressType === 'different' && (
               <AddressForm data={billing} setData={setBilling} />
             )}
@@ -615,17 +615,17 @@ export default function CheckoutPage() {
         <div className="checkout-right-section">
           <div className="checkout-card checkout-summary-wrapper">
             <h2 className="checkout-section-title">Order Summary</h2>
-            
+
             {/* Section 8 – Order Summary */}
             {cartItems && cartItems.length > 0 ? (
               cartItems.map((item, index) => (
                 <div key={item.id || item._id || index} className="checkout-product-card">
                   <div className="checkout-product-img">
                     {item.image && (
-                      <img 
-                        src={item.image} 
-                        alt={item.title || item.name} 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} 
+                      <img
+                        src={item.image}
+                        alt={item.title || item.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
                       />
                     )}
                   </div>
@@ -655,21 +655,21 @@ export default function CheckoutPage() {
               <span>Tax</span>
               <span>${tax.toFixed(2)}</span>
             </div>
-            
+
             {/* Coupon Section - Only visible to Premium Users */}
             {isPremiumUser && (
               <div className="checkout-coupon-section" style={{ margin: '16px 0', padding: '16px', backgroundColor: 'var(--bg-lighter)', borderRadius: '8px' }}>
                 <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Discount Code</h3>
                 <div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      placeholder="Enter code / ELORA15" 
+                      placeholder="Enter code"
                       style={{ flex: 1, padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
                     />
-                    <button 
+                    <button
                       onClick={handleApplyCoupon}
                       disabled={applyingCoupon || !couponCode.trim()}
                       style={{ padding: '8px 16px', backgroundColor: couponCode.trim() ? 'var(--primary-color)' : 'var(--border-color)', color: couponCode.trim() ? 'white' : '#9ca3af', border: 'none', borderRadius: '6px', cursor: couponCode.trim() ? 'pointer' : 'not-allowed', fontWeight: 500 }}
@@ -714,14 +714,14 @@ export default function CheckoutPage() {
 
             {/* Section 10 – Action Buttons */}
             <div className="checkout-bottom-actions">
-              <button 
-                className="checkout-pay-btn" 
+              <button
+                className="checkout-pay-btn"
                 onClick={handlePay}
                 disabled={isSubmitting || !cartItems || cartItems.length === 0}
               >
                 Pay Now
               </button>
-              <button 
+              <button
                 className="checkout-back-btn"
                 onClick={() => navigate('/cart')}
               >
