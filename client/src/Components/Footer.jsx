@@ -174,10 +174,10 @@ function Footer() {
             <h4 className="footer-heading">CUSTOMER CARE</h4>
             <div className="footer-links-list">
               <Link to="/shipping-policy" className="footer-link-item">Shipping Policy</Link>
-              <Link to="/refund-policy" className="footer-link-item">Return Policy</Link>
-              <Link to="/privacy-policy" className="footer-link-item">Terms & Conditions</Link>
+              <Link to="/return-policy" className="footer-link-item">Return Policy</Link>
+              <Link to="/terms-conditions" className="footer-link-item">Terms & Conditions</Link>
               <Link to="/privacy-policy" className="footer-link-item">Privacy Policy</Link>
-              <Link to="/about" className="footer-link-item">FAQ</Link>
+              <Link to="/faq" className="footer-link-item">FAQ</Link>
             </div>
           </div>
 

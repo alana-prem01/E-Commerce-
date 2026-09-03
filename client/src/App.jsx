@@ -12,6 +12,8 @@ import Contact from './pages/Contact';
 import Category from './pages/Category';
 import UserProfile from './pages/UserProfile';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsConditions from './pages/TermsConditions';
+import FAQ from './pages/FAQ';
 import DisclaimerPolicy from './pages/DisclaimerPolicy';
 import ShippingPolicy from './pages/ShippingPolicy';
 import RefundPolicy from './pages/RefundPolicy';
@@ -103,10 +105,15 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
 
+              {/* Policy & Help Pages */}
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-conditions" element={<TermsConditions />} />
+              <Route path="/terms-and-conditions" element={<TermsConditions />} />
               <Route path="/disclaimer-policy" element={<DisclaimerPolicy />} />
               <Route path="/shipping-policy" element={<ShippingPolicy />} />
               <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/return-policy" element={<RefundPolicy />} />
+              <Route path="/faq" element={<FAQ />} />
               <Route path="/popup-best-sellers" element={<PopupBestSellers />} />
 
               {/* Protected Pages – require authentication */}
