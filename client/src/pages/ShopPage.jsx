@@ -231,7 +231,34 @@ export default function ShopPage() {
           )}
         </div>
 
+        {/* Section 10 – Pagination */}
+        {totalCount > 0 && (
+          <div className="shop-pagination">
+            <button
+              className="shop-page-btn"
+              disabled={currentPage === 1 || loading}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            >
+              <svg className="shop-btn-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7.5 9L4.5 6L7.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Prev
+            </button>
 
+            <span className="shop-page-indicator">Page {currentPage} of {totalPages}</span>
+
+            <button
+              className="shop-page-btn"
+              disabled={currentPage >= totalPages || loading}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            >
+              Next
+              <svg className="shop-btn-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.5 9L7.5 6L4.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        )}
 
       </div>
     </div>
