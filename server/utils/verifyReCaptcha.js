@@ -23,6 +23,9 @@ const verifyReCaptchaToken = async (token, remoteIp) => {
         });
 
         const data = await res.json();
+        if (!data.success) {
+            console.error('Google reCAPTCHA verification failed. Response from Google:', data);
+        }
         return data.success === true;
     } catch (error) {
         console.error('Error verifying Google reCAPTCHA token:', error);
