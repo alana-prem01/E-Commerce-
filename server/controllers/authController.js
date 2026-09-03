@@ -2,6 +2,8 @@ const User = require('../models/UserSchema');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
+const verifyTurnstileToken = require('../utils/verifyTurnstile');
+const verifyReCaptchaToken = require('../utils/verifyReCaptcha');
 
 // @desc    Register a new user
 // @route   POST /api/auth/signup
@@ -155,7 +157,25 @@ const signup = async (req, res) => {
 // @access  Public
 const signin = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, recaptchaToken, turnstileToken, captchaToken } = req.body;
+
+        const tokenToVerify = recaptchaToken || captchaToken;
+
+        // Verify Google reCAPTCHA
+        if (tokenToVerify) {
+            const isValidReCaptcha = await verifyReCaptchaToken(tokenToVerify, req.ip);
+            if (!isValidReCaptcha) {
+                return res.status(400).json({ success: false, message: "Google reCAPTCHA verification failed. Please try again." });
+            }
+        }
+
+        // Verify Turnstile CAPTCHA (if provided)
+        if (turnstileToken) {
+            const isValidTurnstile = await verifyTurnstileToken(turnstileToken, req.ip);
+            if (!isValidTurnstile) {
+                return res.status(400).json({ success: false, message: "Turnstile CAPTCHA verification failed. Please try again." });
+            }
+        }
 
         if (!email) {
             return res.status(400).json({ success: false, message: "Email is required" });
@@ -270,7 +290,7 @@ const forgotPassword = async (req, res) => {
 
         // Generate a 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        
+
         console.log(`[DEBUG] Forgot Password OTP for ${user.email}: ${otp}`);
 
         // OTP expires in 10 minutes
@@ -572,7 +592,7 @@ const googleAuth = async (req, res) => {
                 }
             }
         } else if (access_token) {
-            const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+            const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
             const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                 headers: { Authorization: `Bearer ${access_token}` }
             });

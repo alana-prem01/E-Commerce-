@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import api from "../utils/api";
+import ReCaptcha from "../Components/ReCaptcha";
 import "../css/Login.css";
 
 function AdminLogin() {
@@ -16,6 +17,10 @@ function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Google reCAPTCHA State
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  const [recaptchaError, setRecaptchaError] = useState("");
+
   // Validation Message State
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -28,6 +33,7 @@ function AdminLogin() {
     setEmailError("");
     setPasswordError("");
     setTermsError("");
+    setRecaptchaError("");
 
     const trimmedEmail = email.trim();
     setEmail(trimmedEmail);
@@ -54,6 +60,12 @@ function AdminLogin() {
       isValid = false;
     }
 
+    // Google reCAPTCHA Validation
+    if (!recaptchaToken) {
+      setRecaptchaError("Please complete the Google reCAPTCHA verification.");
+      isValid = false;
+    }
+
     // Backend API Call
     if (isValid) {
       setIsSubmitting(true);
@@ -61,6 +73,7 @@ function AdminLogin() {
         const response = await api.post("/auth/signin", {
           email: trimmedEmail,
           password: password,
+          recaptchaToken: recaptchaToken,
         });
 
         if (response.success) {
@@ -79,9 +92,9 @@ function AdminLogin() {
           if (rememberMe) {
             localStorage.setItem("rememberedUser", trimmedEmail);
           }
-          
+
           window.dispatchEvent(new Event('auth-change'));
-          
+
           navigate("/admin-dashboard");
         }
       } catch (error) {
@@ -97,12 +110,12 @@ function AdminLogin() {
       <div className="card-container admin-card">
         {/* Logo Section */}
         <div className="logo-section">
-          <img 
-            src="/logo3.jpeg" 
-            alt="ELORA Logo" 
-            className="logo-image" 
+          <img
+            src="/logo3.jpeg"
+            alt="ELORA Logo"
+            className="logo-image"
           />
-          <span className="logo-text">ELORA <span style={{fontSize: '12px', color: 'gray', marginLeft: '8px'}}>ADMIN</span></span>
+          <span className="logo-text">ELORA <span style={{ fontSize: '12px', color: 'gray', marginLeft: '8px' }}>ADMIN</span></span>
         </div>
 
         {/* Headings */}
@@ -167,6 +180,20 @@ function AdminLogin() {
             </label>
             {termsError && <div className="error-message" style={{ marginTop: '4px' }}>{termsError}</div>}
           </div>
+
+          {/* Google reCAPTCHA */}
+          <ReCaptcha 
+            onChange={(token) => {
+              setRecaptchaToken(token);
+              setRecaptchaError("");
+            }}
+            onExpired={() => {
+              setRecaptchaToken("");
+              setRecaptchaError("reCAPTCHA verification expired. Please verify again.");
+            }}
+            onError={() => setRecaptchaError("reCAPTCHA verification failed. Please try again.")}
+          />
+          {recaptchaError && <div className="error-message" style={{ marginTop: '4px', textAlign: 'center' }}>{recaptchaError}</div>}
 
           {/* Options Row */}
           <div className="options-row">
