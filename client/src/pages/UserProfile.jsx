@@ -693,7 +693,7 @@ function UserProfile() {
                   </div>
                 </div>
                 <div className="value-text-muted" style={{ fontSize: "13px" }}>
-                  Join Elora Premium for ₹599/year to receive Free Delivery on orders, a 15% Discount Coupon (ELORA15), and early product updates.
+                  Join Elora Premium for ₹599/year to receive Free Delivery on orders, a 15% Discount Coupon, and early product updates.
                 </div>
                 <div style={{ marginTop: "10px" }}>
                   <button
