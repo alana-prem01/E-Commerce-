@@ -270,3 +270,34 @@
   box-shadow: 0 8px 24px rgba(11, 93, 80, 0.3);
   background: linear-gradient(135deg, #0d7063, var(--brand-primary));
 }
+
+.google-btn {
+  width: 100%;
+  height: 44px;
+  background-color: #ffffff;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+  border-radius: 24px;
+  font-family: var(--body-font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 18px;
+}
+
+.google-btn:hover {
+  background-color: #F9FAFB;
+  border-color: #9CA3AF;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.google-btn:active {
+  transform: translateY(0);
+}

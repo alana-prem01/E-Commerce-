@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { useGoogleLogin } from "@react-oauth/google";
 import api from "../utils/api";
 import "../css/Login.css";
 
@@ -10,6 +11,61 @@ function Login() {
   const [searchParams] = useSearchParams();
   // Where to go after login — honour ?redirect= or fall back to home
   const redirectTarget = searchParams.get('redirect') || '/';
+
+  // Handle Google OAuth Success
+  const handleGoogleSuccess = async (tokenResponse) => {
+    try {
+      setIsSubmitting(true);
+      const response = await api.post('/auth/google', { access_token: tokenResponse.access_token });
+      if (response.success) {
+        toast.success(response.message || 'Signed in with Google successfully!');
+        localStorage.setItem('accessToken', response.accessToken);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('isLoggedIn', 'true');
+        window.dispatchEvent(new Event('auth-change'));
+        
+        if (response.user.role === 'Admin') {
+          toast.error("Admins must use the Admin Portal to sign in.");
+          localStorage.clear();
+          return;
+        }
+
+        const url = new URL('http://dummy' + redirectTarget);
+        const productId = url.searchParams.get('productId');
+        const qtyParam = url.searchParams.get('qty');
+        const qty = qtyParam ? parseInt(qtyParam, 10) : 1;
+
+        if (productId) {
+          api.post('/cart/addcart', { productId, quantity: qty })
+            .then(() => navigate('/checkout'))
+            .catch(() => navigate(redirectTarget));
+        } else {
+          navigate(redirectTarget);
+        }
+      }
+    } catch (err) {
+      toast.error(err.message || 'Google sign-in failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: (error) => {
+      console.error('Google Auth Error:', error);
+      toast.error('Google Sign In failed. Please check your configuration.');
+    },
+  });
+
+  const handleGoogleClick = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId || clientId.includes('dummy')) {
+      toast.info('Google Client ID is not configured. Please add VITE_GOOGLE_CLIENT_ID to your client/.env file.');
+      return;
+    }
+    loginWithGoogle();
+  };
 
   // State Management
   const [email, setEmail] = useState("");
@@ -240,6 +296,22 @@ function Login() {
           <span className="divider-text">OR</span>
           <div className="divider-line" />
         </div>
+
+        {/* Google Sign In Button */}
+        <button
+          type="button"
+          className="google-btn"
+          onClick={handleGoogleClick}
+          disabled={isSubmitting}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18">
+            <path fill="#4285F4" d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2c1.7-1.57 2.68-3.88 2.68-6.62z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.41-1.57-5.13-3.72L.97 13.02C2.45 15.98 5.48 18 9 18z"/>
+            <path fill="#FBBC05" d="M3.87 10.8c-.18-.53-.28-1.1-.28-1.8s.1-1.27.28-1.8L.97 4.98C.35 6.22 0 7.6 0 9s.35 2.78.97 4.02l2.9-2.22z"/>
+            <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.45 2.02.97 4.98l2.9 2.22C4.59 5.05 6.62 3.58 9 3.58z"/>
+          </svg>
+          <span>Sign in with Google</span>
+        </button>
 
         {/* Footer Row */}
         <div className="footer-row">

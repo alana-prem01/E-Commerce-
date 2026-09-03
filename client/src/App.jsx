@@ -43,6 +43,9 @@ import ContactMessagesPage from './pages/ContactMessagesPage';
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { CartProvider } from './utils/CartContext';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "dummy-google-client-id.apps.googleusercontent.com";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -79,60 +82,62 @@ const Layout = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <CartProvider>
-        <Layout>
-          <Routes>
-            {/* Public Pages */}
-            <Route path="/" element={<Home />} />
-            <Route path="/shop" element={<ShopPage />} />
-            <Route path="/best-sellers" element={<BestSellerPage />} />
-            <Route path="/product/:id" element={<ProductDetailsPage />} />
-            <Route path="/category/:category" element={<Category />} />
-            <Route path="/search" element={<SearchResultsPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/otp" element={<OTPVerificationPage />} />
-            <Route path="/forgot-password" element={<OTPVerificationPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <Router>
+        <CartProvider>
+          <Layout>
+            <Routes>
+              {/* Public Pages */}
+              <Route path="/" element={<Home />} />
+              <Route path="/shop" element={<ShopPage />} />
+              <Route path="/best-sellers" element={<BestSellerPage />} />
+              <Route path="/product/:id" element={<ProductDetailsPage />} />
+              <Route path="/category/:category" element={<Category />} />
+              <Route path="/search" element={<SearchResultsPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/otp" element={<OTPVerificationPage />} />
+              <Route path="/forgot-password" element={<OTPVerificationPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
 
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/disclaimer-policy" element={<DisclaimerPolicy />} />
-            <Route path="/shipping-policy" element={<ShippingPolicy />} />
-            <Route path="/refund-policy" element={<RefundPolicy />} />
-            <Route path="/popup-best-sellers" element={<PopupBestSellers />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/disclaimer-policy" element={<DisclaimerPolicy />} />
+              <Route path="/shipping-policy" element={<ShippingPolicy />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/popup-best-sellers" element={<PopupBestSellers />} />
 
-            {/* Protected Pages – require authentication */}
-            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-            <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-            <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-            <Route path="/ordertracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
-            <Route path="/ordertracking/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
-            <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
-            <Route path="/order-tracking/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
-            <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
+              {/* Protected Pages – require authentication */}
+              <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+              <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+              <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+              <Route path="/ordertracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+              <Route path="/ordertracking/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+              <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+              <Route path="/order-tracking/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
+              <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
 
-            {/* Protected Admin Pages */}
-            <Route path="/admin-dashboard" element={<PrivateRoute role="Admin"><AdminDashboard /></PrivateRoute>} />
-            <Route path="/admin-profile" element={<PrivateRoute role="Admin"><AdminProfilePage /></PrivateRoute>} />
-            <Route path="/products" element={<PrivateRoute role="Admin"><ProductListPage /></PrivateRoute>} />
-            <Route path="/add-product" element={<PrivateRoute role="Admin"><AddProductPage /></PrivateRoute>} />
-            <Route path="/edit-product/:id" element={<PrivateRoute role="Admin"><EditProductPage /></PrivateRoute>} />
-            <Route path="/orders" element={<PrivateRoute role="Admin"><OrderListPage /></PrivateRoute>} />
-            <Route path="/order/:id" element={<PrivateRoute role="Admin"><SingleOrderPage /></PrivateRoute>} />
-            <Route path="/users" element={<PrivateRoute role="Admin"><UserListPage /></PrivateRoute>} />
-            <Route path="/user-details/:id" element={<PrivateRoute role="Admin"><SingleUserDetailsPage /></PrivateRoute>} />
-            <Route path="/coupons" element={<PrivateRoute role="Admin"><CouponManagementPage /></PrivateRoute>} />
-            <Route path="/premium-subscribers" element={<PrivateRoute role="Admin"><PremiumSubscribersPage /></PrivateRoute>} />
-            <Route path="/admin-messages" element={<PrivateRoute role="Admin"><ContactMessagesPage /></PrivateRoute>} />
-          </Routes>
-        </Layout>
-      </CartProvider>
-    </Router>
+              {/* Protected Admin Pages */}
+              <Route path="/admin-dashboard" element={<PrivateRoute role="Admin"><AdminDashboard /></PrivateRoute>} />
+              <Route path="/admin-profile" element={<PrivateRoute role="Admin"><AdminProfilePage /></PrivateRoute>} />
+              <Route path="/products" element={<PrivateRoute role="Admin"><ProductListPage /></PrivateRoute>} />
+              <Route path="/add-product" element={<PrivateRoute role="Admin"><AddProductPage /></PrivateRoute>} />
+              <Route path="/edit-product/:id" element={<PrivateRoute role="Admin"><EditProductPage /></PrivateRoute>} />
+              <Route path="/orders" element={<PrivateRoute role="Admin"><OrderListPage /></PrivateRoute>} />
+              <Route path="/order/:id" element={<PrivateRoute role="Admin"><SingleOrderPage /></PrivateRoute>} />
+              <Route path="/users" element={<PrivateRoute role="Admin"><UserListPage /></PrivateRoute>} />
+              <Route path="/user-details/:id" element={<PrivateRoute role="Admin"><SingleUserDetailsPage /></PrivateRoute>} />
+              <Route path="/coupons" element={<PrivateRoute role="Admin"><CouponManagementPage /></PrivateRoute>} />
+              <Route path="/premium-subscribers" element={<PrivateRoute role="Admin"><PremiumSubscribersPage /></PrivateRoute>} />
+              <Route path="/admin-messages" element={<PrivateRoute role="Admin"><ContactMessagesPage /></PrivateRoute>} />
+            </Routes>
+          </Layout>
+        </CartProvider>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 

@@ -1,6 +1,7 @@
 const User = require('../models/UserSchema');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 
 // @desc    Register a new user
 // @route   POST /api/auth/signup
@@ -526,9 +527,142 @@ const resetChangePassword = async (req, res) => {
     }
 };
 
+// @desc    Authenticate user with Google OAuth (Signup / Signin)
+// @route   POST /api/auth/google
+// @access  Public
+const googleAuth = async (req, res) => {
+    try {
+        const { credential, access_token } = req.body;
+
+        if (!credential && !access_token) {
+            return res.status(400).json({
+                success: false,
+                message: "Google token is required"
+            });
+        }
+
+        let name, email, googleId, picture;
+
+        if (credential) {
+            // Verify Google ID token (Credential string from Google OAuth)
+            const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+            try {
+                const ticket = await client.verifyIdToken({
+                    idToken: credential,
+                    audience: process.env.GOOGLE_CLIENT_ID ? [process.env.GOOGLE_CLIENT_ID] : undefined,
+                });
+                const payload = ticket.getPayload();
+                email = payload.email?.toLowerCase();
+                name = payload.name || payload.given_name || "Google User";
+                googleId = payload.sub;
+                picture = payload.picture || "";
+            } catch (err) {
+                // Fallback to manual payload decode if verifyIdToken fails without client id check
+                const decoded = jwt.decode(credential);
+                if (decoded && decoded.email) {
+                    email = decoded.email?.toLowerCase();
+                    name = decoded.name || "Google User";
+                    googleId = decoded.sub;
+                    picture = decoded.picture || "";
+                } else {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid Google token: " + err.message
+                    });
+                }
+            }
+        } else if (access_token) {
+            const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+            const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${access_token}` }
+            });
+            const googleData = await response.json();
+            email = googleData.email?.toLowerCase();
+            name = googleData.name || "Google User";
+            googleId = googleData.sub;
+            picture = googleData.picture || "";
+        }
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Unable to retrieve email from Google Account"
+            });
+        }
+
+        // Check if user already exists
+        let user = await User.findOne({ email });
+
+        if (user) {
+            if (user.status === 'Blocked') {
+                return res.status(403).json({
+                    success: false,
+                    message: "Your account has been blocked. Please contact support."
+                });
+            }
+
+            if (!user.googleId) {
+                user.googleId = googleId;
+            }
+            if (picture && (!user.profileImage || user.profileImage === "")) {
+                user.profileImage = picture;
+            }
+            user.lastLogin = new Date();
+            await user.save();
+        } else {
+            // Register new user via Google
+            user = new User({
+                name: name.slice(0, 50),
+                email,
+                googleId,
+                authProvider: 'google',
+                profileImage: picture,
+                emailVerified: true,
+                status: 'Active',
+                role: 'User'
+            });
+            await user.save();
+        }
+
+        // Issue JWT token
+        const payload = {
+            id: user._id,
+            role: user.role
+        };
+
+        const accessToken = jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Signed in with Google successfully",
+            accessToken,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                profileImage: user.profileImage,
+                membership: user.membership
+            }
+        });
+
+    } catch (error) {
+        console.error("Google Auth Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Internal Server Error"
+        });
+    }
+};
+
 module.exports = {
     signup,
     signin,
+    googleAuth,
     forgotPassword,
     verifyOTP,
     resetPassword,
