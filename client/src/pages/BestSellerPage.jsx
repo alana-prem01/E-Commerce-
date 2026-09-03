@@ -5,7 +5,7 @@ import '../css/BestSellerPage.css';
 
 export default function BestSellerPage() {
   const navigate = useNavigate();
-  
+
   // UI State
   const [isPricePopoverOpen, setIsPricePopoverOpen] = useState(false);
   const popoverRef = useRef(null);
@@ -102,8 +102,8 @@ export default function BestSellerPage() {
   };
 
   const isPriceApplied = appliedMinPrice !== null && appliedMinPrice !== '' && appliedMaxPrice !== null && appliedMaxPrice !== '';
-  const priceLabel = isPriceApplied 
-    ? `Price: Rs. ${appliedMinPrice} - Rs. ${appliedMaxPrice}` 
+  const priceLabel = isPriceApplied
+    ? `Price: Rs. ${appliedMinPrice} - Rs. ${appliedMaxPrice}`
     : 'Price';
 
   return (
@@ -116,19 +116,19 @@ export default function BestSellerPage() {
 
       {/* Section 2 – Shell */}
       <div className="bsp-shell">
-        
+
         {/* Section 3 – Toolbar */}
         <div className="bsp-toolbar">
-          
+
           {/* Section 4 – Price Filter */}
           <div className="bsp-price-filter-container" ref={popoverRef}>
-            <button 
+            <button
               className={`bsp-price-trigger ${isPricePopoverOpen ? 'open' : ''}`}
               onClick={() => setIsPricePopoverOpen(!isPricePopoverOpen)}
             >
               <span className="bsp-trigger-label">{priceLabel}</span>
               <svg className="bsp-trigger-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="7" viewBox="0 0 12 7" fill="none">
-                <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 
@@ -141,20 +141,20 @@ export default function BestSellerPage() {
                 <div className="bsp-min-max-inputs">
                   <div className="bsp-input-wrapper">
                     <span className="bsp-input-prefix">Rs.</span>
-                    <input 
-                      type="number" 
-                      className="bsp-price-input" 
-                      value={minPrice} 
-                      onChange={(e) => setMinPrice(e.target.value)} 
+                    <input
+                      type="number"
+                      className="bsp-price-input"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
                     />
                   </div>
                   <div className="bsp-input-wrapper">
                     <span className="bsp-input-prefix">Rs.</span>
-                    <input 
-                      type="number" 
-                      className="bsp-price-input" 
-                      value={maxPrice} 
-                      onChange={(e) => setMaxPrice(e.target.value)} 
+                    <input
+                      type="number"
+                      className="bsp-price-input"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
                     />
                   </div>
                 </div>
@@ -178,9 +178,9 @@ export default function BestSellerPage() {
           {/* Section 7 – Toolbar Right (Sort) */}
           <div className="bsp-toolbar-right">
             <span className="bsp-sort-label">Sort by</span>
-            <select 
-              className="bsp-sort-select" 
-              value={sortOption} 
+            <select
+              className="bsp-sort-select"
+              value={sortOption}
               onChange={handleSortChange}
             >
               <option value="Best Selling">Best Selling</option>
@@ -220,7 +220,7 @@ export default function BestSellerPage() {
                       <img src={product.productImage} alt={product.productName} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <svg className="bsp-placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                       </svg>
                     )}
                     {product.isBestSeller && <div className="bsp-best-seller-tag">Best Seller</div>}
@@ -233,34 +233,7 @@ export default function BestSellerPage() {
           )}
         </div>
 
-        {/* Section 10 – Pagination */}
-        {totalCount > 0 && (
-          <div className="bsp-pagination">
-            <button 
-              className="bsp-page-btn" 
-              disabled={currentPage === 1 || loading}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            >
-              <svg className="bsp-btn-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7.5 9L4.5 6L7.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Prev
-            </button>
-            
-            <span className="bsp-page-indicator">Page {currentPage} of {totalPages}</span>
-            
-            <button 
-              className="bsp-page-btn" 
-              disabled={currentPage >= totalPages || loading}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            >
-              Next
-              <svg className="bsp-btn-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4.5 9L7.5 6L4.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
-        )}
+
 
       </div>
     </div>

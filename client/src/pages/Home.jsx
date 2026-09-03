@@ -98,7 +98,7 @@ function Home() {
               Exquisite jewellery that celebrates every<br />moment of your life.
             </p>
             <div className="hero-buttons">
-              <button className="btn-solid" onClick={() => navigate("/best-sellers")}>
+              <button className="btn-solid" onClick={() => navigate("/shop")}>
                 SHOP NOW
               </button>
               <button className="btn-outline-hero" onClick={() => navigate("/category/necklaces")}>

@@ -5,7 +5,7 @@ import '../css/ShopPage.css';
 
 export default function ShopPage() {
   const navigate = useNavigate();
-  
+
   // UI State
   const [isPricePopoverOpen, setIsPricePopoverOpen] = useState(false);
   const popoverRef = useRef(null);
@@ -18,7 +18,7 @@ export default function ShopPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState('Date New to Old');
   const [priceError, setPriceError] = useState(null);
-  
+
   const itemsPerPage = 24;
 
   // Data State
@@ -99,33 +99,33 @@ export default function ShopPage() {
   };
 
   const isPriceApplied = appliedMinPrice !== null && appliedMaxPrice !== null;
-  const priceLabel = isPriceApplied 
-    ? `Price: Rs. ${appliedMinPrice} - Rs. ${appliedMaxPrice}` 
+  const priceLabel = isPriceApplied
+    ? `Price: Rs. ${appliedMinPrice} - Rs. ${appliedMaxPrice}`
     : 'Price';
 
   return (
     <div className="shop-wrapper">
       {/* Section 1 – Page Header */}
       <div className="shop-page-header">
-        <h1 className="shop-page-title">Shop All</h1>
+        <h1 className="shop-page-title">Find Your Perfect Piece</h1>
         <p className="shop-page-subtitle">Discover our complete collection of exquisite jewelry.</p>
       </div>
 
       {/* Section 2 – Shell */}
       <div className="shop-shell">
-        
+
         {/* Section 3 – Toolbar */}
         <div className="shop-toolbar">
-          
+
           {/* Section 4 – Price Filter */}
           <div className="shop-price-filter-container" ref={popoverRef}>
-            <button 
+            <button
               className={`shop-price-trigger ${isPricePopoverOpen ? 'open' : ''}`}
               onClick={() => setIsPricePopoverOpen(!isPricePopoverOpen)}
             >
               <span className="shop-trigger-label">{priceLabel}</span>
               <svg className="shop-trigger-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="7" viewBox="0 0 12 7" fill="none">
-                <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 
@@ -138,20 +138,20 @@ export default function ShopPage() {
                 <div className="shop-min-max-inputs">
                   <div className="shop-input-wrapper">
                     <span className="shop-input-prefix">Rs.</span>
-                    <input 
-                      type="number" 
-                      className="shop-price-input" 
-                      value={minPrice} 
-                      onChange={(e) => setMinPrice(e.target.value)} 
+                    <input
+                      type="number"
+                      className="shop-price-input"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
                     />
                   </div>
                   <div className="shop-input-wrapper">
                     <span className="shop-input-prefix">Rs.</span>
-                    <input 
-                      type="number" 
-                      className="shop-price-input" 
-                      value={maxPrice} 
-                      onChange={(e) => setMaxPrice(e.target.value)} 
+                    <input
+                      type="number"
+                      className="shop-price-input"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
                     />
                   </div>
                 </div>
@@ -175,9 +175,9 @@ export default function ShopPage() {
           {/* Section 7 – Toolbar Right (Sort) */}
           <div className="shop-toolbar-right">
             <span className="shop-sort-label">Sort by</span>
-            <select 
-              className="shop-sort-select" 
-              value={sortOption} 
+            <select
+              className="shop-sort-select"
+              value={sortOption}
               onChange={handleSortChange}
             >
               <option value="Date New to Old">Date New to Old</option>
@@ -218,7 +218,7 @@ export default function ShopPage() {
                       <img src={product.productImage} alt={product.productName} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <svg className="shop-placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                       </svg>
                     )}
                     {product.isBestSeller && <div className="shop-best-seller-tag">Best Seller</div>}
@@ -231,34 +231,7 @@ export default function ShopPage() {
           )}
         </div>
 
-        {/* Section 10 – Pagination */}
-        {totalCount > 0 && (
-          <div className="shop-pagination">
-            <button 
-              className="shop-page-btn" 
-              disabled={currentPage === 1 || loading}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            >
-              <svg className="shop-btn-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7.5 9L4.5 6L7.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Prev
-            </button>
-            
-            <span className="shop-page-indicator">Page {currentPage} of {totalPages}</span>
-            
-            <button 
-              className="shop-page-btn" 
-              disabled={currentPage >= totalPages || loading}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            >
-              Next
-              <svg className="shop-btn-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4.5 9L7.5 6L4.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
-        )}
+
 
       </div>
     </div>

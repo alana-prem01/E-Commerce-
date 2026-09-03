@@ -37,6 +37,16 @@ function Cart({ isOpen = true, onClose }) {
     removeFromCart(id);
   };
 
+  const handleClose = () => {
+    if (typeof onClose === 'function') {
+      onClose();
+    } else if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
+
   const handleCheckout = () => {
     if (onClose) onClose();
     navigate('/checkout');
@@ -192,7 +202,7 @@ function Cart({ isOpen = true, onClose }) {
   return (
     <>
       {/* Semi-transparent Overlay */}
-      <div className={`cart-overlay ${isOpen ? 'open' : ''}`} onClick={onClose} />
+      <div className={`cart-overlay ${isOpen ? 'open' : ''}`} onClick={handleClose} />
 
       {/* Drawer Container */}
       <div
@@ -209,7 +219,7 @@ function Cart({ isOpen = true, onClose }) {
               {totalItemCount}
             </div>
           </div>
-          <button className="cart-close-btn" onClick={onClose} aria-label="Close cart">
+          <button className="cart-close-btn" onClick={handleClose} aria-label="Close cart">
             <FaTimes size={18} />
           </button>
         </div>
