@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './Components/Header';
 import Footer from './Components/Footer';
@@ -51,6 +52,11 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "dummy-google-
 
 const Layout = ({ children }) => {
   const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [location.pathname]);
+
   const adminRoutes = [
     '/admin-dashboard', '/admin-profile', '/products', '/add-product',
     '/edit-product', '/orders', '/order/', '/users', '/user-details', '/coupons', '/premium-subscribers', '/admin-messages',

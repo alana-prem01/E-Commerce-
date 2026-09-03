@@ -108,6 +108,10 @@ function Footer() {
     }
   };
 
+  const handleLinkClick = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="footer-container">
 
@@ -161,11 +165,11 @@ function Footer() {
           <div>
             <h4 className="footer-heading">QUICK LINKS</h4>
             <div className="footer-links-list">
-              <Link to="/" className="footer-link-item">Home</Link>
-              <Link to="/best-sellers" className="footer-link-item">Shop</Link>
-              <Link to="/category/necklaces" className="footer-link-item">Collections</Link>
-              <Link to="/about" className="footer-link-item">About Us</Link>
-              <Link to="/contact" className="footer-link-item">Contact</Link>
+              <Link to="/" className="footer-link-item" onClick={handleLinkClick}>Home</Link>
+              <Link to="/best-sellers" className="footer-link-item" onClick={handleLinkClick}>Shop</Link>
+              <Link to="/category/necklaces" className="footer-link-item" onClick={handleLinkClick}>Collections</Link>
+              <Link to="/about" className="footer-link-item" onClick={handleLinkClick}>About Us</Link>
+              <Link to="/contact" className="footer-link-item" onClick={handleLinkClick}>Contact</Link>
             </div>
           </div>
 
@@ -173,11 +177,11 @@ function Footer() {
           <div>
             <h4 className="footer-heading">CUSTOMER CARE</h4>
             <div className="footer-links-list">
-              <Link to="/shipping-policy" className="footer-link-item">Shipping Policy</Link>
-              <Link to="/return-policy" className="footer-link-item">Return Policy</Link>
-              <Link to="/terms-conditions" className="footer-link-item">Terms & Conditions</Link>
-              <Link to="/privacy-policy" className="footer-link-item">Privacy Policy</Link>
-              <Link to="/faq" className="footer-link-item">FAQ</Link>
+              <Link to="/shipping-policy" className="footer-link-item" onClick={handleLinkClick}>Shipping Policy</Link>
+              <Link to="/return-policy" className="footer-link-item" onClick={handleLinkClick}>Return Policy</Link>
+              <Link to="/terms-conditions" className="footer-link-item" onClick={handleLinkClick}>Terms & Conditions</Link>
+              <Link to="/privacy-policy" className="footer-link-item" onClick={handleLinkClick}>Privacy Policy</Link>
+              <Link to="/faq" className="footer-link-item" onClick={handleLinkClick}>FAQ</Link>
             </div>
           </div>
 
