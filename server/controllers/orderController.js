@@ -8,7 +8,7 @@ const sendEmail = require('../utils/sendEmail');
 const getAllOrders = async (req, res) => {
   try {
     const { search, orderStatus, paymentStatus, page = 1, limit = 10 } = req.query;
-    
+
     let query = {};
 
     // Search by Order ID or Customer Name
@@ -53,13 +53,13 @@ const getAllOrders = async (req, res) => {
     const totalOrders = await Order.countDocuments(query);
     const totalPages = Math.ceil(totalOrders / limitNumber);
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       count: orders.length,
       totalOrders,
       totalPages,
       currentPage: pageNumber,
-      orders 
+      orders
     });
   } catch (error) {
     console.error('Error in getAllOrders:', error);
@@ -73,16 +73,16 @@ const getAllOrders = async (req, res) => {
 const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    
+
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
-    
+
     res.status(200).json({ success: true, order });
   } catch (error) {
     console.error('Error in getOrderById:', error);
     if (error.kind === 'ObjectId') {
-        return res.status(404).json({ success: false, message: 'Order not found' });
+      return res.status(404).json({ success: false, message: 'Order not found' });
     }
     res.status(500).json({ success: false, message: 'Server Error' });
   }
@@ -94,11 +94,11 @@ const getOrderById = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   try {
     const status = req.body.status || req.body.orderStatus;
-    
+
     // Validate status
     const validStatuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
     if (!validStatuses.includes(status)) {
-        return res.status(400).json({ success: false, message: 'Invalid status provided' });
+      return res.status(400).json({ success: false, message: 'Invalid status provided' });
     }
 
     const order = await Order.findById(req.params.id);
@@ -109,16 +109,16 @@ const updateOrderStatus = async (req, res) => {
 
     // UI requirement: Orders with Delivered or Cancelled status cannot be updated further.
     if (order.orderStatus === 'Delivered' || order.orderStatus === 'Cancelled') {
-        return res.status(400).json({ success: false, message: `Cannot update a ${order.orderStatus} order` });
+      return res.status(400).json({ success: false, message: `Cannot update a ${order.orderStatus} order` });
     }
 
     order.orderStatus = status;
 
     // Update tracking dates
     if (!order.tracking) {
-        order.tracking = { orderedAt: order.createdAt || Date.now() };
+      order.tracking = { orderedAt: order.createdAt || Date.now() };
     }
-    
+
     if (status === 'Processing') order.tracking.processedAt = Date.now();
     else if (status === 'Shipped') order.tracking.shippedAt = Date.now();
     else if (status === 'Out for Delivery') order.tracking.outForDeliveryAt = Date.now();
@@ -184,7 +184,7 @@ const updateOrderStatus = async (req, res) => {
   } catch (error) {
     console.error('Error in updateOrderStatus:', error);
     if (error.kind === 'ObjectId') {
-        return res.status(404).json({ success: false, message: 'Order not found' });
+      return res.status(404).json({ success: false, message: 'Order not found' });
     }
     res.status(500).json({ success: false, message: 'Server Error' });
   }
