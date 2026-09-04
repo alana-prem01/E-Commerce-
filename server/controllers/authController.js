@@ -316,7 +316,10 @@ const forgotPassword = async (req, res) => {
             user.resetPasswordOTP = undefined;
             user.resetPasswordExpires = undefined;
             await user.save();
-            return res.status(500).json({ success: false, message: "Email could not be sent" });
+            return res.status(500).json({ 
+                success: false, 
+                message: error?.message ? `Email could not be sent: ${error.message}` : "Email could not be sent" 
+            });
         }
 
     } catch (error) {
@@ -451,7 +454,10 @@ const sendChangePasswordOTP = async (req, res) => {
             user.resetPasswordOTP = undefined;
             user.resetPasswordExpires = undefined;
             await user.save();
-            return res.status(500).json({ success: false, message: "Email could not be sent" });
+            return res.status(500).json({ 
+                success: false, 
+                message: error?.message ? `Email could not be sent: ${error.message}` : "Email could not be sent" 
+            });
         }
     } catch (error) {
         console.error("Send Change Password OTP Error:", error);
