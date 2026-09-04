@@ -233,7 +233,7 @@ const updateUserProfile = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        const { name, email, phone, address } = req.body;
+        const { name, email, phone, address, currentPassword, newPassword } = req.body;
 
         if (name) {
             if (name.trim().length < 2) {
@@ -258,6 +258,21 @@ const updateUserProfile = async (req, res) => {
             }
 
             user.email = email.trim().toLowerCase();
+        }
+
+        if (newPassword) {
+            if (!currentPassword) {
+                return res.status(400).json({ success: false, message: "Current password is required to change password" });
+            }
+            const isMatch = await bcrypt.compare(currentPassword, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ success: false, message: "Incorrect current password" });
+            }
+            if (newPassword.length < 6) {
+                return res.status(400).json({ success: false, message: "New password must be at least 6 characters" });
+            }
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(newPassword, salt);
         }
 
         if (phone !== undefined) user.phone = phone;
