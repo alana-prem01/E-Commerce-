@@ -43,7 +43,13 @@
   --body-font: 'Poppins', -apple-system, sans-serif;
   
   --primary-color: #046a5a;
+  --primary-color-dark: #5e3b25;
+  --primary-color-hover: #4a2e1d;
   --secondary-color: #014d40;
+  
+  --text-secondary: #6b7280;
+  --text-medium: #374151;
+  --text-dark: #111827;
   
   --heading-color: var(--secondary-color);
   --body-color: #2b2b2b;
