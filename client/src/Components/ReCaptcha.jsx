@@ -10,6 +10,11 @@ import React, { useEffect, useRef } from 'react';
 const ReCaptcha = ({ siteKey, onChange, onExpired, onError, theme = 'light' }) => {
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
+  const callbacksRef = useRef({ onChange, onExpired, onError });
+
+  useEffect(() => {
+    callbacksRef.current = { onChange, onExpired, onError };
+  });
 
   useEffect(() => {
     const key = siteKey || import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
@@ -20,13 +25,13 @@ const ReCaptcha = ({ siteKey, onChange, onExpired, onError, theme = 'light' }) =
           widgetIdRef.current = window.grecaptcha.render(containerRef.current, {
             sitekey: key,
             callback: (token) => {
-              if (onChange) onChange(token);
+              if (callbacksRef.current.onChange) callbacksRef.current.onChange(token);
             },
             'expired-callback': () => {
-              if (onExpired) onExpired();
+              if (callbacksRef.current.onExpired) callbacksRef.current.onExpired();
             },
             'error-callback': () => {
-              if (onError) onError();
+              if (callbacksRef.current.onError) callbacksRef.current.onError();
             },
             theme: theme,
           });
@@ -60,15 +65,10 @@ const ReCaptcha = ({ siteKey, onChange, onExpired, onError, theme = 'light' }) =
       }
     }
 
-    return () => {
-      if (widgetIdRef.current !== null && window.grecaptcha && window.grecaptcha.reset) {
-        try {
-          window.grecaptcha.reset(widgetIdRef.current);
-        } catch (e) {}
-        widgetIdRef.current = null;
-      }
-    };
-  }, [siteKey, theme, onChange, onExpired, onError]);
+    // Do NOT reset the widgetIdRef or call reset on unmount to prevent 
+    // "reCAPTCHA has already been rendered" if React re-runs the effect.
+    // If the component actually unmounts, the DOM element is destroyed anyway.
+  }, [siteKey, theme]);
 
   return (
     <div className="recaptcha-wrapper" style={{ margin: '16px 0', display: 'flex', justifyContent: 'center' }}>

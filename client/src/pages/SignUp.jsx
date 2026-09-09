@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useGoogleLogin } from '@react-oauth/google';
 import api from '../utils/api';
+import ReCaptcha from '../Components/ReCaptcha';
 import '../css/SignUp.css';
 
 const SignUp = () => {
@@ -65,6 +66,10 @@ const SignUp = () => {
   // Validation Error States
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState('');
+
+  // Google reCAPTCHA State
+  const [recaptchaToken, setRecaptchaToken] = useState('');
+  const [recaptchaError, setRecaptchaError] = useState('');
 
   // Handle Input Changes
   const handleChange = (e) => {
@@ -188,6 +193,12 @@ const SignUp = () => {
       setErrors((prev) => ({ ...prev, consent: '' }));
     }
 
+    // Google reCAPTCHA Validation
+    if (!recaptchaToken) {
+      setRecaptchaError("Please complete the Google reCAPTCHA verification.");
+      return;
+    }
+
     if (!errors.fullName && !errors.email && !errors.password && !errors.confirmPassword) {
       setIsSubmitting(true);
       try {
@@ -198,6 +209,7 @@ const SignUp = () => {
           password: formData.password,
           confirmPassword: formData.confirmPassword,
           consent: formData.consent,
+          recaptchaToken: recaptchaToken,
         };
         const response = await api.post("/auth/signup", payload);
         if (response.success) {
@@ -397,6 +409,20 @@ const SignUp = () => {
               {errors.consent}
             </span>
           )}
+
+          {/* Google reCAPTCHA */}
+          <ReCaptcha 
+            onChange={(token) => {
+              setRecaptchaToken(token);
+              setRecaptchaError("");
+            }}
+            onExpired={() => {
+              setRecaptchaToken("");
+              setRecaptchaError("reCAPTCHA verification expired. Please verify again.");
+            }}
+            onError={() => setRecaptchaError("reCAPTCHA verification failed. Please try again.")}
+          />
+          {recaptchaError && <div className="error-message" style={{ marginTop: '4px', textAlign: 'center' }}>{recaptchaError}</div>}
 
           {/* Create Account Button */}
           <button type="submit" className="create-account-btn" disabled={isSubmitting}>

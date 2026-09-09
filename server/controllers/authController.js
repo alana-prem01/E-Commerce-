@@ -11,7 +11,16 @@ const verifyReCaptchaToken = require('../utils/verifyReCaptcha');
 
 const signup = async (req, res) => {
     try {
-        let { name, email, phone, password, confirmPassword, consent } = req.body;
+        let { name, email, phone, password, confirmPassword, consent, recaptchaToken } = req.body;
+
+        // Google reCAPTCHA Verification
+        if (!recaptchaToken) {
+            return res.status(400).json({ success: false, message: "reCAPTCHA token is missing" });
+        }
+        const isRecaptchaValid = await verifyReCaptchaToken(recaptchaToken);
+        if (!isRecaptchaValid) {
+            return res.status(400).json({ success: false, message: "reCAPTCHA verification failed" });
+        }
 
         // Trim inputs
         const trimmedName = name?.trim();
@@ -161,7 +170,11 @@ const signin = async (req, res) => {
 
         const tokenToVerify = recaptchaToken || captchaToken;
 
-        // Verify Google reCAPTCHA
+        // Verify CAPTCHA
+        if (!tokenToVerify && !turnstileToken) {
+            return res.status(400).json({ success: false, message: "CAPTCHA verification is required" });
+        }
+
         if (tokenToVerify) {
             const isValidReCaptcha = await verifyReCaptchaToken(tokenToVerify, req.ip);
             if (!isValidReCaptcha) {
@@ -169,7 +182,6 @@ const signin = async (req, res) => {
             }
         }
 
-        // Verify Turnstile CAPTCHA (if provided)
         if (turnstileToken) {
             const isValidTurnstile = await verifyTurnstileToken(turnstileToken, req.ip);
             if (!isValidTurnstile) {
@@ -316,9 +328,9 @@ const forgotPassword = async (req, res) => {
             user.resetPasswordOTP = undefined;
             user.resetPasswordExpires = undefined;
             await user.save();
-            return res.status(500).json({ 
-                success: false, 
-                message: error?.message ? `Email could not be sent: ${error.message}` : "Email could not be sent" 
+            return res.status(500).json({
+                success: false,
+                message: error?.message ? `Email could not be sent: ${error.message}` : "Email could not be sent"
             });
         }
 
@@ -333,8 +345,20 @@ const forgotPassword = async (req, res) => {
 // @access  Public
 const resetPassword = async (req, res) => {
     try {
-        // Expected request body: email, otp, newPassword, confirmPassword
-        const { email, otp, newPassword, confirmPassword } = req.body;
+        // Expected request body: email, otp, newPassword, confirmPassword, recaptchaToken
+        const { email, otp, newPassword, confirmPassword, recaptchaToken, captchaToken } = req.body;
+
+        const tokenToVerify = recaptchaToken || captchaToken;
+
+        // Verify Google reCAPTCHA
+        if (!tokenToVerify) {
+            return res.status(400).json({ success: false, message: "reCAPTCHA verification token is missing" });
+        }
+
+        const isValidReCaptcha = await verifyReCaptchaToken(tokenToVerify);
+        if (!isValidReCaptcha) {
+            return res.status(400).json({ success: false, message: "Google reCAPTCHA verification failed. Please try again." });
+        }
 
         if (!email || !otp || !newPassword || !confirmPassword) {
             return res.status(400).json({ success: false, message: "Please provide email, OTP, new password, and confirm password" });
@@ -454,9 +478,9 @@ const sendChangePasswordOTP = async (req, res) => {
             user.resetPasswordOTP = undefined;
             user.resetPasswordExpires = undefined;
             await user.save();
-            return res.status(500).json({ 
-                success: false, 
-                message: error?.message ? `Email could not be sent: ${error.message}` : "Email could not be sent" 
+            return res.status(500).json({
+                success: false,
+                message: error?.message ? `Email could not be sent: ${error.message}` : "Email could not be sent"
             });
         }
     } catch (error) {
