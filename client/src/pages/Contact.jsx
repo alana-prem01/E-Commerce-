@@ -24,21 +24,46 @@ function Contact({ heroBgImage }) {
     setSuccessMsg('');
     setErrorMsg('');
 
-    if (!formData.name || !formData.email || !formData.comment) {
-      setErrorMsg('Please fill in all required fields.');
+    // Client-side validation
+    if (!formData.name || !formData.name.trim()) {
+      setErrorMsg('Please enter your name.');
+      return;
+    }
+
+    if (!formData.email || !formData.email.trim()) {
+      setErrorMsg('Please enter your email address.');
+      return;
+    }
+
+    // Strict email regex — requires a valid domain with 2+ char TLD
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setErrorMsg('Please enter a valid email address (e.g. name@domain.com).');
+      return;
+    }
+
+    if (!formData.comment || !formData.comment.trim()) {
+      setErrorMsg('Please enter your message.');
       return;
     }
 
     setSubmitting(true);
     try {
-      const res = await api.post('/contact', formData);
+      const res = await api.post('/contact', {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
+        comment: formData.comment.trim(),
+      });
       if (res.success) {
         setSuccessMsg(res.message || 'Your message has been sent successfully. We will get back to you soon!');
         setFormData({ name: '', email: '', phone: '', comment: '' });
       } else {
-        setErrorMsg(res.message || 'Failed to send message.');
+        // Backend returned a non-success response
+        setErrorMsg(res.message || 'Failed to send message. Please try again.');
       }
     } catch (err) {
+      // Network or API error — preserve user data, show error
       setErrorMsg(err.message || 'Failed to send message. Please try again.');
     } finally {
       setSubmitting(false);

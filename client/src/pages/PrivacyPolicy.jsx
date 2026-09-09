@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import '../css/PrivacyPolicy.css';
 
 function PrivacyPolicy() {
@@ -46,23 +47,19 @@ function PrivacyPolicy() {
         <h2 className="privacy-policy-heading">External Links & Support</h2>
         <p className="privacy-policy-text">
           Our website may contain links to third-party websites. Please review our full terms at our{' '}
-          <a
-            href="https://example.com/terms"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/terms-conditions"
             className="privacy-policy-link"
           >
             Terms of Service page
-          </a>
+          </Link>
           . If you have any questions or privacy requests, feel free to contact us directly via our{' '}
-          <a
-            href="https://example.com/contact"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/contact"
             className="privacy-policy-link"
           >
             Support Portal
-          </a>
+          </Link>
           .
         </p>
       </div>

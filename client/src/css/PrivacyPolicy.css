@@ -27,7 +27,7 @@
   font-family: var(--heading-font);
   font-size: 40px;
   font-weight: 700;
-  color: #005e68;
+  color: var(--text-dark);
   text-align: center;
   margin: 0 0 32px 0;
 }
@@ -46,7 +46,7 @@
   font-family: var(--heading-font);
   font-size: 32px;
   font-weight: 700;
-  color: #005e68;
+  color: var(--text-dark);
   margin-top: 48px;
   margin-bottom: 20px;
   text-align: left;

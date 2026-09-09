@@ -17,7 +17,7 @@ function Footer() {
       try {
         const user = JSON.parse(userStr);
         if (user.email) setEmail(user.email);
-      } catch (err) { }
+      } catch { }
     }
   }, []);
 
@@ -154,10 +154,10 @@ function Footer() {
               Timeless jewellery crafted with passion and precision. Designed to make every moment special.
             </p>
             <div className="footer-social-row">
-              <a href="#" className="social-icon-link"><FaInstagram size={16} /></a>
-              <a href="#" className="social-icon-link"><FaFacebookF size={16} /></a>
-              <a href="#" className="social-icon-link"><FaTwitter size={16} /></a>
-              <a href="#" className="social-icon-link"><FaWhatsapp size={16} /></a>
+              <button type="button" className="social-icon-link" onClick={() => {}} aria-label="Instagram"><FaInstagram size={16} /></button>
+              <button type="button" className="social-icon-link" onClick={() => {}} aria-label="Facebook"><FaFacebookF size={16} /></button>
+              <button type="button" className="social-icon-link" onClick={() => {}} aria-label="Twitter"><FaTwitter size={16} /></button>
+              <button type="button" className="social-icon-link" onClick={() => {}} aria-label="WhatsApp"><FaWhatsapp size={16} /></button>
             </div>
           </div>
 

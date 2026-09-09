@@ -151,8 +151,15 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setCartItems([]);
+    // Also clear cart on the backend so server state stays in sync
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (isLoggedIn) {
+      api.delete('/cart/clearcart').catch(() => {
+        // Silent — local cart is already cleared
+      });
+    }
   };
 
   const totalItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);

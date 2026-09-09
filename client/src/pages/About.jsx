@@ -85,7 +85,7 @@ function About() {
       </section>
 
       {/* 4. Customer Review Section */}
-      <section className="about-review-section">
+      <section className="about-review-section" id="reviews">
         <div className="review-wrapper">
           {/* Section Heading */}
           <h2 className="about-review-heading">Loved by Our Patrons</h2>

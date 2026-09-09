@@ -187,6 +187,7 @@ function UserProfile() {
   const [contactData, setContactData] = useState({
     name: user.name || "User",
     email: user.email || "user@example.com",
+    phone: user.phone || "",
   });
   const [tempContact, setTempContact] = useState({ ...contactData });
 
@@ -195,13 +196,14 @@ function UserProfile() {
     if (fullUser) {
       setContactData({
         name: fullUser.name || "User",
-        email: fullUser.email || "user@example.com"
+        email: fullUser.email || "user@example.com",
+        phone: fullUser.phone || "",
       });
     }
   }, [fullUser]);
 
   const handleEditContactClick = () => {
-    setTempContact({ name: contactData.name, email: contactData.email });
+    setTempContact({ name: contactData.name, email: contactData.email, phone: contactData.phone || "" });
     setContactError("");
     setContactSuccess("");
     setIsEditingContact(true);
@@ -222,17 +224,41 @@ function UserProfile() {
       return;
     }
 
+    // Phone validation (optional but if provided, must be valid)
+    if (tempContact.phone && tempContact.phone.trim()) {
+      const phoneDigits = tempContact.phone.replace(/\D/g, '');
+      if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+        setContactError("Please enter a valid phone number (7-15 digits).");
+        return;
+      }
+    }
+
+    // Warn if email is being changed
+    const emailChanged = tempContact.email.trim().toLowerCase() !== contactData.email.toLowerCase();
+    if (emailChanged) {
+      const confirmed = window.confirm(
+        "You are changing your login email address to:\n" +
+        tempContact.email.trim() + "\n\n" +
+        "This will update your login credentials immediately. " +
+        "Please ensure you have access to the new email address before proceeding.\n\n" +
+        "Do you want to continue?"
+      );
+      if (!confirmed) return;
+    }
+
     setIsSavingContact(true);
     try {
       const res = await api.put('/profile', {
         name: tempContact.name.trim(),
-        email: tempContact.email.trim()
+        email: tempContact.email.trim(),
+        phone: tempContact.phone ? tempContact.phone.replace(/\D/g, '') : undefined,
       });
 
       if (res.success && res.data) {
         setContactData({
           name: res.data.name,
-          email: res.data.email
+          email: res.data.email,
+          phone: res.data.phone || "",
         });
         setFullUser(res.data);
         localStorage.setItem("user", JSON.stringify(res.data));
@@ -601,6 +627,10 @@ function UserProfile() {
                 <span className="label-text">EMAIL ADDRESS</span>
                 <div className="value-text">{contactData.email}</div>
               </div>
+              <div>
+                <span className="label-text">PHONE NUMBER</span>
+                <div className="value-text">{contactData.phone || <span style={{ color: '#aaa', fontStyle: 'italic' }}>Not provided</span>}</div>
+              </div>
             </div>
           ) : (
             /* EDIT MODE */
@@ -622,6 +652,26 @@ function UserProfile() {
                   value={tempContact.email}
                   onChange={(e) => setTempContact({ ...tempContact, email: e.target.value })}
                 />
+                <p style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
+                  Changing your email updates your login credentials immediately.
+                </p>
+              </div>
+              <div>
+                <label className="label-text">PHONE NUMBER</label>
+                <input
+                  type="tel"
+                  className="input-field"
+                  placeholder="10-digit mobile number"
+                  value={tempContact.phone}
+                  inputMode="numeric"
+                  onChange={(e) => setTempContact({ ...tempContact, phone: e.target.value })}
+                  onKeyDown={(e) => {
+                    const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+                    if (!allowedKeys.includes(e.key) && !/^[0-9+]$/.test(e.key)) e.preventDefault();
+                  }}
+                  maxLength={15}
+                />
+                <p style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>Enter digits only (e.g. 9876543210)</p>
               </div>
               <div className="button-group">
                 <button className="btn-primary" onClick={handleSaveContact} disabled={isSavingContact}>
@@ -788,8 +838,14 @@ function UserProfile() {
                     placeholder="Phone number"
                     className="input-field"
                     required
+                    inputMode="numeric"
+                    maxLength={15}
                     value={addressForm.phone}
                     onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
+                    onKeyDown={(e) => {
+                      const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+                      if (!allowedKeys.includes(e.key) && !/^[0-9+]$/.test(e.key)) e.preventDefault();
+                    }}
                   />
                 </div>
               </div>

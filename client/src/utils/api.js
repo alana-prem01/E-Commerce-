@@ -1,6 +1,7 @@
 // Centralized API helper for all backend calls
 // In development mode (npm run dev), points to local server (http://localhost:5000/api)
 // In production mode, uses VITE_API_URL for the deployed Render backend.
+import { toast } from 'react-toastify';
 const getApiBase = () => {
   if (import.meta.env.DEV) {
     return 'http://localhost:5000/api';
@@ -43,15 +44,23 @@ const apiFetch = async (endpoint, options = {}) => {
   }
 
   if (response.status === 401) {
-    // Only intercept 401 if it's not a signin request
+    // Only intercept 401 if it's not a signin/login request
     if (!endpoint.includes('/signin') && !endpoint.includes('/login')) {
-      // Token expired or invalid
+      // Token expired or invalid – clean up auth state
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('cartItems');
       window.dispatchEvent(new Event('auth-change'));
-      window.location.href = '/login';
+      // Show toast then redirect after a short delay so the user sees the message
+      if (!window._sessionExpiredRedirecting) {
+        window._sessionExpiredRedirecting = true;
+        toast.error('Your session has expired. Please sign in again.', { autoClose: 1800 });
+        setTimeout(() => {
+          window._sessionExpiredRedirecting = false;
+          window.location.href = '/login';
+        }, 1900);
+      }
       throw new Error('Session expired. Please login again.');
     }
   }

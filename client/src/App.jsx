@@ -43,6 +43,8 @@ import WishlistPage from './pages/WishlistPage';
 import CouponManagementPage from './pages/CouponManagementPage';
 import PremiumSubscribersPage from './pages/PremiumSubscribersPage';
 import ContactMessagesPage from './pages/ContactMessagesPage';
+import NotFound from './pages/NotFound';
+import AdminNotFound from './pages/AdminNotFound';
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { CartProvider } from './utils/CartContext';
@@ -67,7 +69,7 @@ const Layout = ({ children }) => {
       return location.pathname.startsWith(route);
     }
     return location.pathname === route || location.pathname.startsWith(`${route}/`);
-  });
+  }) || location.pathname.startsWith('/admin');
 
   if (isAdminRoute) {
     return (
@@ -86,6 +88,22 @@ const Layout = ({ children }) => {
       <Footer />
     </>
   );
+};
+
+const NotFoundHandler = () => {
+  const location = useLocation();
+  const adminRoutes = [
+    '/admin-dashboard', '/admin-profile', '/products', '/add-product',
+    '/edit-product', '/orders', '/order/', '/users', '/user-details', '/coupons', '/premium-subscribers', '/admin-messages',
+  ];
+  const isAdminRoute = adminRoutes.some(route => {
+    if (route.endsWith('/')) {
+      return location.pathname.startsWith(route);
+    }
+    return location.pathname === route || location.pathname.startsWith(`${route}/`);
+  }) || location.pathname.startsWith('/admin');
+
+  return isAdminRoute ? <AdminNotFound /> : <NotFound />;
 };
 
 function App() {
@@ -146,6 +164,9 @@ function App() {
               <Route path="/coupons" element={<PrivateRoute role="Admin"><CouponManagementPage /></PrivateRoute>} />
               <Route path="/premium-subscribers" element={<PrivateRoute role="Admin"><PremiumSubscribersPage /></PrivateRoute>} />
               <Route path="/admin-messages" element={<PrivateRoute role="Admin"><ContactMessagesPage /></PrivateRoute>} />
+              
+              {/* Catch-all 404 Route */}
+              <Route path="*" element={<NotFoundHandler />} />
             </Routes>
           </Layout>
         </CartProvider>

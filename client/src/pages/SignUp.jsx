@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useGoogleLogin } from '@react-oauth/google';
 import api from '../utils/api';
@@ -87,6 +87,19 @@ const SignUp = () => {
     if (name === 'confirmPassword') {
       validateConfirmPassword(formData.password, value);
     }
+
+    // Clear phone error on change
+    if (name === 'phone') {
+      setErrors((prev) => ({ ...prev, phone: '' }));
+    }
+  };
+
+  // Block non-numeric characters in phone field
+  const handlePhoneKeyDown = (e) => {
+    const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+    if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
   };
 
   // Password Strength Calculation
@@ -151,6 +164,19 @@ const SignUp = () => {
       }
     }
 
+    if (name === 'phone') {
+      const digits = value.replace(/\D/g, '');
+      if (!digits) {
+        setErrors((prev) => ({ ...prev, phone: 'Phone number is required.' }));
+      } else if (countryCode === '+91' && digits.length !== 10) {
+        setErrors((prev) => ({ ...prev, phone: 'Please enter a valid 10-digit Indian mobile number.' }));
+      } else if (digits.length < 7 || digits.length > 15) {
+        setErrors((prev) => ({ ...prev, phone: 'Please enter a valid phone number.' }));
+      } else {
+        setErrors((prev) => ({ ...prev, phone: '' }));
+      }
+    }
+
     if (name === 'password') {
       const val = value;
       const isValid =
@@ -188,13 +214,24 @@ const SignUp = () => {
       setErrors((prev) => ({ ...prev, consent: '' }));
     }
 
-    if (!errors.fullName && !errors.email && !errors.password && !errors.confirmPassword) {
+    if (!errors.fullName && !errors.email && !errors.phone && !errors.password && !errors.confirmPassword) {
+      // Validate phone before submitting
+      const phoneDigits = formData.phone.replace(/\D/g, '');
+      if (!phoneDigits) {
+        setErrors((prev) => ({ ...prev, phone: 'Phone number is required.' }));
+        return;
+      }
+      if (countryCode === '+91' && phoneDigits.length !== 10) {
+        setErrors((prev) => ({ ...prev, phone: 'Please enter a valid 10-digit Indian mobile number.' }));
+        return;
+      }
+
       setIsSubmitting(true);
       try {
         const payload = {
           name: formData.fullName,
           email: formData.email,
-          phone: `${countryCode}${formData.phone}`,
+          phone: `${countryCode}${phoneDigits}`,
           password: formData.password,
           confirmPassword: formData.confirmPassword,
           consent: formData.consent,
@@ -293,11 +330,15 @@ const SignUp = () => {
                   maxLength={15}
                   value={formData.phone}
                   onChange={handleChange}
+                  onKeyDown={handlePhoneKeyDown}
+                  onBlur={handleBlur}
                   className="input-field"
                   style={{ flex: 1 }}
                   required
+                  inputMode="numeric"
                 />
               </div>
+              {errors.phone && <span className="error-message">{errors.phone}</span>}
             </div>
 
             {/* Password Input */}
@@ -383,13 +424,13 @@ const SignUp = () => {
             />
             <label htmlFor="consent" className="consent-text">
               I accept the{' '}
-              <a href="#terms" className="link">
-                Terms & Conditions
-              </a>{' '}
+              <Link to="/terms-conditions" className="link" target="_blank" rel="noopener noreferrer">
+                Terms &amp; Conditions
+              </Link>{' '}
               and{' '}
-              <a href="#privacy" className="link">
+              <Link to="/privacy-policy" className="link" target="_blank" rel="noopener noreferrer">
                 Privacy Policy
-              </a>
+              </Link>
             </label>
           </div>
           {errors.consent && (

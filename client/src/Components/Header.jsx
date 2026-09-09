@@ -4,6 +4,7 @@ import { FaSearch, FaChevronDown, FaTimes, FaBars, FaHeart } from "react-icons/f
 import { CgProfile } from "react-icons/cg";
 import { IoCart } from "react-icons/io5";
 import { useCart } from "../utils/CartContext";
+import api from "../utils/api";
 import "../css/Header.css";
 
 const CATEGORIES = [
@@ -34,6 +35,7 @@ function Header() {
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [wishlistCount, setWishlistCount] = useState(0);
 
   const categoriesRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -55,6 +57,8 @@ function Header() {
       } catch {
         setIsAdmin(false);
       }
+      // Refresh wishlist count when auth changes
+      fetchWishlistCount();
     };
     window.addEventListener('auth-change', handle);
     return () => window.removeEventListener('auth-change', handle);
@@ -91,6 +95,29 @@ function Header() {
       setSearchQuery("");
     }
   };
+
+  // Fetch wishlist count from backend
+  const fetchWishlistCount = async () => {
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!loggedIn) {
+      setWishlistCount(0);
+      return;
+    }
+    try {
+      const res = await api.get('/profile/wishlist');
+      if (res && res.success && Array.isArray(res.wishlist)) {
+        setWishlistCount(res.wishlist.length);
+      } else if (res && Array.isArray(res.data)) {
+        setWishlistCount(res.data.length);
+      }
+    } catch {
+      // Silent — don't break header on wishlist API failure
+    }
+  };
+
+  useEffect(() => {
+    fetchWishlistCount();
+  }, [isLoggedIn]);
 
   const isActive = (path) => location.pathname === path ? "active-link" : "";
 
@@ -171,8 +198,11 @@ function Header() {
 
             {/* Wishlist */}
             {isLoggedIn && (
-              <Link to="/wishlist" className={`nav-link-custom icon-btn ${isActive("/wishlist")}`} title="Wishlist">
+              <Link to="/wishlist" className={`nav-link-custom icon-btn ${isActive("/wishlist")}`} title="Wishlist" style={{ position: 'relative' }}>
                 <FaHeart className="icon wishlist-icon" />
+                {wishlistCount > 0 && (
+                  <span className="cart-badge" style={{ backgroundColor: '#c0392b' }}>{wishlistCount}</span>
+                )}
               </Link>
             )}
 

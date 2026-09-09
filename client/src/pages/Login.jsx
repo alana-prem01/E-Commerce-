@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -69,9 +69,9 @@ function Login() {
   };
 
   // State Management
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem('rememberedUser') || "");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => Boolean(localStorage.getItem('rememberedUser')));
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -273,7 +273,12 @@ function Login() {
                 onChange={(e) => setAcceptTerms(e.target.checked)}
                 className="checkbox"
               />
-              <span>I accept the Privacy Policy and Terms of Service</span>
+              <span>
+                I accept the{' '}
+                <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>Privacy Policy</Link>
+                {' '}and{' '}
+                <Link to="/terms-conditions" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>Terms of Service</Link>
+              </span>
             </label>
             {termsError && <div className="error-message" style={{ marginTop: '4px' }}>{termsError}</div>}
           </div>

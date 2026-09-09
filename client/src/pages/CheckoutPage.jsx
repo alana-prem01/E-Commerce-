@@ -3,55 +3,87 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useCart } from '../utils/CartContext';
 import api from '../utils/api';
+import { formatINR } from '../utils/currency';
 import '../css/CheckoutPage.css';
 
-const AddressForm = ({ data, setData }) => (
-  <div className="checkout-form-grid">
-    <div className="checkout-input-group w-full">
-      <select className="checkout-select" value={data.country} onChange={e => setData({ ...data, country: e.target.value })}>
-        <option value="" disabled>Country/Region</option>
-        <option value="IN">India</option>
-        <option value="US">United States</option>
-      </select>
-    </div>
-    <div className="checkout-input-group w-half">
-      <input className="checkout-input" placeholder="First Name" value={data.firstName} onChange={e => setData({ ...data, firstName: e.target.value })} />
-    </div>
-    <div className="checkout-input-group w-half">
-      <input className="checkout-input" placeholder="Last Name" value={data.lastName} onChange={e => setData({ ...data, lastName: e.target.value })} />
-    </div>
-    <div className="checkout-input-group w-full">
-      <div className="checkout-input-wrapper">
-        <svg className="checkout-input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-          <circle cx="12" cy="10" r="3"></circle>
-        </svg>
-        <input className="checkout-input with-icon" placeholder="Address" value={data.address} onChange={e => setData({ ...data, address: e.target.value })} />
+// All Indian States and Union Territories
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  // Union Territories
+  'Andaman and Nicobar Islands', 'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir',
+  'Ladakh', 'Lakshadweep', 'Puducherry',
+];
+
+const AddressForm = ({ data, setData }) => {
+  // Block non-numeric keys on phone field
+  const handlePhoneKeyDown = (e) => {
+    const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+    if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  return (
+    <div className="checkout-form-grid">
+      <div className="checkout-input-group w-full">
+        <select className="checkout-select" value={data.country} onChange={e => setData({ ...data, country: e.target.value })}>
+          <option value="" disabled>Country/Region</option>
+          <option value="IN">India</option>
+          <option value="US">United States</option>
+        </select>
+      </div>
+      <div className="checkout-input-group w-half">
+        <input className="checkout-input" placeholder="First Name" value={data.firstName} onChange={e => setData({ ...data, firstName: e.target.value })} />
+      </div>
+      <div className="checkout-input-group w-half">
+        <input className="checkout-input" placeholder="Last Name" value={data.lastName} onChange={e => setData({ ...data, lastName: e.target.value })} />
+      </div>
+      <div className="checkout-input-group w-full">
+        <div className="checkout-input-wrapper">
+          <svg className="checkout-input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <input className="checkout-input with-icon" placeholder="Address" value={data.address} onChange={e => setData({ ...data, address: e.target.value })} />
+        </div>
+      </div>
+      <div className="checkout-input-group w-half">
+        <input className="checkout-input" placeholder="City" value={data.city} onChange={e => setData({ ...data, city: e.target.value })} />
+      </div>
+      <div className="checkout-input-group w-quarter">
+        <select className="checkout-select" value={data.state} onChange={e => setData({ ...data, state: e.target.value })}>
+          <option value="" disabled>State</option>
+          {INDIAN_STATES.map(state => (
+            <option key={state} value={state}>{state}</option>
+          ))}
+        </select>
+      </div>
+      <div className="checkout-input-group w-quarter">
+        <input className="checkout-input" placeholder="PIN Code" value={data.pinCode} onChange={e => setData({ ...data, pinCode: e.target.value })} />
+      </div>
+      <div className="checkout-input-group w-full">
+        <div className="checkout-input-wrapper">
+          <svg className="checkout-input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+          </svg>
+          <input
+            className="checkout-input with-icon"
+            placeholder="Phone Number"
+            value={data.phone}
+            onChange={e => setData({ ...data, phone: e.target.value })}
+            onKeyDown={handlePhoneKeyDown}
+            inputMode="numeric"
+          />
+        </div>
       </div>
     </div>
-    <div className="checkout-input-group w-half">
-      <input className="checkout-input" placeholder="City" value={data.city} onChange={e => setData({ ...data, city: e.target.value })} />
-    </div>
-    <div className="checkout-input-group w-quarter">
-      <select className="checkout-select" value={data.state} onChange={e => setData({ ...data, state: e.target.value })}>
-        <option value="" disabled>State</option>
-        <option value="MH">MH</option>
-        <option value="DL">DL</option>
-      </select>
-    </div>
-    <div className="checkout-input-group w-quarter">
-      <input className="checkout-input" placeholder="PIN Code" value={data.pinCode} onChange={e => setData({ ...data, pinCode: e.target.value })} />
-    </div>
-    <div className="checkout-input-group w-full">
-      <div className="checkout-input-wrapper">
-        <svg className="checkout-input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-        </svg>
-        <input className="checkout-input with-icon" placeholder="Phone Number" value={data.phone} onChange={e => setData({ ...data, phone: e.target.value })} />
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
 export default function CheckoutPage() {
   const { cartItems, subtotal, clearCart } = useCart();
@@ -72,11 +104,11 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
 
   const [shipping, setShipping] = useState({
-    country: '', firstName: '', lastName: '', address: '', city: '', state: '', pinCode: '', phone: ''
+    country: 'IN', firstName: '', lastName: '', address: '', city: '', state: '', pinCode: '', phone: ''
   });
 
   const [billing, setBilling] = useState({
-    country: '', firstName: '', lastName: '', address: '', city: '', state: '', pinCode: '', phone: ''
+    country: 'IN', firstName: '', lastName: '', address: '', city: '', state: '', pinCode: '', phone: ''
   });
 
   const [isPremiumUser, setIsPremiumUser] = useState(false);
@@ -90,13 +122,14 @@ export default function CheckoutPage() {
     const fName = nameParts[0] || '';
     const lName = nameParts.slice(1).join(' ') || '';
 
+    // State is stored as full name in DB; use it directly
     setShipping({
       country: addr.country === 'United States' ? 'US' : 'IN',
       firstName: fName,
       lastName: lName,
       address: [addr.house, addr.street].filter(Boolean).join(', '),
       city: addr.city || '',
-      state: addr.state || '',
+      state: addr.state || '',   // Full state name, matches dropdown values
       pinCode: addr.pinCode || '',
       phone: addr.phone || ''
     });
@@ -249,9 +282,25 @@ export default function CheckoutPage() {
     await saveShippingAddressToDb();
 
     if (paymentMethod === 'cod') {
+      // COD: clear cart, show success page with COD order info
+      const codOrder = {
+        _id: `COD-${Date.now()}`,
+        paymentMethod: 'Cash on Delivery',
+        paymentDetails: { payment_method: 'Cash on Delivery' },
+        pricing: {
+          subtotal: currentSubtotal,
+          shipping: shippingCost,
+          tax,
+          discount,
+          total: finalAmount
+        },
+        createdAt: new Date().toISOString(),
+        status: 'Pending',
+      };
+      await clearCart();
       toast.success('Order placed successfully via Cash on Delivery!');
-      clearCart();
-      navigate('/');
+      localStorage.setItem('lastCompletedOrder', JSON.stringify(codOrder));
+      navigate('/payment-success', { state: { order: codOrder } });
       return;
     }
 
@@ -318,7 +367,7 @@ export default function CheckoutPage() {
 
             if (verifyData.success) {
               toast.success('Payment successful!');
-              clearCart();
+              await clearCart();
               if (verifyData.order) {
                 localStorage.setItem('lastCompletedOrder', JSON.stringify(verifyData.order));
               }
@@ -517,7 +566,9 @@ export default function CheckoutPage() {
                 <p className="checkout-shipping-name">Standard Shipping</p>
                 <p className="checkout-shipping-est">3-5 Business Days</p>
               </div>
-              <div className="checkout-shipping-price">$5.00</div>
+              <div className="checkout-shipping-price">
+                {isPremiumUser ? 'FREE (Premium)' : formatINR(65)}
+              </div>
             </div>
 
             <div
@@ -534,7 +585,7 @@ export default function CheckoutPage() {
                 <p className="checkout-shipping-name">Express Shipping</p>
                 <p className="checkout-shipping-est">1-2 Business Days</p>
               </div>
-              <div className="checkout-shipping-price">$15.00</div>
+              <div className="checkout-shipping-price">{formatINR(150)}</div>
             </div>
           </div>
 
@@ -633,7 +684,7 @@ export default function CheckoutPage() {
                     <h3 className="checkout-product-name">{item.title || item.name}</h3>
                     <p className="checkout-product-qty">Qty: {item.quantity}</p>
                   </div>
-                  <div className="checkout-product-price">${(item.price * item.quantity).toFixed(2)}</div>
+                  <div className="checkout-product-price">{formatINR(item.price * item.quantity)}</div>
                 </div>
               ))
             ) : (
@@ -645,15 +696,15 @@ export default function CheckoutPage() {
             {/* Section 9 – Price Summary */}
             <div className="checkout-price-row">
               <span>Subtotal</span>
-              <span>${currentSubtotal.toFixed(2)}</span>
+              <span>{formatINR(currentSubtotal)}</span>
             </div>
             <div className="checkout-price-row">
               <span>Shipping</span>
-              <span>{isPremiumUser ? 'FREE (Premium Member)' : `$${shippingCost.toFixed(2)}`}</span>
+              <span>{isPremiumUser ? 'FREE (Premium Member)' : formatINR(shippingCost)}</span>
             </div>
             <div className="checkout-price-row">
               <span>Tax</span>
-              <span>${tax.toFixed(2)}</span>
+              <span>{formatINR(tax)}</span>
             </div>
 
             {/* Coupon Section - Only visible to Premium Users */}
@@ -685,7 +736,7 @@ export default function CheckoutPage() {
             {discount > 0 && (
               <div className="checkout-price-row checkout-price-discount" style={{ color: 'var(--success)', fontWeight: 500 }}>
                 <span>Discount ({appliedCoupon?.code})</span>
-                <span>-${discount.toFixed(2)}</span>
+                <span>-{formatINR(discount)}</span>
               </div>
             )}
 
@@ -693,7 +744,7 @@ export default function CheckoutPage() {
 
             <div className="checkout-total-row">
               <span>Total</span>
-              <span>${finalAmount.toFixed(2)}</span>
+              <span>{formatINR(finalAmount)}</span>
             </div>
 
             {/* Privacy Terms */}
@@ -719,7 +770,11 @@ export default function CheckoutPage() {
                 onClick={handlePay}
                 disabled={isSubmitting || !cartItems || cartItems.length === 0}
               >
-                Pay Now
+                {isSubmitting
+                  ? 'Processing...'
+                  : paymentMethod === 'cod'
+                    ? 'Place Order'
+                    : 'Pay Now'}
               </button>
               <button
                 className="checkout-back-btn"
