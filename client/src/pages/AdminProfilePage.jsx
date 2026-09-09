@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { FiEye, FiEyeOff, FiLock, FiMail, FiUser, FiSave, FiCheckCircle, FiShield, FiKey, FiArrowLeft, FiRotateCcw } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiLock, FiMail, FiUser, FiSave, FiCheckCircle, FiShield, FiKey, FiArrowLeft, FiEdit2 } from 'react-icons/fi';
 import api from '../utils/api';
 import '../css/AdminProfilePage.css';
 
@@ -23,6 +23,12 @@ export default function AdminProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isOtpLoading, setIsOtpLoading] = useState(false);
+
+  // Change Email OTP state: 1 = Enter new email, 2 = Verify OTP, 3 = Success
+  const [emailStep, setEmailStep] = useState(1);
+  const [newEmail, setNewEmail] = useState('');
+  const [emailOtp, setEmailOtp] = useState('');
+  const [isEmailOtpLoading, setIsEmailOtpLoading] = useState(false);
 
   // Load user data on mount
   useEffect(() => {
@@ -52,35 +58,20 @@ export default function AdminProfilePage() {
     }
   };
 
-  // Update Profile Details (Name & Email)
+  // Update Profile Details (Name only — email is changed via OTP)
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-
     const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-
     if (!trimmedName || trimmedName.length < 2) {
       toast.error('Please enter a valid name (at least 2 characters).');
       return;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
-      toast.error('Please enter a valid email address.');
-      return;
-    }
-
     setIsSubmittingProfile(true);
-
     try {
-      const res = await api.put('/profile', {
-        name: trimmedName,
-        email: trimmedEmail,
-      });
-
+      const res = await api.put('/profile', { name: trimmedName });
       if (res.success) {
         toast.success(res.message || 'Profile updated successfully!');
-        const updatedData = { ...savedUser, name: trimmedName, email: trimmedEmail };
+        const updatedData = { ...savedUser, name: trimmedName };
         setSavedUser(updatedData);
         localStorage.setItem('user', JSON.stringify(updatedData));
         window.dispatchEvent(new Event('auth-change'));
@@ -88,10 +79,7 @@ export default function AdminProfilePage() {
         toast.error(res.message || 'Failed to update profile.');
       }
     } catch (err) {
-      toast.error(err.message || 'Error updating profile. Saved locally.');
-      const updatedData = { ...savedUser, name: trimmedName, email: trimmedEmail };
-      setSavedUser(updatedData);
-      localStorage.setItem('user', JSON.stringify(updatedData));
+      toast.error(err.message || 'Error updating profile.');
     } finally {
       setIsSubmittingProfile(false);
     }
@@ -99,8 +87,78 @@ export default function AdminProfilePage() {
 
   const handleCancelProfile = () => {
     setName(savedUser.name || '');
-    setEmail(savedUser.email || '');
     toast.info('Profile changes reset.');
+  };
+
+  // --- Change Email OTP Handlers ---
+
+  const handleSendEmailOTP = async () => {
+    setIsEmailOtpLoading(true);
+    try {
+      const res = await api.post('/auth/change-email/send-otp');
+      if (res && res.success) {
+        toast.success(res.message || `OTP sent to your current email (${email || savedUser.email})`);
+        setEmailStep(2);
+      } else {
+        toast.error(res?.message || 'Failed to send OTP.');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to send OTP.');
+    } finally {
+      setIsEmailOtpLoading(false);
+    }
+  };
+
+  const handleVerifyEmailOTP = async (e) => {
+    e.preventDefault();
+    const trimmedOtp = emailOtp.trim();
+    const trimmedNewEmail = newEmail.trim().toLowerCase();
+
+    if (!trimmedOtp || trimmedOtp.length !== 6 || !/^\d+$/.test(trimmedOtp)) {
+      toast.error('Please enter a valid 6-digit OTP.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!trimmedNewEmail || !emailRegex.test(trimmedNewEmail)) {
+      toast.error('Please enter a valid new email address.');
+      return;
+    }
+
+    if (trimmedNewEmail === (email || savedUser.email).toLowerCase()) {
+      toast.error('New email must be different from your current email.');
+      return;
+    }
+
+    setIsEmailOtpLoading(true);
+    try {
+      const res = await api.post('/auth/change-email/verify-otp', {
+        otp: trimmedOtp,
+        newEmail: trimmedNewEmail
+      });
+      if (res && res.success) {
+        toast.success(res.message || 'Email updated successfully!');
+        const updatedEmail = res.email || trimmedNewEmail;
+        setEmail(updatedEmail);
+        const updatedData = { ...savedUser, email: updatedEmail };
+        setSavedUser(updatedData);
+        localStorage.setItem('user', JSON.stringify(updatedData));
+        window.dispatchEvent(new Event('auth-change'));
+        setEmailStep(3);
+      } else {
+        toast.error(res?.message || 'Invalid or expired OTP.');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Invalid or expired OTP.');
+    } finally {
+      setIsEmailOtpLoading(false);
+    }
+  };
+
+  const handleCancelEmailFlow = () => {
+    setEmailStep(1);
+    setNewEmail('');
+    setEmailOtp('');
   };
 
   // --- OTP Reset Password Handlers ---
@@ -303,16 +361,29 @@ export default function AdminProfilePage() {
 
                 <div className="col-md-6">
                   <label className="form-label font-weight-bold">
-                    <FiMail className="me-1 text-secondary" /> Email Address
+                    <FiMail className="me-1 text-secondary" /> Current Email Address
                   </label>
-                  <input
-                    type="email"
-                    className="admin-input"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter email address"
-                    required
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="email"
+                      className="admin-input"
+                      value={email}
+                      readOnly
+                      disabled
+                      style={{
+                        backgroundColor: 'var(--admin-bg-soft, #F8FAFC)',
+                        cursor: 'not-allowed',
+                        color: 'var(--admin-text-muted, #64748B)',
+                        paddingRight: '160px'
+                      }}
+                    />
+                    <span style={{
+                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                      fontSize: '0.72rem', color: '#94a3b8', whiteSpace: 'nowrap'
+                    }}>
+                      🔒 Change via OTP below
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -331,13 +402,132 @@ export default function AdminProfilePage() {
                   disabled={isSubmittingProfile}
                 >
                   <FiSave size={16} />
-                  {isSubmittingProfile ? 'Saving...' : 'Save Profile'}
+                  {isSubmittingProfile ? 'Saving...' : 'Save Name'}
                 </button>
               </div>
             </div>
           </form>
 
-          {/* Card 2: Password Reset via OTP Verification */}
+          {/* Card 2: Change Email via OTP */}
+          <div className="admin-card p-4 mb-4">
+            <div className="admin-card-header mb-4 pb-3" style={{ borderBottom: '1px solid var(--admin-border, #E2E8F0)' }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <h3 className="admin-card-title m-0 d-flex align-items-center gap-2">
+                  <FiMail className="text-teal" /> Change Email (OTP Verification)
+                </h3>
+                {emailStep > 1 && emailStep < 3 && (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+                    onClick={handleCancelEmailFlow}
+                  >
+                    <FiArrowLeft size={14} /> Back
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* EMAIL STEP 1: Send OTP to current email */}
+            {emailStep === 1 && (
+              <div className="text-center py-3">
+                <div className="mb-3" style={{ color: 'var(--admin-text-muted, #64748B)' }}>
+                  <FiMail size={40} style={{ color: '#0D9488', marginBottom: '12px' }} />
+                  <p className="m-0" style={{ fontSize: '0.95rem' }}>
+                    To update your admin email, we must first verify your identity.
+                    Click below to send a 6-digit OTP verification code to your current email: <strong>{email || savedUser.email}</strong>.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-primary px-4 py-2 mt-2 d-inline-flex align-items-center gap-2"
+                  onClick={handleSendEmailOTP}
+                  disabled={isEmailOtpLoading}
+                >
+                  <FiMail size={16} />
+                  {isEmailOtpLoading ? 'Sending OTP...' : 'Send Verification OTP'}
+                </button>
+              </div>
+            )}
+
+            {/* EMAIL STEP 2: Verify OTP & Enter New Email */}
+            {emailStep === 2 && (
+              <form onSubmit={handleVerifyEmailOTP}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--admin-text-muted, #64748B)', marginBottom: '16px' }}>
+                  A 6-digit OTP was sent to your current email <strong>{email || savedUser.email}</strong>. Enter the OTP code and your new email address below.
+                </p>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-5">
+                    <label className="form-label font-weight-bold">Verification Code (OTP)</label>
+                    <input
+                      type="text"
+                      className="admin-input text-center font-weight-bold"
+                      style={{ letterSpacing: '4px', fontSize: '1.1rem' }}
+                      maxLength={6}
+                      placeholder="123456"
+                      value={emailOtp}
+                      onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ''))}
+                      autoFocus
+                      required
+                    />
+                  </div>
+                  <div className="col-md-7">
+                    <label className="form-label font-weight-bold">
+                      <FiMail className="me-1 text-secondary" /> New Email Address
+                    </label>
+                    <input
+                      type="email"
+                      className="admin-input"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="Enter new email address"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="d-flex align-items-center gap-3 mt-4">
+                  <button
+                    type="submit"
+                    className="admin-btn admin-btn-primary d-inline-flex align-items-center gap-2"
+                    disabled={isEmailOtpLoading || !emailOtp || !newEmail}
+                  >
+                    <FiSave size={16} />
+                    {isEmailOtpLoading ? 'Verifying & Updating...' : 'Verify OTP & Update Email'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-link text-decoration-none p-0"
+                    style={{ fontSize: '0.9rem', color: '#0D9488' }}
+                    onClick={handleSendEmailOTP}
+                    disabled={isEmailOtpLoading}
+                  >
+                    Resend OTP
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* EMAIL STEP 3: Success */}
+            {emailStep === 3 && (
+              <div className="text-center py-3">
+                <FiCheckCircle size={48} style={{ color: '#10B981', marginBottom: '12px' }} />
+                <h5 style={{ color: '#10B981', fontWeight: 600 }}>Email Updated Successfully!</h5>
+                <p style={{ fontSize: '0.9rem', color: 'var(--admin-text-muted, #64748B)' }}>
+                  Your email has been changed to <strong>{email}</strong>.
+                </p>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-outline mt-2 d-inline-flex align-items-center gap-2"
+                  onClick={handleCancelEmailFlow}
+                >
+                  <FiEdit2 size={15} /> Change Email Again
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Card 3: Password Reset via OTP Verification */}
           <div className="admin-card p-4">
             <div className="admin-card-header mb-4 pb-3" style={{ borderBottom: '1px solid var(--admin-border, #E2E8F0)' }}>
               <div className="d-flex justify-content-between align-items-center">

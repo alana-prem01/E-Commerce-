@@ -16,4 +16,8 @@ router.post('/change-password/send-otp', protect, authLimiter, authController.se
 router.post('/change-password/verify-otp', protect, authLimiter, authController.verifyChangePasswordOTP);
 router.post('/change-password/reset', protect, authLimiter, authController.resetChangePassword);
 
+// Change Email Routes (Protected)
+router.post('/change-email/send-otp', protect, authLimiter, authController.sendChangeEmailOTP);
+router.post('/change-email/verify-otp', protect, authLimiter, authController.verifyChangeEmailOTP);
+
 module.exports = router;

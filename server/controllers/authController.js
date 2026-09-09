@@ -577,6 +577,101 @@ const resetChangePassword = async (req, res) => {
     }
 };
 
+// @desc    Change Email (Send OTP to CURRENT email for identity confirmation)
+// @route   POST /api/auth/change-email/send-otp
+// @access  Private
+const sendChangeEmailOTP = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`[DEBUG] Change Email OTP for ${user.email}: ${otp}`);
+
+        // Store OTP — expires in 10 minutes
+        user.changeEmailOTP = otp;
+        user.changeEmailExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        const sendEmail = require('../utils/sendEmail');
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Email Change Request — Elora Admin',
+                message: `You requested to change your admin account email address.\n\nYour OTP verification code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email and your email will remain unchanged.`
+            });
+            res.status(200).json({ success: true, message: `OTP sent to your current email (${user.email}). Please check your inbox.` });
+        } catch (emailError) {
+            console.error("Email Sending Error:", emailError);
+            user.changeEmailOTP = undefined;
+            user.changeEmailExpires = undefined;
+            await user.save();
+            return res.status(500).json({ success: false, message: "Failed to send OTP email. Please try again." });
+        }
+    } catch (error) {
+        console.error("Send Change Email OTP Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// @desc    Change Email (Verify OTP, then update to new email)
+// @route   POST /api/auth/change-email/verify-otp
+// @access  Private
+const verifyChangeEmailOTP = async (req, res) => {
+    try {
+        const { otp, newEmail } = req.body;
+        const userId = req.user.id;
+
+        if (!otp || !newEmail) {
+            return res.status(400).json({ success: false, message: "OTP and new email are required" });
+        }
+
+        const trimmedNewEmail = newEmail.trim().toLowerCase();
+
+        // Validate new email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmedNewEmail)) {
+            return res.status(400).json({ success: false, message: "Please enter a valid email address" });
+        }
+
+        // Find user and verify OTP
+        const user = await User.findOne({
+            _id: userId,
+            changeEmailOTP: otp.trim(),
+            changeEmailExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired OTP. Please request a new one." });
+        }
+
+        if (user.email === trimmedNewEmail) {
+            return res.status(400).json({ success: false, message: "New email must be different from your current email" });
+        }
+
+        // Check new email is not already taken by another account
+        const conflict = await User.findOne({ email: trimmedNewEmail, _id: { $ne: userId } });
+        if (conflict) {
+            return res.status(400).json({ success: false, message: "This email is already in use by another account" });
+        }
+
+        // Update email
+        user.email = trimmedNewEmail;
+        user.changeEmailOTP = undefined;
+        user.changeEmailExpires = undefined;
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Email updated successfully!", email: trimmedNewEmail });
+    } catch (error) {
+        console.error("Verify Change Email OTP Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
 // @desc    Authenticate user with Google OAuth (Signup / Signin)
 // @route   POST /api/auth/google
 // @access  Public
@@ -718,5 +813,7 @@ module.exports = {
     resetPassword,
     sendChangePasswordOTP,
     verifyChangePasswordOTP,
-    resetChangePassword
+    resetChangePassword,
+    sendChangeEmailOTP,
+    verifyChangeEmailOTP
 };
