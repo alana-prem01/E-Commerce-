@@ -248,13 +248,6 @@ export default function CheckoutPage() {
     // Persist entered address to DB user profile
     await saveShippingAddressToDb();
 
-    if (paymentMethod === 'cod') {
-      toast.success('Order placed successfully via Cash on Delivery!');
-      clearCart();
-      navigate('/');
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const isValidHex = (val) => typeof val === 'string' && /^[0-9a-fA-F]{24}$/.test(val);
@@ -268,6 +261,40 @@ export default function CheckoutPage() {
           image: item.image
         };
       });
+
+      const userStr = localStorage.getItem("user");
+      const loggedInUser = userStr ? JSON.parse(userStr) : null;
+      const userId = loggedInUser?._id || loggedInUser?.id || null;
+
+      if (paymentMethod === 'cod') {
+        const codRes = await api.post('/payment/create-cod-order', {
+          contactEmail: email,
+          shippingAddress: shipping,
+          billingAddress: billingAddressType === 'same' ? shipping : billing,
+          orderItems: formattedOrderItems,
+          pricing: {
+            subtotal: currentSubtotal,
+            shipping: shippingCost,
+            tax: tax,
+            discount: discount,
+            total: finalAmount
+          },
+          user: userId
+        });
+
+        if (codRes.success) {
+          toast.success('Order placed successfully via Cash on Delivery!');
+          clearCart();
+          if (codRes.order) {
+            localStorage.setItem('lastCompletedOrder', JSON.stringify(codRes.order));
+          }
+          navigate('/payment-success', { state: { order: codRes.order } });
+        } else {
+          toast.error(codRes.message || 'Failed to place COD order');
+        }
+        setIsSubmitting(false);
+        return;
+      }
 
       // 1. Create Razorpay order via backend
       const orderData = await api.post('/payment/create-order', {

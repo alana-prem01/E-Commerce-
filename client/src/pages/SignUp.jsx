@@ -144,9 +144,16 @@ const SignUp = () => {
 
     if (name === 'email') {
       const lowercased = value.toLowerCase();
-      setFormData((prev) => ({ ...prev, email: lowercased }));
-      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!regex.test(lowercased) || lowercased.length > 100) {
+      const trimmed = lowercased.trim();
+      setFormData((prev) => ({ ...prev, email: trimmed }));
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!trimmed) {
+        setErrors((prev) => ({ ...prev, email: 'Email is required.' }));
+      } else if (/\s/.test(value)) {
+        setErrors((prev) => ({ ...prev, email: 'Email cannot contain spaces.' }));
+      } else if ((trimmed.match(/@/g) || []).length !== 1) {
+        setErrors((prev) => ({ ...prev, email: "Email must contain exactly one '@' symbol." }));
+      } else if (!emailRegex.test(trimmed) || trimmed.length > 100) {
         setErrors((prev) => ({
           ...prev,
           email: 'Please enter a valid email address.',

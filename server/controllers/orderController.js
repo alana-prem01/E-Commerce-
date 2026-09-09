@@ -7,7 +7,7 @@ const sendEmail = require('../utils/sendEmail');
 // @access  Private/Admin
 const getAllOrders = async (req, res) => {
   try {
-    const { search, orderStatus, paymentStatus, page = 1, limit = 10 } = req.query;
+    const { search, orderStatus, paymentStatus, page = 1, limit, all } = req.query;
 
     let query = {};
 
@@ -40,25 +40,25 @@ const getAllOrders = async (req, res) => {
     }
 
     // Pagination
-    const pageNumber = parseInt(page, 10) || 1;
-    const limitNumber = parseInt(limit, 10) || 10;
-    const skip = (pageNumber - 1) * limitNumber;
-
-    const orders = await Order.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNumber)
-      .populate('user', 'name email');
-
     const totalOrders = await Order.countDocuments(query);
-    const totalPages = Math.ceil(totalOrders / limitNumber);
+
+    let ordersQuery = Order.find(query).sort({ createdAt: -1 }).populate('user', 'name email');
+
+    if (all !== 'true' && limit && limit !== '0' && limit !== '10000') {
+      const pageNumber = parseInt(page, 10) || 1;
+      const limitNumber = parseInt(limit, 10) || 10;
+      const skip = (pageNumber - 1) * limitNumber;
+      ordersQuery = ordersQuery.skip(skip).limit(limitNumber);
+    }
+
+    const orders = await ordersQuery;
 
     res.status(200).json({
       success: true,
       count: orders.length,
       totalOrders,
-      totalPages,
-      currentPage: pageNumber,
+      totalPages: Math.ceil(totalOrders / 10) || 1,
+      currentPage: parseInt(page, 10) || 1,
       orders
     });
   } catch (error) {
@@ -113,6 +113,11 @@ const updateOrderStatus = async (req, res) => {
     }
 
     order.orderStatus = status;
+
+    // If order status is set to Delivered, automatically mark payment as Paid (especially for Cash on Delivery orders)
+    if (status === 'Delivered') {
+      order.paymentStatus = 'Paid';
+    }
 
     // Update tracking dates
     if (!order.tracking) {

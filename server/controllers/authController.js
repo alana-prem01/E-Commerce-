@@ -203,8 +203,8 @@ const signin = async (req, res) => {
             return res.status(400).json({ success: false, message: "Email cannot exceed 100 characters" });
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(trimmedEmail)) {
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (/\s/.test(email) || (email.match(/@/g) || []).length !== 1 || !emailRegex.test(trimmedEmail)) {
             return res.status(400).json({ success: false, message: "Invalid email format" });
         }
 
