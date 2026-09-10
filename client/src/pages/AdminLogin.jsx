@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import api from "../utils/api";
@@ -228,7 +228,9 @@ function AdminLogin() {
                 onChange={(e) => setAcceptTerms(e.target.checked)}
                 className="checkbox"
               />
-              <span>I accept the Privacy Policy and Terms of Service</span>
+              <span>
+                I accept the <Link to="/privacy-policy" onClick={(e) => e.stopPropagation()}>Privacy Policy</Link> and <Link to="/terms" onClick={(e) => e.stopPropagation()}>Terms of Service</Link>
+              </span>
             </label>
             {termsError && <div className="error-message" style={{ marginTop: '4px' }}>{termsError}</div>}
           </div>
