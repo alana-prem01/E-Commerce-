@@ -203,21 +203,30 @@ export default function SearchResultsPage() {
                 <button
                   className="pagination-btn"
                   disabled={page === 1}
-                  onClick={() => setPage(p => p - 1)}
+                  onClick={() => {
+                    setPage(p => p - 1);
+                    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                  }}
                 >← Prev</button>
                 <div className="pagination-pages">
                   {[...Array(totalPages)].map((_, i) => (
                     <button
                       key={i}
                       className={`pagination-page ${page === i + 1 ? 'active' : ''}`}
-                      onClick={() => setPage(i + 1)}
+                      onClick={() => {
+                        setPage(i + 1);
+                        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                      }}
                     >{i + 1}</button>
                   ))}
                 </div>
                 <button
                   className="pagination-btn"
                   disabled={page === totalPages}
-                  onClick={() => setPage(p => p + 1)}
+                  onClick={() => {
+                    setPage(p => p + 1);
+                    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                  }}
                 >Next →</button>
               </div>
             )}

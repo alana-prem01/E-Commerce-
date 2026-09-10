@@ -117,13 +117,24 @@ export default function ProductDetailsPage() {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     if (!isLoggedIn) {
       // Redirect to login with intent to checkout after authentication, preserving product and quantity
-      const redirectUrl = `/checkout?productId=${id}&qty=${qty}`;
+      const redirectUrl = `/checkout?buyNow=true&productId=${id}&qty=${qty}`;
       navigate(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
       return;
     }
     if (product) {
-      addToCart(product, qty);
-      navigate('/checkout');
+      const buyNowData = {
+        id: product._id || product.id,
+        product: product._id || product.id,
+        title: product.name || product.title || product.productName || 'Jewellery Item',
+        variant: product.variant || 'Standard',
+        price: typeof product.price === 'number'
+          ? product.price
+          : parseFloat(String(product.price).replace(/[^0-9.]/g, '')) || 0,
+        quantity: qty,
+        image: product.image || product.productImage || ''
+      };
+      sessionStorage.setItem('buyNowItem', JSON.stringify(buyNowData));
+      navigate('/checkout?buyNow=true');
     }
   };
 

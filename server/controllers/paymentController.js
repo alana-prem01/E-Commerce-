@@ -119,7 +119,8 @@ exports.verifyPayment = async (req, res) => {
       orderItems,
       pricing,
       user,
-      couponCode
+      couponCode,
+      isBuyNow
     } = req.body;
 
     // Validate shipping address before creating order
@@ -211,8 +212,8 @@ exports.verifyPayment = async (req, res) => {
       }
     }
 
-    // 4. Clear purchased items from cart
-    if (user && orderItems && orderItems.length > 0) {
+    // 4. Clear purchased items from cart (only for normal cart checkout, not Buy Now)
+    if (!isBuyNow && user && orderItems && orderItems.length > 0) {
       const purchasedProductIds = orderItems.map(item => item.product).filter(Boolean);
       if (purchasedProductIds.length > 0) {
         await Cart.findOneAndUpdate(
@@ -314,7 +315,8 @@ exports.createCodOrder = async (req, res) => {
       orderItems,
       pricing,
       user,
-      couponCode
+      couponCode,
+      isBuyNow
     } = req.body;
 
     // Validate shipping address before creating COD order
@@ -386,8 +388,8 @@ exports.createCodOrder = async (req, res) => {
       }
     }
 
-    // Clear cart if user logged in
-    if (user && orderItems && orderItems.length > 0) {
+    // Clear cart if user logged in (only for normal cart checkout, not Buy Now)
+    if (!isBuyNow && user && orderItems && orderItems.length > 0) {
       const purchasedProductIds = orderItems.map(item => item.product).filter(Boolean);
       if (purchasedProductIds.length > 0) {
         await Cart.findOneAndUpdate(

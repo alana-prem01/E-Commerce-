@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useCart } from '../utils/CartContext';
 import api from '../utils/api';
@@ -127,6 +127,54 @@ const AddressForm = ({ data, setData, errors = {} }) => {
 
 export default function CheckoutPage() {
   const { cartItems, subtotal, clearCart } = useCart();
+  const [searchParams] = useSearchParams();
+
+  const isBuyNowRoute = searchParams.get('buyNow') === 'true' || Boolean(searchParams.get('productId'));
+
+  const [buyNowItem, setBuyNowItem] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem('buyNowItem');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const productId = searchParams.get('productId');
+    const qtyParam = searchParams.get('qty');
+    const qty = qtyParam ? parseInt(qtyParam, 10) : 1;
+
+    if (isBuyNowRoute && productId && (!buyNowItem || String(buyNowItem.id || buyNowItem.product) !== String(productId))) {
+      api.get(`/products/getsingleproductdetails/${productId}`)
+        .then(res => {
+          if (res.success && res.product) {
+            const p = res.product;
+            const item = {
+              id: p._id || p.id,
+              product: p._id || p.id,
+              title: p.name || p.title || p.productName || 'Jewellery Item',
+              variant: p.variant || 'Standard',
+              price: typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^0-9.]/g, '')) || 0,
+              quantity: qty,
+              image: p.image || p.productImage || ''
+            };
+            setBuyNowItem(item);
+            sessionStorage.setItem('buyNowItem', JSON.stringify(item));
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch buy now product:', err);
+        });
+    } else if (!isBuyNowRoute) {
+      sessionStorage.removeItem('buyNowItem');
+      if (buyNowItem) setBuyNowItem(null);
+    }
+  }, [isBuyNowRoute, searchParams]);
+
+  const isBuyNow = isBuyNowRoute && Boolean(buyNowItem);
+  const checkoutItems = isBuyNow ? [buyNowItem] : (cartItems || []);
+
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [shippingMethod, setShippingMethod] = useState('standard');
@@ -233,7 +281,9 @@ export default function CheckoutPage() {
     }
   };
 
-  const currentSubtotal = subtotal || 0;
+  const currentSubtotal = isBuyNow
+    ? (buyNowItem ? buyNowItem.price * buyNowItem.quantity : 0)
+    : (subtotal || 0);
   const shippingCost = isPremiumUser ? 0 : (shippingMethod === 'express' ? 150 : 65);
   const tax = currentSubtotal > 0 ? 110 : 0;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
@@ -365,7 +415,7 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
     try {
       const isValidHex = (val) => typeof val === 'string' && /^[0-9a-fA-F]{24}$/.test(val);
-      const formattedOrderItems = (cartItems || []).map(item => {
+      const formattedOrderItems = (checkoutItems || []).map(item => {
         const rawId = item._id || item.product || item.id;
         return {
           product: isValidHex(rawId) ? rawId : undefined,
@@ -394,12 +444,17 @@ export default function CheckoutPage() {
             total: finalAmount
           },
           user: userId,
-          couponCode: appliedCoupon ? appliedCoupon.code : null
+          couponCode: appliedCoupon ? appliedCoupon.code : null,
+          isBuyNow: isBuyNow
         });
 
         if (codRes.success) {
           toast.success('Order placed successfully via Cash on Delivery!');
-          clearCart();
+          if (isBuyNow) {
+            sessionStorage.removeItem('buyNowItem');
+          } else {
+            clearCart();
+          }
           if (codRes.order) {
             localStorage.setItem('lastCompletedOrder', JSON.stringify(codRes.order));
           }
@@ -416,7 +471,8 @@ export default function CheckoutPage() {
         amount: finalAmount, // legacy fallback
         subtotal: currentSubtotal,
         couponCode: appliedCoupon ? appliedCoupon.code : null,
-        currency: 'INR'
+        currency: 'INR',
+        isBuyNow: isBuyNow
       });
 
       if (!orderData.success) {
@@ -456,12 +512,17 @@ export default function CheckoutPage() {
                 total: finalAmount
               },
               user: userId,
-              couponCode: appliedCoupon ? appliedCoupon.code : null
+              couponCode: appliedCoupon ? appliedCoupon.code : null,
+              isBuyNow: isBuyNow
             });
 
             if (verifyData.success) {
               toast.success('Payment successful!');
-              await clearCart();
+              if (isBuyNow) {
+                sessionStorage.removeItem('buyNowItem');
+              } else {
+                await clearCart();
+              }
               if (verifyData.order) {
                 localStorage.setItem('lastCompletedOrder', JSON.stringify(verifyData.order));
               }
@@ -764,8 +825,8 @@ export default function CheckoutPage() {
             <h2 className="checkout-section-title">Order Summary</h2>
 
             {/* Section 8 – Order Summary */}
-            {cartItems && cartItems.length > 0 ? (
-              cartItems.map((item, index) => (
+            {checkoutItems && checkoutItems.length > 0 ? (
+              checkoutItems.map((item, index) => (
                 <div key={item.id || item._id || index} className="checkout-product-card">
                   <div className="checkout-product-img">
                     {item.image && (
@@ -785,7 +846,7 @@ export default function CheckoutPage() {
               ))
             ) : (
               <div style={{ padding: '16px 0', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                Your cart is empty.
+                {isBuyNow ? 'Buy Now item not found.' : 'Your cart is empty.'}
               </div>
             )}
 
@@ -864,7 +925,7 @@ export default function CheckoutPage() {
               <button
                 className="checkout-pay-btn"
                 onClick={handlePay}
-                disabled={isSubmitting || !cartItems || cartItems.length === 0}
+                disabled={isSubmitting || !checkoutItems || checkoutItems.length === 0}
               >
                 {isSubmitting
                   ? 'Processing...'
@@ -874,7 +935,10 @@ export default function CheckoutPage() {
               </button>
               <button
                 className="checkout-back-btn"
-                onClick={() => navigate('/cart')}
+                onClick={() => {
+                  sessionStorage.removeItem('buyNowItem');
+                  navigate('/cart');
+                }}
               >
                 Back to Cart
               </button>

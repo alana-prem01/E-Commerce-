@@ -31,18 +31,7 @@ function Login() {
           return;
         }
 
-        const url = new URL('http://dummy' + redirectTarget);
-        const productId = url.searchParams.get('productId');
-        const qtyParam = url.searchParams.get('qty');
-        const qty = qtyParam ? parseInt(qtyParam, 10) : 1;
-
-        if (productId) {
-          api.post('/cart/addcart', { productId, quantity: qty })
-            .then(() => navigate('/checkout'))
-            .catch(() => navigate(redirectTarget));
-        } else {
-          navigate(redirectTarget);
-        }
+        navigate(redirectTarget);
       }
     } catch (err) {
       toast.error(err.message || 'Google sign-in failed. Please try again.');
@@ -199,25 +188,8 @@ function Login() {
             return;
           }
 
-          // Check for productId and qty in redirect path (Buy Now flow)
-          const url = new URL('http://dummy' + redirectTarget);
-          const productId = url.searchParams.get('productId');
-          const qtyParam = url.searchParams.get('qty');
-          const qty = qtyParam ? parseInt(qtyParam, 10) : 1;
-
-          if (productId) {
-            // Add the product to the cart via backend before navigating to checkout
-            api.post('/cart/addcart', { productId, quantity: qty })
-              .then(() => {
-                navigate('/checkout');
-              })
-              .catch(() => {
-                toast.error('Failed to add product to cart before checkout');
-                navigate(redirectTarget);
-              });
-          } else {
-            navigate(redirectTarget);
-          }
+          // Navigate to redirectTarget (Checkout will handle Buy Now flow if buyNow params are present)
+          navigate(redirectTarget);
         }
       } catch (error) {
         const msg = error.message || "Unable to connect to the backend server.";
