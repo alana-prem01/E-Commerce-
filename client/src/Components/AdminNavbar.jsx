@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FiSearch, FiUser } from 'react-icons/fi';
+import { FiUser } from 'react-icons/fi';
 import '../css/AdminNavbar.css';
 
 const AdminNavbar = () => {
-    const [isSearchExpanded, setIsSearchExpanded] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
     const dropdownRef = useRef(null);
@@ -70,22 +68,6 @@ const AdminNavbar = () => {
 
             {/* Icons Container */}
             <div className="admin-navbar-icons">
-                {/* Search */}
-                <div className="admin-navbar-search-container">
-                    <input 
-                        type="text"
-                        className={`admin-navbar-search-input ${isSearchExpanded ? 'expanded' : ''}`}
-                        placeholder="Search..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onBlur={() => { if(!searchQuery) setIsSearchExpanded(false) }}
-                    />
-                    <FiSearch 
-                        className="admin-navbar-search-icon" 
-                        onClick={() => setIsSearchExpanded(true)}
-                    />
-                </div>
-
                 {/* Profile */}
                 <div className="admin-navbar-profile-container" ref={dropdownRef}>
                     <FiUser 
@@ -110,3 +92,4 @@ const AdminNavbar = () => {
 };
 
 export default AdminNavbar;
+
