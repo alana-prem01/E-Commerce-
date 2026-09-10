@@ -279,7 +279,8 @@ export default function CheckoutPage() {
             discount: discount,
             total: finalAmount
           },
-          user: userId
+          user: userId,
+          couponCode: appliedCoupon ? appliedCoupon.code : null
         });
 
         if (codRes.success) {
@@ -340,7 +341,8 @@ export default function CheckoutPage() {
                 discount: discount,
                 total: finalAmount
               },
-              user: userId
+              user: userId,
+              couponCode: appliedCoupon ? appliedCoupon.code : null
             });
 
             if (verifyData.success) {

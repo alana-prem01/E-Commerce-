@@ -6,6 +6,7 @@ import '../css/CouponManagementPage.css';
 
 export default function CouponManagementPage() {
   const [coupons, setCoupons] = useState([]);
+  const [totalCouponUsers, setTotalCouponUsers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -22,7 +23,10 @@ export default function CouponManagementPage() {
     setLoading(true);
     try {
       const data = await api.get('/coupons');
-      if (data.success) setCoupons(data.coupons || []);
+      if (data.success) {
+        setCoupons(data.coupons || []);
+        setTotalCouponUsers(data.totalCouponUsers || 0);
+      }
     } catch (err) {
       toast.error('Failed to load coupons');
     } finally {
@@ -32,10 +36,30 @@ export default function CouponManagementPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.code || !form.discountValue || !form.expiresAt) {
+    if (!form.code || form.discountValue === '' || !form.expiresAt) {
       toast.error('Please fill all required fields');
       return;
     }
+
+    const val = Number(form.discountValue);
+    if (form.discountType === 'percent') {
+      if (isNaN(val) || val < 1 || val > 70) {
+        toast.error('Percentage discount must be between 1% and 70%.');
+        return;
+      }
+    } else if (isNaN(val) || val <= 0) {
+      toast.error('Discount value must be greater than 0.');
+      return;
+    }
+
+    if (form.usageLimit !== '' && form.usageLimit !== null && form.usageLimit !== undefined) {
+      const limit = Number(form.usageLimit);
+      if (isNaN(limit) || limit <= 0) {
+        toast.error('Usage limit must be greater than 0.');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const data = await api.post('/coupons', form);
@@ -108,8 +132,8 @@ export default function CouponManagementPage() {
                     <div style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem' }}>Expired Coupons</div>
                 </div>
                 <div className="admin-card text-center py-4" style={{ marginBottom: 0 }}>
-                    <div style={{ fontSize: '2rem', fontWeight: 600, color: 'var(--admin-secondary)', marginBottom: '4px' }}>{coupons.reduce((acc, c) => acc + c.usedCount, 0)}</div>
-                    <div style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem' }}>Total Uses</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 600, color: 'var(--admin-secondary)', marginBottom: '4px' }}>{totalCouponUsers}</div>
+                    <div style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem' }}>Coupon Users</div>
                 </div>
             </div>
 
@@ -229,6 +253,7 @@ export default function CouponManagementPage() {
                                 <th>Min Order</th>
                                 <th>Expires</th>
                                 <th>Usage</th>
+                                <th>Users</th>
                                 <th>Status</th>
                                 <th style={{ textAlign: 'right' }}>Actions</th>
                             </tr>
@@ -265,6 +290,11 @@ export default function CouponManagementPage() {
                                         </td>
                                         <td>
                                             {coupon.usedCount}/{coupon.usageLimit ?? '∞'}
+                                        </td>
+                                        <td>
+                                            <span title="Unique users who purchased with this coupon">
+                                                {coupon.uniqueUserCount ?? 0}
+                                            </span>
                                         </td>
                                         <td>
                                             <span className={`admin-badge ${expired ? 'admin-badge-danger' : (coupon.isActive ? 'admin-badge-success' : 'admin-badge-warning')}`}>

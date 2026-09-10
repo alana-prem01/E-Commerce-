@@ -12,7 +12,6 @@ function AdminLogin() {
   // State Management
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -133,10 +132,6 @@ function AdminLogin() {
           localStorage.setItem("user", JSON.stringify(response.user));
           localStorage.setItem("isLoggedIn", "true");
 
-          if (rememberMe) {
-            localStorage.setItem("rememberedUser", trimmedEmail);
-          }
-
           window.dispatchEvent(new Event('auth-change'));
 
           navigate("/admin-dashboard");
@@ -253,16 +248,7 @@ function AdminLogin() {
           {recaptchaError && <div className="error-message" style={{ marginTop: '4px', textAlign: 'center' }}>{recaptchaError}</div>}
 
           {/* Options Row */}
-          <div className="options-row">
-            <label className="remember-me">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="checkbox"
-              />
-              <span>Remember Me</span>
-            </label>
+          <div className="options-row" style={{ justifyContent: 'flex-end' }}>
             <span
               className="forgot-password-link"
               onClick={() => navigate("/forgot-password")}

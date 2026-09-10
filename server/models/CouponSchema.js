@@ -16,7 +16,15 @@ const couponSchema = new mongoose.Schema({
   discountValue: {
     type: Number,
     required: true,
-    min: 0
+    validate: {
+      validator: function(val) {
+        if (this.discountType === 'percent') {
+          return val >= 1 && val <= 70;
+        }
+        return val > 0;
+      },
+      message: 'Percentage discount must be between 1% and 70%.'
+    }
   },
   minOrderAmount: {
     type: Number,
@@ -32,7 +40,16 @@ const couponSchema = new mongoose.Schema({
   },
   usageLimit: {
     type: Number,
-    default: null // null = unlimited
+    default: null, // null = unlimited
+    validate: {
+      validator: function(val) {
+        if (val !== null && val !== undefined) {
+          return val > 0;
+        }
+        return true;
+      },
+      message: 'Usage limit must be greater than 0.'
+    }
   },
   usedCount: {
     type: Number,

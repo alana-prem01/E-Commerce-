@@ -105,7 +105,8 @@ exports.verifyPayment = async (req, res) => {
       billingAddress,
       orderItems,
       pricing,
-      user
+      user,
+      couponCode
     } = req.body;
 
     // Check for duplicate order verification
@@ -153,6 +154,7 @@ exports.verifyPayment = async (req, res) => {
       shippingAddress: sanitizeAddr(shippingAddress),
       billingAddress: sanitizeAddr(billingAddress),
       orderItems: sanitizedOrderItems,
+      couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
       pricing: {
         subtotal: pricing?.subtotal || 0,
         shipping: pricing?.shipping || 0,
@@ -170,6 +172,15 @@ exports.verifyPayment = async (req, res) => {
     });
 
     await newOrder.save();
+
+    // Increment usedCount on the coupon if one was applied
+    if (couponCode) {
+      const Coupon = require('../models/CouponSchema');
+      await Coupon.findOneAndUpdate(
+        { code: couponCode.trim().toUpperCase() },
+        { $inc: { usedCount: 1 } }
+      );
+    }
 
     // 3. Decrement stock for each ordered product
     for (const item of sanitizedOrderItems) {
@@ -283,7 +294,8 @@ exports.createCodOrder = async (req, res) => {
       billingAddress,
       orderItems,
       pricing,
-      user
+      user,
+      couponCode
     } = req.body;
 
     const mongoose = require('mongoose');
@@ -313,6 +325,7 @@ exports.createCodOrder = async (req, res) => {
       shippingAddress: sanitizeAddr(shippingAddress),
       billingAddress: sanitizeAddr(billingAddress),
       orderItems: sanitizedOrderItems,
+      couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
       pricing: {
         subtotal: pricing?.subtotal || 0,
         shipping: pricing?.shipping || 0,
@@ -328,6 +341,15 @@ exports.createCodOrder = async (req, res) => {
     });
 
     await newOrder.save();
+
+    // Increment usedCount on the coupon if one was applied
+    if (couponCode) {
+      const Coupon = require('../models/CouponSchema');
+      await Coupon.findOneAndUpdate(
+        { code: couponCode.trim().toUpperCase() },
+        { $inc: { usedCount: 1 } }
+      );
+    }
 
     // Decrement stock for each ordered product
     for (const item of sanitizedOrderItems) {

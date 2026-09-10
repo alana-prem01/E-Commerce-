@@ -125,8 +125,36 @@ const createCoupon = async (req, res) => {
   try {
     const { code, discountType, discountValue, minOrderAmount, maxDiscount, expiresAt, usageLimit } = req.body;
 
-    if (!code || !discountType || !discountValue || !expiresAt) {
+    if (!code || !discountType || discountValue === undefined || discountValue === null || discountValue === '' || !expiresAt) {
       return res.status(400).json({ success: false, message: 'Please provide all required fields' });
+    }
+
+    const numDiscountValue = Number(discountValue);
+
+    // Percentage Discount Validation: 1% to 70%
+    if (discountType === 'percent') {
+      if (isNaN(numDiscountValue) || numDiscountValue < 1 || numDiscountValue > 70) {
+        return res.status(400).json({
+          success: false,
+          message: 'Percentage discount must be between 1% and 70%.'
+        });
+      }
+    } else if (isNaN(numDiscountValue) || numDiscountValue <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Discount value must be greater than 0.'
+      });
+    }
+
+    // Usage Limit Validation: Must be > 0 if specified
+    if (usageLimit !== undefined && usageLimit !== null && usageLimit !== '') {
+      const numUsageLimit = Number(usageLimit);
+      if (isNaN(numUsageLimit) || numUsageLimit <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Usage limit must be greater than 0.'
+        });
+      }
     }
 
     const existing = await Coupon.findOne({ code: code.trim().toUpperCase() });
@@ -134,19 +162,27 @@ const createCoupon = async (req, res) => {
       return res.status(409).json({ success: false, message: 'Coupon code already exists' });
     }
 
+    const parsedUsageLimit = (usageLimit !== undefined && usageLimit !== null && usageLimit !== '')
+      ? Number(usageLimit)
+      : null;
+
     const coupon = await Coupon.create({
       code: code.trim().toUpperCase(),
       discountType,
-      discountValue: Number(discountValue),
+      discountValue: numDiscountValue,
       minOrderAmount: Number(minOrderAmount) || 0,
       maxDiscount: maxDiscount ? Number(maxDiscount) : null,
       expiresAt: new Date(expiresAt),
-      usageLimit: usageLimit ? Number(usageLimit) : null,
+      usageLimit: parsedUsageLimit,
       isActive: true
     });
 
     res.status(201).json({ success: true, message: 'Coupon created successfully', coupon });
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ success: false, message: messages[0] || 'Validation Error' });
+    }
     console.error('Create Coupon Error:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
@@ -157,8 +193,67 @@ const createCoupon = async (req, res) => {
 // @access  Private/Admin
 const getAllCoupons = async (req, res) => {
   try {
+    const Order = require('../models/OrderSchema');
     const coupons = await Coupon.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, count: coupons.length, coupons });
+
+    // Fetch all orders that had a coupon applied or discount > 0
+    const orders = await Order.find({
+      $or: [
+        { couponCode: { $exists: true, $ne: null } },
+        { 'pricing.discount': { $gt: 0 } }
+      ]
+    }).lean();
+
+    // Calculate total unique users across ALL coupons
+    const totalUserKeys = new Set();
+    orders.forEach(o => {
+      const key = o.user ? o.user.toString() : (o.contactEmail ? o.contactEmail.trim().toLowerCase() : null);
+      if (key) totalUserKeys.add(key);
+    });
+
+    // Calculate uniqueUserCount per coupon
+    const couponsWithUserCount = coupons.map((coupon) => {
+      const obj = coupon.toObject();
+      const code = coupon.code ? coupon.code.toUpperCase() : '';
+
+      const matchingOrders = orders.filter(o => {
+        // Direct match by coupon code
+        if (o.couponCode && o.couponCode.toUpperCase() === code) return true;
+
+        // Fallback for legacy orders without couponCode: match by discount amount/percentage
+        if (o.pricing && Number(o.pricing.discount) > 0) {
+          const subtotal = Number(o.pricing.subtotal) || 0;
+          const discount = Number(o.pricing.discount) || 0;
+          if (coupon.discountType === 'percent' && subtotal > 0) {
+            const expectedDiscount = (subtotal * coupon.discountValue) / 100;
+            if (Math.abs(discount - expectedDiscount) < 1) return true;
+          } else if (coupon.discountType === 'fixed') {
+            if (discount === coupon.discountValue) return true;
+          }
+        }
+        return false;
+      });
+
+      const couponUserKeys = new Set();
+      matchingOrders.forEach(o => {
+        const key = o.user ? o.user.toString() : (o.contactEmail ? o.contactEmail.trim().toLowerCase() : null);
+        if (key) couponUserKeys.add(key);
+      });
+
+      // Take whichever is greater: distinct order users or recorded usedCount
+      obj.uniqueUserCount = Math.max(couponUserKeys.size, coupon.usedCount || 0);
+      return obj;
+    });
+
+    // Total coupon users is the count of distinct users who bought items using coupons
+    const totalCouponUsers = totalUserKeys.size;
+
+    res.status(200).json({
+      success: true,
+      count: coupons.length,
+      totalCouponUsers,
+      coupons: couponsWithUserCount
+    });
   } catch (error) {
     console.error('Get Coupons Error:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
