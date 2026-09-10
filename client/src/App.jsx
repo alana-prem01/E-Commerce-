@@ -64,12 +64,12 @@ const Layout = ({ children }) => {
     '/edit-product', '/orders', '/order/', '/users', '/user-details', '/coupons', '/premium-subscribers', '/admin-messages',
   ];
 
-  const isAdminRoute = adminRoutes.some(route => {
+  const isAdminRoute = location.pathname !== '/admin-login' && (adminRoutes.some(route => {
     if (route.endsWith('/')) {
       return location.pathname.startsWith(route);
     }
     return location.pathname === route || location.pathname.startsWith(`${route}/`);
-  }) || location.pathname.startsWith('/admin');
+  }) || location.pathname.startsWith('/admin'));
 
   if (isAdminRoute) {
     return (
@@ -96,12 +96,12 @@ const NotFoundHandler = () => {
     '/admin-dashboard', '/admin-profile', '/products', '/add-product',
     '/edit-product', '/orders', '/order/', '/users', '/user-details', '/coupons', '/premium-subscribers', '/admin-messages',
   ];
-  const isAdminRoute = adminRoutes.some(route => {
+  const isAdminRoute = location.pathname !== '/admin-login' && (adminRoutes.some(route => {
     if (route.endsWith('/')) {
       return location.pathname.startsWith(route);
     }
     return location.pathname === route || location.pathname.startsWith(`${route}/`);
-  }) || location.pathname.startsWith('/admin');
+  }) || location.pathname.startsWith('/admin'));
 
   return isAdminRoute ? <AdminNotFound /> : <NotFound />;
 };
