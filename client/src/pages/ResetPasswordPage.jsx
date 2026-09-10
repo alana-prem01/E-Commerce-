@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
+import ReCaptcha from '../Components/ReCaptcha';
 import '../css/ResetPasswordPage.css';
 
 export default function ResetPasswordPage() {
@@ -18,6 +19,10 @@ export default function ResetPasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [consentError, setConsentError] = useState('');
+  const [recaptchaToken, setRecaptchaToken] = useState('');
+  const [recaptchaError, setRecaptchaError] = useState('');
   const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -97,7 +102,17 @@ export default function ResetPasswordPage() {
     }
     setConfirmPasswordError(confError);
 
-    if (passError || confError) {
+    if (!consent) {
+      setConsentError("You must accept the terms and policies to reset your password.");
+    } else {
+      setConsentError("");
+    }
+
+    if (!recaptchaToken) {
+      setRecaptchaError("Please complete the Google reCAPTCHA verification.");
+    }
+
+    if (passError || confError || !consent || !recaptchaToken) {
       return;
     }
 
@@ -109,6 +124,7 @@ export default function ResetPasswordPage() {
         otp: otp,
         newPassword: password,
         confirmPassword: confirmPassword,
+        recaptchaToken: recaptchaToken,
       });
 
       if (response.success) {
@@ -240,6 +256,47 @@ export default function ResetPasswordPage() {
                 </svg>
               </div>
               {confirmPasswordError && <span className="reset-error-message">{confirmPasswordError}</span>}
+            </div>
+
+            {/* Terms and Privacy Policy Consent Checkbox */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', marginBottom: '4px' }}>
+              <input
+                type="checkbox"
+                id="reset-consent"
+                checked={consent}
+                onChange={(e) => {
+                  setConsent(e.target.checked);
+                  if (e.target.checked) setConsentError('');
+                }}
+                style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary-color, #4F46E5)' }}
+              />
+              <label htmlFor="reset-consent" style={{ fontSize: '13px', color: '#4B5563', cursor: 'pointer' }}>
+                I accept the{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color, #4F46E5)', textDecoration: 'underline' }}>
+                  Terms & Conditions
+                </a>{' '}
+                and{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color, #4F46E5)', textDecoration: 'underline' }}>
+                  Privacy Policy
+                </a>
+              </label>
+            </div>
+            {consentError && <span className="reset-error-message" style={{ display: 'block', marginBottom: '8px' }}>{consentError}</span>}
+
+            {/* Google reCAPTCHA */}
+            <div style={{ margin: '14px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <ReCaptcha 
+                onChange={(token) => {
+                  setRecaptchaToken(token);
+                  setRecaptchaError("");
+                }}
+                onExpired={() => {
+                  setRecaptchaToken("");
+                  setRecaptchaError("reCAPTCHA verification expired. Please verify again.");
+                }}
+                onError={() => setRecaptchaError("reCAPTCHA verification failed. Please try again.")}
+              />
+              {recaptchaError && <span className="reset-error-message" style={{ marginTop: '6px', textAlign: 'center' }}>{recaptchaError}</span>}
             </div>
 
             {/* Section 6 – Reset Password Button */}

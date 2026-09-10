@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useGoogleLogin } from '@react-oauth/google';
 import api from '../utils/api';
+import ReCaptcha from '../Components/ReCaptcha';
 import '../css/SignUp.css';
 
 const SignUp = () => {
@@ -66,6 +67,10 @@ const SignUp = () => {
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState('');
 
+  // Google reCAPTCHA State
+  const [recaptchaToken, setRecaptchaToken] = useState('');
+  const [recaptchaError, setRecaptchaError] = useState('');
+
   // Handle Input Changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -100,6 +105,14 @@ const SignUp = () => {
     if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
       e.preventDefault();
     }
+  };
+
+  // Block non-numeric pasted content in phone field
+  const handlePhonePaste = (e) => {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+    const digitsOnly = pasted.replace(/\D/g, '').slice(0, 15);
+    setFormData((prev) => ({ ...prev, phone: prev.phone + digitsOnly }));
   };
 
   // Password Strength Calculation
@@ -152,9 +165,16 @@ const SignUp = () => {
 
     if (name === 'email') {
       const lowercased = value.toLowerCase();
-      setFormData((prev) => ({ ...prev, email: lowercased }));
-      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!regex.test(lowercased) || lowercased.length > 100) {
+      const trimmed = lowercased.trim();
+      setFormData((prev) => ({ ...prev, email: trimmed }));
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!trimmed) {
+        setErrors((prev) => ({ ...prev, email: 'Email is required.' }));
+      } else if (/\s/.test(value)) {
+        setErrors((prev) => ({ ...prev, email: 'Email cannot contain spaces.' }));
+      } else if ((trimmed.match(/@/g) || []).length !== 1) {
+        setErrors((prev) => ({ ...prev, email: "Email must contain exactly one '@' symbol." }));
+      } else if (!emailRegex.test(trimmed) || trimmed.length > 100) {
         setErrors((prev) => ({
           ...prev,
           email: 'Please enter a valid email address.',
@@ -168,8 +188,14 @@ const SignUp = () => {
       const digits = value.replace(/\D/g, '');
       if (!digits) {
         setErrors((prev) => ({ ...prev, phone: 'Phone number is required.' }));
-      } else if (countryCode === '+91' && digits.length !== 10) {
-        setErrors((prev) => ({ ...prev, phone: 'Please enter a valid 10-digit Indian mobile number.' }));
+      } else if (countryCode === '+91') {
+        if (digits.length !== 10) {
+          setErrors((prev) => ({ ...prev, phone: 'Please enter a valid 10-digit Indian mobile number.' }));
+        } else if (!/^[6-9]\d{9}$/.test(digits)) {
+          setErrors((prev) => ({ ...prev, phone: 'Indian mobile numbers must start with 6, 7, 8, or 9.' }));
+        } else {
+          setErrors((prev) => ({ ...prev, phone: '' }));
+        }
       } else if (digits.length < 7 || digits.length > 15) {
         setErrors((prev) => ({ ...prev, phone: 'Please enter a valid phone number.' }));
       } else {
@@ -221,11 +247,19 @@ const SignUp = () => {
         setErrors((prev) => ({ ...prev, phone: 'Phone number is required.' }));
         return;
       }
-      if (countryCode === '+91' && phoneDigits.length !== 10) {
-        setErrors((prev) => ({ ...prev, phone: 'Please enter a valid 10-digit Indian mobile number.' }));
+      if (countryCode === '+91') {
+        if (phoneDigits.length !== 10) {
+          setErrors((prev) => ({ ...prev, phone: 'Please enter a valid 10-digit Indian mobile number.' }));
+          return;
+        }
+        if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+          setErrors((prev) => ({ ...prev, phone: 'Indian mobile numbers must start with 6, 7, 8, or 9.' }));
+          return;
+        }
+      } else if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+        setErrors((prev) => ({ ...prev, phone: 'Please enter a valid phone number.' }));
         return;
       }
-
       setIsSubmitting(true);
       try {
         const payload = {
@@ -235,6 +269,7 @@ const SignUp = () => {
           password: formData.password,
           confirmPassword: formData.confirmPassword,
           consent: formData.consent,
+          recaptchaToken: recaptchaToken,
         };
         const response = await api.post("/auth/signup", payload);
         if (response.success) {
@@ -331,6 +366,7 @@ const SignUp = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   onKeyDown={handlePhoneKeyDown}
+                  onPaste={handlePhonePaste}
                   onBlur={handleBlur}
                   className="input-field"
                   style={{ flex: 1 }}
@@ -438,6 +474,20 @@ const SignUp = () => {
               {errors.consent}
             </span>
           )}
+
+          {/* Google reCAPTCHA */}
+          <ReCaptcha 
+            onChange={(token) => {
+              setRecaptchaToken(token);
+              setRecaptchaError("");
+            }}
+            onExpired={() => {
+              setRecaptchaToken("");
+              setRecaptchaError("reCAPTCHA verification expired. Please verify again.");
+            }}
+            onError={() => setRecaptchaError("reCAPTCHA verification failed. Please try again.")}
+          />
+          {recaptchaError && <div className="error-message" style={{ marginTop: '4px', textAlign: 'center' }}>{recaptchaError}</div>}
 
           {/* Create Account Button */}
           <button type="submit" className="create-account-btn" disabled={isSubmitting}>

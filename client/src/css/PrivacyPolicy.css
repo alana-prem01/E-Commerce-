@@ -96,13 +96,13 @@
 .privacy-policy-link {
   font-family: var(--body-font);
   font-size: 16px;
-  color: #005e68;
+  color: var(--primary-color-hover);
   text-decoration: underline;
   transition: color 300ms ease;
 }
 
 .privacy-policy-link:hover {
-  color: #eac33f;
+  color: var(--secondary-color);
 }
 
 /* Accessibility Focus Indicator */

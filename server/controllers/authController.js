@@ -11,7 +11,16 @@ const verifyReCaptchaToken = require('../utils/verifyReCaptcha');
 
 const signup = async (req, res) => {
     try {
-        let { name, email, phone, password, confirmPassword, consent } = req.body;
+        let { name, email, phone, password, confirmPassword, consent, recaptchaToken } = req.body;
+
+        // Google reCAPTCHA Verification
+        if (!recaptchaToken) {
+            return res.status(400).json({ success: false, message: "reCAPTCHA token is missing" });
+        }
+        const isRecaptchaValid = await verifyReCaptchaToken(recaptchaToken);
+        if (!isRecaptchaValid) {
+            return res.status(400).json({ success: false, message: "reCAPTCHA verification failed" });
+        }
 
         // Trim inputs
         const trimmedName = name?.trim();
@@ -117,14 +126,32 @@ const signup = async (req, res) => {
             });
         }
 
-        // 7. Hash Password
+        // 7. Phone Validation (optional field but if provided must be valid)
+        if (phone) {
+            const phoneDigits = phone.replace(/\D/g, '');
+            if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please enter a valid phone number (7-15 digits)"
+                });
+            }
+            // Indian mobile: 10 digits starting with 6-9
+            if (phoneDigits.length === 10 && !/^[6-9]\d{9}$/.test(phoneDigits)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please enter a valid Indian mobile number (10 digits starting with 6-9)"
+                });
+            }
+        }
+
+        // 8. Hash Password
         const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
 
-        // 8. Create User
+        // 9. Create User
         const newUser = new User({
             name: trimmedName,
             email: trimmedEmail,
-            phone: phone ? phone.trim() : "",
+            phone: phone ? phone.replace(/\D/g, '') : "",
             password: hashedPassword
             // role will automatically be "User"
         })
@@ -161,7 +188,11 @@ const signin = async (req, res) => {
 
         const tokenToVerify = recaptchaToken || captchaToken;
 
-        // Verify Google reCAPTCHA
+        // Verify CAPTCHA
+        if (!tokenToVerify && !turnstileToken) {
+            return res.status(400).json({ success: false, message: "CAPTCHA verification is required" });
+        }
+
         if (tokenToVerify) {
             const isValidReCaptcha = await verifyReCaptchaToken(tokenToVerify, req.ip);
             if (!isValidReCaptcha) {
@@ -169,7 +200,6 @@ const signin = async (req, res) => {
             }
         }
 
-        // Verify Turnstile CAPTCHA (if provided)
         if (turnstileToken) {
             const isValidTurnstile = await verifyTurnstileToken(turnstileToken, req.ip);
             if (!isValidTurnstile) {
@@ -191,8 +221,8 @@ const signin = async (req, res) => {
             return res.status(400).json({ success: false, message: "Email cannot exceed 100 characters" });
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(trimmedEmail)) {
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (/\s/.test(email) || (email.match(/@/g) || []).length !== 1 || !emailRegex.test(trimmedEmail)) {
             return res.status(400).json({ success: false, message: "Invalid email format" });
         }
 
@@ -245,7 +275,7 @@ const signin = async (req, res) => {
         const accessToken = jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            { expiresIn: '15m' }
+            { expiresIn: '7d' }
         );
 
         return res.status(200).json({
@@ -316,9 +346,9 @@ const forgotPassword = async (req, res) => {
             user.resetPasswordOTP = undefined;
             user.resetPasswordExpires = undefined;
             await user.save();
-            return res.status(500).json({ 
-                success: false, 
-                message: error?.message ? `Email could not be sent: ${error.message}` : "Email could not be sent" 
+            return res.status(500).json({
+                success: false,
+                message: error?.message ? `Email could not be sent: ${error.message}` : "Email could not be sent"
             });
         }
 
@@ -333,8 +363,20 @@ const forgotPassword = async (req, res) => {
 // @access  Public
 const resetPassword = async (req, res) => {
     try {
-        // Expected request body: email, otp, newPassword, confirmPassword
-        const { email, otp, newPassword, confirmPassword } = req.body;
+        // Expected request body: email, otp, newPassword, confirmPassword, recaptchaToken
+        const { email, otp, newPassword, confirmPassword, recaptchaToken, captchaToken } = req.body;
+
+        const tokenToVerify = recaptchaToken || captchaToken;
+
+        // Verify Google reCAPTCHA
+        if (!tokenToVerify) {
+            return res.status(400).json({ success: false, message: "reCAPTCHA verification token is missing" });
+        }
+
+        const isValidReCaptcha = await verifyReCaptchaToken(tokenToVerify);
+        if (!isValidReCaptcha) {
+            return res.status(400).json({ success: false, message: "Google reCAPTCHA verification failed. Please try again." });
+        }
 
         if (!email || !otp || !newPassword || !confirmPassword) {
             return res.status(400).json({ success: false, message: "Please provide email, OTP, new password, and confirm password" });
@@ -454,9 +496,9 @@ const sendChangePasswordOTP = async (req, res) => {
             user.resetPasswordOTP = undefined;
             user.resetPasswordExpires = undefined;
             await user.save();
-            return res.status(500).json({ 
-                success: false, 
-                message: error?.message ? `Email could not be sent: ${error.message}` : "Email could not be sent" 
+            return res.status(500).json({
+                success: false,
+                message: error?.message ? `Email could not be sent: ${error.message}` : "Email could not be sent"
             });
         }
     } catch (error) {
@@ -549,6 +591,101 @@ const resetChangePassword = async (req, res) => {
 
     } catch (error) {
         console.error("Reset Change Password Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// @desc    Change Email (Send OTP to CURRENT email for identity confirmation)
+// @route   POST /api/auth/change-email/send-otp
+// @access  Private
+const sendChangeEmailOTP = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`[DEBUG] Change Email OTP for ${user.email}: ${otp}`);
+
+        // Store OTP — expires in 10 minutes
+        user.changeEmailOTP = otp;
+        user.changeEmailExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        const sendEmail = require('../utils/sendEmail');
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Email Change Request — Elora Admin',
+                message: `You requested to change your admin account email address.\n\nYour OTP verification code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email and your email will remain unchanged.`
+            });
+            res.status(200).json({ success: true, message: `OTP sent to your current email (${user.email}). Please check your inbox.` });
+        } catch (emailError) {
+            console.error("Email Sending Error:", emailError);
+            user.changeEmailOTP = undefined;
+            user.changeEmailExpires = undefined;
+            await user.save();
+            return res.status(500).json({ success: false, message: "Failed to send OTP email. Please try again." });
+        }
+    } catch (error) {
+        console.error("Send Change Email OTP Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// @desc    Change Email (Verify OTP, then update to new email)
+// @route   POST /api/auth/change-email/verify-otp
+// @access  Private
+const verifyChangeEmailOTP = async (req, res) => {
+    try {
+        const { otp, newEmail } = req.body;
+        const userId = req.user.id;
+
+        if (!otp || !newEmail) {
+            return res.status(400).json({ success: false, message: "OTP and new email are required" });
+        }
+
+        const trimmedNewEmail = newEmail.trim().toLowerCase();
+
+        // Validate new email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmedNewEmail)) {
+            return res.status(400).json({ success: false, message: "Please enter a valid email address" });
+        }
+
+        // Find user and verify OTP
+        const user = await User.findOne({
+            _id: userId,
+            changeEmailOTP: otp.trim(),
+            changeEmailExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired OTP. Please request a new one." });
+        }
+
+        if (user.email === trimmedNewEmail) {
+            return res.status(400).json({ success: false, message: "New email must be different from your current email" });
+        }
+
+        // Check new email is not already taken by another account
+        const conflict = await User.findOne({ email: trimmedNewEmail, _id: { $ne: userId } });
+        if (conflict) {
+            return res.status(400).json({ success: false, message: "This email is already in use by another account" });
+        }
+
+        // Update email
+        user.email = trimmedNewEmail;
+        user.changeEmailOTP = undefined;
+        user.changeEmailExpires = undefined;
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Email updated successfully!", email: trimmedNewEmail });
+    } catch (error) {
+        console.error("Verify Change Email OTP Error:", error);
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
@@ -659,7 +796,7 @@ const googleAuth = async (req, res) => {
         const accessToken = jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            { expiresIn: '15m' }
+            { expiresIn: '7d' }
         );
 
         return res.status(200).json({
@@ -694,5 +831,7 @@ module.exports = {
     resetPassword,
     sendChangePasswordOTP,
     verifyChangePasswordOTP,
-    resetChangePassword
+    resetChangePassword,
+    sendChangeEmailOTP,
+    verifyChangeEmailOTP
 };

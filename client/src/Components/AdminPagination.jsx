@@ -6,14 +6,10 @@ const AdminPagination = ({
   pageSize = 10,
   onPageChange
 }) => {
-  const totalPages = Math.ceil(totalItems / pageSize);
-
-  // When there are 10 or fewer records, pagination controls should not be shown
-  if (totalPages <= 1) {
-    return null;
-  }
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
   const handlePageClick = (page) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
     onPageChange(page);
     // Scroll to top of window and admin main container
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
@@ -23,7 +19,7 @@ const AdminPagination = ({
     }
   };
 
-  const startRecord = (currentPage - 1) * pageSize + 1;
+  const startRecord = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endRecord = Math.min(currentPage * pageSize, totalItems);
 
   // Generate page numbers
@@ -55,18 +51,18 @@ const AdminPagination = ({
         {/* Previous Button */}
         <button
           type="button"
-          onClick={() => handlePageClick(Math.max(currentPage - 1, 1))}
-          disabled={currentPage === 1}
+          onClick={() => handlePageClick(currentPage - 1)}
+          disabled={currentPage <= 1}
           style={{
             padding: '6px 14px',
             border: '1px solid #D1D5DB',
             borderRadius: '6px',
             backgroundColor: '#FFFFFF',
-            color: currentPage === 1 ? '#9CA3AF' : 'var(--admin-text-main, #1F2937)',
-            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            color: currentPage <= 1 ? '#9CA3AF' : 'var(--admin-text-main, #1F2937)',
+            cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
             fontSize: '0.875rem',
             fontWeight: 500,
-            opacity: currentPage === 1 ? 0.6 : 1,
+            opacity: currentPage <= 1 ? 0.6 : 1,
             transition: 'all 0.15s ease'
           }}
         >
@@ -89,7 +85,7 @@ const AdminPagination = ({
                 borderRadius: '6px',
                 backgroundColor: isActive ? 'var(--primary-color, #046a5a)' : '#FFFFFF',
                 color: isActive ? '#FFFFFF' : 'var(--admin-text-main, #1F2937)',
-                cursor: 'pointer',
+                cursor: isActive ? 'default' : 'pointer',
                 fontSize: '0.875rem',
                 fontWeight: isActive ? 600 : 400,
                 transition: 'all 0.15s ease'
@@ -103,18 +99,18 @@ const AdminPagination = ({
         {/* Next Button */}
         <button
           type="button"
-          onClick={() => handlePageClick(Math.min(currentPage + 1, totalPages))}
-          disabled={currentPage === totalPages}
+          onClick={() => handlePageClick(currentPage + 1)}
+          disabled={currentPage >= totalPages}
           style={{
             padding: '6px 14px',
             border: '1px solid #D1D5DB',
             borderRadius: '6px',
             backgroundColor: '#FFFFFF',
-            color: currentPage === totalPages ? '#9CA3AF' : 'var(--admin-text-main, #1F2937)',
-            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            color: currentPage >= totalPages ? '#9CA3AF' : 'var(--admin-text-main, #1F2937)',
+            cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
             fontSize: '0.875rem',
             fontWeight: 500,
-            opacity: currentPage === totalPages ? 0.6 : 1,
+            opacity: currentPage >= totalPages ? 0.6 : 1,
             transition: 'all 0.15s ease'
           }}
         >

@@ -511,4 +511,73 @@
     border-top: 1px solid var(--border-color);
     margin: 16px -16px -16px -16px;
   }
+  /* Bug #29: prevent product name & info overlap in order summary */
+  .checkout-product-card {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .checkout-product-img {
+    flex-shrink: 0;
+  }
+  .checkout-product-info {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+  .checkout-product-name {
+    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+    font-size: 14px;
+  }
+  .checkout-product-price {
+    width: 100%;
+    text-align: right;
+    font-size: 14px;
+  }
+  /* Ensure order summary is readable on mobile */
+  .checkout-summary-wrapper {
+    position: static;
+  }
 }
+
+@media (max-width: 480px) {
+  .checkout-page-wrapper {
+    padding: 8px;
+  }
+  .checkout-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  .checkout-form-grid .w-half,
+  .checkout-form-grid .w-quarter,
+  .checkout-form-grid .w-full {
+    width: 100%;
+  }
+  .checkout-section-title {
+    font-size: 20px;
+  }
+  .checkout-page-title {
+    font-size: 24px;
+  }
+}
+
+/* Bug #24: Error state for invalid address fields */
+.checkout-input.checkout-input-error,
+.checkout-select.checkout-input-error {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.checkout-input.checkout-input-error:focus,
+.checkout-select.checkout-input-error:focus {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.checkout-validation-msg {
+  color: #EF4444;
+  font-size: 13px;
+  margin-top: 4px;
+  padding-left: 2px;
+}
+

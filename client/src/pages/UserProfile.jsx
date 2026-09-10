@@ -233,31 +233,25 @@ function UserProfile() {
       }
     }
 
-    // Warn if email is being changed
-    const emailChanged = tempContact.email.trim().toLowerCase() !== contactData.email.toLowerCase();
+    // Block email change via this form — email requires OTP verification
+    const emailChanged = tempContact.email !== contactData.email;
     if (emailChanged) {
-      const confirmed = window.confirm(
-        "You are changing your login email address to:\n" +
-        tempContact.email.trim() + "\n\n" +
-        "This will update your login credentials immediately. " +
-        "Please ensure you have access to the new email address before proceeding.\n\n" +
-        "Do you want to continue?"
-      );
-      if (!confirmed) return;
+      // silently ignore — email field is read-only in edit mode
     }
 
     setIsSavingContact(true);
     try {
+      // NOTE: Email is NOT updated here — email changes require verification
+      // via the secure OTP flow at /auth/change-email/send-otp.
       const res = await api.put('/profile', {
         name: tempContact.name.trim(),
-        email: tempContact.email.trim(),
         phone: tempContact.phone ? tempContact.phone.replace(/\D/g, '') : undefined,
       });
 
       if (res.success && res.data) {
         setContactData({
           name: res.data.name,
-          email: res.data.email,
+          email: contactData.email, // email unchanged — only name/phone updated here
           phone: res.data.phone || "",
         });
         setFullUser(res.data);
@@ -646,14 +640,17 @@ function UserProfile() {
               </div>
               <div>
                 <label className="label-text">EMAIL ADDRESS</label>
-                <input
-                  type="email"
-                  className="input-field"
-                  value={tempContact.email}
-                  onChange={(e) => setTempContact({ ...tempContact, email: e.target.value })}
-                />
+                {/* Email requires secure OTP verification — not editable inline */}
+                <div className="input-field" style={{ backgroundColor: '#f5f5f5', color: '#888', cursor: 'default', display: 'flex', alignItems: 'center', userSelect: 'none' }}>
+                  {contactData.email}
+                </div>
                 <p style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
-                  Changing your email updates your login credentials immediately.
+                  To change your email address, use the{' '}
+                  <a href="/profile" style={{ color: 'var(--primary-color-hover)', textDecoration: 'underline' }}
+                    onClick={(e) => { e.preventDefault(); alert('Please use the Account Security section or contact support to change your email address. This requires OTP verification.'); }}
+                  >
+                    Account Security
+                  </a>{' '}flow for secure OTP verification.
                 </p>
               </div>
               <div>
@@ -668,6 +665,12 @@ function UserProfile() {
                   onKeyDown={(e) => {
                     const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
                     if (!allowedKeys.includes(e.key) && !/^[0-9+]$/.test(e.key)) e.preventDefault();
+                  }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                    const digitsOnly = pasted.replace(/\D/g, '').slice(0, 15);
+                    setTempContact({ ...tempContact, phone: tempContact.phone + digitsOnly });
                   }}
                   maxLength={15}
                 />

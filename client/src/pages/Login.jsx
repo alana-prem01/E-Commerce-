@@ -84,43 +84,78 @@ function Login() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [termsError, setTermsError] = useState("");
+  const [apiError, setApiError] = useState("");
+
+  // Validation Helpers
+  const validateEmailField = (val) => {
+    const trimmed = val.trim();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!val || !val.trim()) {
+      return "Email is required.";
+    } else if (/\s/.test(val)) {
+      return "Email cannot contain spaces.";
+    } else if ((val.match(/@/g) || []).length !== 1) {
+      return "Email must contain exactly one '@' symbol.";
+    } else if (trimmed.length > 100) {
+      return "Email cannot exceed 100 characters.";
+    } else if (!emailRegex.test(trimmed)) {
+      return "Please enter a valid email address.";
+    }
+    return "";
+  };
+
+  const validatePasswordField = (val) => {
+    if (!val) {
+      return "Password is required.";
+    } else if (/\s/.test(val)) {
+      return "Spaces are not allowed in password.";
+    } else if (val.length < 8 || val.length > 20) {
+      return "Password must be 8-20 characters long.";
+    } else if (!/[A-Z]/.test(val)) {
+      return "Password must contain at least one uppercase letter.";
+    } else if (!/[a-z]/.test(val)) {
+      return "Password must contain at least one lowercase letter.";
+    } else if (!/[0-9]/.test(val)) {
+      return "Password must contain at least one number.";
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(val)) {
+      return "Password must contain at least one special character (!@#$%^&*).";
+    }
+    return "";
+  };
+
+  const handleEmailChange = (e) => {
+    const val = e.target.value;
+    setEmail(val);
+    setApiError("");
+    setEmailError(validateEmailField(val));
+  };
+
+  const handlePasswordChange = (e) => {
+    const val = e.target.value;
+    setPassword(val);
+    setApiError("");
+    setPasswordError(validatePasswordField(val));
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     let isValid = true;
-    setEmailError("");
-    setPasswordError("");
+    const errEmail = validateEmailField(email);
+    const errPassword = validatePasswordField(password);
+
+    setEmailError(errEmail);
+    setPasswordError(errPassword);
     setTermsError("");
     setRecaptchaError("");
+    setApiError("");
+
+    if (errEmail || errPassword) {
+      isValid = false;
+    }
 
     const trimmedEmail = email.trim();
     setEmail(trimmedEmail);
-
-    // Email Validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!trimmedEmail) {
-      setEmailError("Email is required.");
-      isValid = false;
-    } else if (trimmedEmail.length > 100) {
-      setEmailError("Email cannot exceed 100 characters.");
-      isValid = false;
-    } else if (!emailRegex.test(trimmedEmail)) {
-      setEmailError("Please enter a valid email address.");
-      isValid = false;
-    }
-
-    // Password Validation
-    if (!password) {
-      setPasswordError("Password is required.");
-      isValid = false;
-    } else if (password.length < 8 || password.length > 20) {
-      setPasswordError("Password must be 8-20 characters long.");
-      isValid = false;
-    } else if (/\s/.test(password)) {
-      setPasswordError("Spaces are not allowed in password.");
-      isValid = false;
-    }
 
     // Terms Validation
     if (!acceptTerms) {
@@ -185,7 +220,9 @@ function Login() {
           }
         }
       } catch (error) {
-        toast.error(error.message || "Unable to connect to the backend server.");
+        const msg = error.message || "Unable to connect to the backend server.";
+        setApiError(msg);
+        toast.error(msg);
       } finally {
         setIsSubmitting(false);
       }
@@ -224,7 +261,8 @@ function Login() {
                 maxLength={100}
                 className="email-input"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
+                onBlur={(e) => setEmailError(validateEmailField(e.target.value))}
                 required
               />
               {emailError && <div className="error-message">{emailError}</div>}
@@ -244,7 +282,8 @@ function Login() {
                   maxLength={20}
                   className="password-input"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
+                  onBlur={(e) => setPasswordError(validatePasswordField(e.target.value))}
                   required
                 />
                 <button
@@ -263,6 +302,13 @@ function Login() {
               {passwordError && <div className="error-message">{passwordError}</div>}
             </div>
           </div>
+
+          {/* API / Credentials Error */}
+          {apiError && (
+            <div className="error-message" style={{ marginTop: '12px', padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', textAlign: 'center', fontSize: '13.5px' }}>
+              {apiError}
+            </div>
+          )}
 
           {/* Privacy Terms */}
           <div style={{ marginTop: '16px' }}>

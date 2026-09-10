@@ -85,6 +85,20 @@ const userSchema = new mongoose.Schema({
         type: Date
     },
 
+    pendingEmail: {
+        type: String,
+        trim: true,
+        lowercase: true
+    },
+
+    changeEmailOTP: {
+        type: String
+    },
+
+    changeEmailExpires: {
+        type: Date
+    },
+
     username: {
         type: String,
         trim: true

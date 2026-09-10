@@ -35,9 +35,10 @@ const OrderListPage = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/orders/allorders');
+      const res = await api.get('/orders/allorders?limit=10000&all=true');
       if (res.success) {
-        setOrders(res.orders || res.data || []);
+        const fetchedOrders = res.orders || res.data || [];
+        setOrders(Array.isArray(fetchedOrders) ? fetchedOrders : []);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -56,7 +57,11 @@ const OrderListPage = () => {
       if (res.success) {
         toast.success(`Order status updated to ${newStatus}`);
         setOrders(orders.map(order => 
-          order._id === id ? { ...order, orderStatus: newStatus } : order
+          order._id === id ? { 
+            ...order, 
+            orderStatus: newStatus,
+            paymentStatus: newStatus === 'Delivered' ? 'Paid' : order.paymentStatus
+          } : order
         ));
       }
     } catch (error) {
@@ -67,9 +72,19 @@ const OrderListPage = () => {
 
   // Filter orders based on search, status and payment
   const filteredOrders = (orders || []).filter(order => {
-    const customerName = order.user ? order.user.name : (order.contactEmail || 'Guest');
-    const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          order._id.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!order) return false;
+
+    const userObj = order.user;
+    const customerName = (userObj && typeof userObj === 'object' && userObj.name) 
+      ? userObj.name 
+      : (order.contactEmail || (typeof userObj === 'string' ? userObj : 'Guest'));
+    
+    const orderIdStr = order._id ? String(order._id) : '';
+    const searchLower = searchTerm.trim().toLowerCase();
+
+    const matchesSearch = !searchLower || 
+                          customerName.toLowerCase().includes(searchLower) || 
+                          orderIdStr.toLowerCase().includes(searchLower);
     
     const matchesStatus = statusFilter === 'All Status' || order.orderStatus === statusFilter;
     const matchesPayment = paymentFilter === 'All' || order.paymentStatus === paymentFilter;
@@ -138,6 +153,7 @@ const OrderListPage = () => {
                 <th>Customer</th>
                 <th>Order Date</th>
                 <th>Total Amount</th>
+                <th>Payment Method</th>
                 <th>Payment Status</th>
                 <th>Order Status</th>
                 <th style={{ textAlign: 'right' }}>Action</th>
@@ -146,14 +162,18 @@ const OrderListPage = () => {
             <tbody>
               {paginatedOrders.length > 0 ? (
                 paginatedOrders.map(order => {
-                  const customerName = order.user ? order.user.name : (order.contactEmail || 'Guest');
+                  const customerName = (order.user && order.user.name) ? order.user.name : (order.contactEmail || 'Guest');
                   const amount = order.pricing?.total || 0;
                   const paymentStatusClass = order.paymentStatus === 'Paid' ? 'admin-badge-success' : 
                                             order.paymentStatus === 'Failed' ? 'admin-badge-danger' : 'admin-badge-warning';
                   
+                  const rawMethod = order.paymentDetails?.payment_method || order.paymentMethod || 'Card';
+                  const isCOD = rawMethod.toLowerCase().includes('cod') || rawMethod.toLowerCase().includes('cash');
+                  const displayMethod = isCOD ? 'Cash on Delivery' : 'Card';
+
                   return (
                     <tr key={order._id}>
-                      <td style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem' }}>#{order._id.substring(order._id.length - 6).toUpperCase()}</td>
+                      <td style={{ color: 'var(--admin-text-muted)', fontSize: '0.875rem' }}>#{String(order._id).substring(String(order._id).length - 6).toUpperCase()}</td>
                       <td style={{ fontWeight: 500 }}>{customerName}</td>
                       <td>
                         <span style={{ display: 'block', fontSize: '0.875rem' }}>
@@ -164,6 +184,11 @@ const OrderListPage = () => {
                         </span>
                       </td>
                       <td style={{ fontWeight: 600 }}>₹{amount.toLocaleString('en-IN')}</td>
+                      <td>
+                        <span className={`admin-badge ${isCOD ? 'admin-badge-warning' : 'admin-badge-success'}`} style={{ fontSize: '0.75rem' }}>
+                          {displayMethod}
+                        </span>
+                      </td>
                       <td>
                         <span className={`admin-badge ${paymentStatusClass}`}>
                           {order.paymentStatus}
@@ -196,7 +221,7 @@ const OrderListPage = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="7">
+                  <td colSpan="8">
                     <div style={{ textAlign: 'center', padding: '40px' }}>
                       <div style={{ color: 'var(--admin-text-light)', marginBottom: '16px' }}>
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">

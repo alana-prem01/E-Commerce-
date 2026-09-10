@@ -19,13 +19,21 @@ const INDIAN_STATES = [
   'Ladakh', 'Lakshadweep', 'Puducherry',
 ];
 
-const AddressForm = ({ data, setData }) => {
+const AddressForm = ({ data, setData, errors = {} }) => {
   // Block non-numeric keys on phone field
   const handlePhoneKeyDown = (e) => {
     const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
     if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
       e.preventDefault();
     }
+  };
+
+  // Block non-numeric pasted content in phone field
+  const handlePhonePaste = (e) => {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+    const digitsOnly = pasted.replace(/\D/g, '').slice(0, 15);
+    setData({ ...data, phone: data.phone + digitsOnly });
   };
 
   return (
@@ -38,7 +46,13 @@ const AddressForm = ({ data, setData }) => {
         </select>
       </div>
       <div className="checkout-input-group w-half">
-        <input className="checkout-input" placeholder="First Name" value={data.firstName} onChange={e => setData({ ...data, firstName: e.target.value })} />
+        <input
+          className={`checkout-input${errors.firstName ? ' checkout-input-error' : ''}`}
+          placeholder="First Name *"
+          value={data.firstName}
+          onChange={e => setData({ ...data, firstName: e.target.value })}
+        />
+        {errors.firstName && <div className="checkout-validation-msg">{errors.firstName}</div>}
       </div>
       <div className="checkout-input-group w-half">
         <input className="checkout-input" placeholder="Last Name" value={data.lastName} onChange={e => setData({ ...data, lastName: e.target.value })} />
@@ -49,22 +63,45 @@ const AddressForm = ({ data, setData }) => {
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
             <circle cx="12" cy="10" r="3"></circle>
           </svg>
-          <input className="checkout-input with-icon" placeholder="Address" value={data.address} onChange={e => setData({ ...data, address: e.target.value })} />
+          <input
+            className={`checkout-input with-icon${errors.address ? ' checkout-input-error' : ''}`}
+            placeholder="Address *"
+            value={data.address}
+            onChange={e => setData({ ...data, address: e.target.value })}
+          />
         </div>
+        {errors.address && <div className="checkout-validation-msg">{errors.address}</div>}
       </div>
       <div className="checkout-input-group w-half">
-        <input className="checkout-input" placeholder="City" value={data.city} onChange={e => setData({ ...data, city: e.target.value })} />
+        <input
+          className={`checkout-input${errors.city ? ' checkout-input-error' : ''}`}
+          placeholder="City *"
+          value={data.city}
+          onChange={e => setData({ ...data, city: e.target.value })}
+        />
+        {errors.city && <div className="checkout-validation-msg">{errors.city}</div>}
       </div>
       <div className="checkout-input-group w-quarter">
-        <select className="checkout-select" value={data.state} onChange={e => setData({ ...data, state: e.target.value })}>
-          <option value="" disabled>State</option>
+        <select
+          className={`checkout-select${errors.state ? ' checkout-input-error' : ''}`}
+          value={data.state}
+          onChange={e => setData({ ...data, state: e.target.value })}
+        >
+          <option value="" disabled>State *</option>
           {INDIAN_STATES.map(state => (
             <option key={state} value={state}>{state}</option>
           ))}
         </select>
+        {errors.state && <div className="checkout-validation-msg">{errors.state}</div>}
       </div>
       <div className="checkout-input-group w-quarter">
-        <input className="checkout-input" placeholder="PIN Code" value={data.pinCode} onChange={e => setData({ ...data, pinCode: e.target.value })} />
+        <input
+          className={`checkout-input${errors.pinCode ? ' checkout-input-error' : ''}`}
+          placeholder="PIN Code *"
+          value={data.pinCode}
+          onChange={e => setData({ ...data, pinCode: e.target.value })}
+        />
+        {errors.pinCode && <div className="checkout-validation-msg">{errors.pinCode}</div>}
       </div>
       <div className="checkout-input-group w-full">
         <div className="checkout-input-wrapper">
@@ -72,18 +109,21 @@ const AddressForm = ({ data, setData }) => {
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
           </svg>
           <input
-            className="checkout-input with-icon"
-            placeholder="Phone Number"
+            className={`checkout-input with-icon${errors.phone ? ' checkout-input-error' : ''}`}
+            placeholder="Phone Number *"
             value={data.phone}
             onChange={e => setData({ ...data, phone: e.target.value })}
             onKeyDown={handlePhoneKeyDown}
+            onPaste={handlePhonePaste}
             inputMode="numeric"
           />
         </div>
+        {errors.phone && <div className="checkout-validation-msg">{errors.phone}</div>}
       </div>
     </div>
   );
 };
+
 
 export default function CheckoutPage() {
   const { cartItems, subtotal, clearCart } = useCart();
@@ -95,6 +135,7 @@ export default function CheckoutPage() {
   const [saveAddress, setSaveAddress] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addressErrors, setAddressErrors] = useState({});
 
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -193,7 +234,7 @@ export default function CheckoutPage() {
   };
 
   const currentSubtotal = subtotal || 0;
-  const shippingCost = isPremiumUser ? 0 : 65;
+  const shippingCost = isPremiumUser ? 0 : (shippingMethod === 'express' ? 150 : 65);
   const tax = currentSubtotal > 0 ? 110 : 0;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const finalAmount = Math.max(0, currentSubtotal + shippingCost + tax - discount);
@@ -278,31 +319,48 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Persist entered address to DB user profile
-    await saveShippingAddressToDb();
+    // ── ADDRESS VALIDATION (Bug #24) ────────────────────────────────────────
+    const validateAddress = (addr) => {
+      const errs = {};
+      if (!addr.firstName?.trim()) errs.firstName = 'First name is required.';
+      if (!addr.address?.trim()) errs.address = 'Address is required.';
+      if (!addr.city?.trim()) errs.city = 'City is required.';
+      if (!addr.state?.trim()) errs.state = 'State is required.';
+      if (!addr.pinCode?.trim()) {
+        errs.pinCode = 'PIN code is required.';
+      } else if (!/^\d{4,10}$/.test(addr.pinCode.trim())) {
+        errs.pinCode = 'Please enter a valid PIN code.';
+      }
+      const phoneDigits = (addr.phone || '').replace(/\D/g, '');
+      if (!phoneDigits) {
+        errs.phone = 'Phone number is required.';
+      } else if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+        errs.phone = 'Please enter a valid phone number.';
+      }
+      return errs;
+    };
 
-    if (paymentMethod === 'cod') {
-      // COD: clear cart, show success page with COD order info
-      const codOrder = {
-        _id: `COD-${Date.now()}`,
-        paymentMethod: 'Cash on Delivery',
-        paymentDetails: { payment_method: 'Cash on Delivery' },
-        pricing: {
-          subtotal: currentSubtotal,
-          shipping: shippingCost,
-          tax,
-          discount,
-          total: finalAmount
-        },
-        createdAt: new Date().toISOString(),
-        status: 'Pending',
-      };
-      await clearCart();
-      toast.success('Order placed successfully via Cash on Delivery!');
-      localStorage.setItem('lastCompletedOrder', JSON.stringify(codOrder));
-      navigate('/payment-success', { state: { order: codOrder } });
+    const shippingErrs = validateAddress(shipping);
+    if (Object.keys(shippingErrs).length > 0) {
+      setAddressErrors(shippingErrs);
+      const firstErrField = document.querySelector('.checkout-input-error, .checkout-select.checkout-input-error');
+      if (firstErrField) firstErrField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      toast.error('Please complete all required shipping address fields.');
       return;
     }
+    setAddressErrors({});
+
+    if (billingAddressType === 'different') {
+      const billingErrs = validateAddress(billing);
+      if (Object.keys(billingErrs).length > 0) {
+        toast.error('Please complete all required billing address fields.');
+        return;
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    // Persist entered address to DB user profile
+    await saveShippingAddressToDb();
 
     setIsSubmitting(true);
     try {
@@ -317,6 +375,40 @@ export default function CheckoutPage() {
           image: item.image
         };
       });
+
+      const userStr = localStorage.getItem("user");
+      const loggedInUser = userStr ? JSON.parse(userStr) : null;
+      const userId = loggedInUser?._id || loggedInUser?.id || null;
+
+      if (paymentMethod === 'cod') {
+        const codRes = await api.post('/payment/create-cod-order', {
+          contactEmail: email,
+          shippingAddress: shipping,
+          billingAddress: billingAddressType === 'same' ? shipping : billing,
+          orderItems: formattedOrderItems,
+          pricing: {
+            subtotal: currentSubtotal,
+            shipping: shippingCost,
+            tax: tax,
+            discount: discount,
+            total: finalAmount
+          },
+          user: userId
+        });
+
+        if (codRes.success) {
+          toast.success('Order placed successfully via Cash on Delivery!');
+          clearCart();
+          if (codRes.order) {
+            localStorage.setItem('lastCompletedOrder', JSON.stringify(codRes.order));
+          }
+          navigate('/payment-success', { state: { order: codRes.order } });
+        } else {
+          toast.error(codRes.message || 'Failed to place COD order');
+        }
+        setIsSubmitting(false);
+        return;
+      }
 
       // 1. Create Razorpay order via backend
       const orderData = await api.post('/payment/create-order', {
@@ -371,9 +463,11 @@ export default function CheckoutPage() {
               if (verifyData.order) {
                 localStorage.setItem('lastCompletedOrder', JSON.stringify(verifyData.order));
               }
+              setIsSubmitting(false);
               navigate('/payment-success', { state: { order: verifyData.order } });
             } else {
               toast.error('Payment verification failed');
+              setIsSubmitting(false);
             }
           } catch (error) {
             console.error('Verify error:', error);
@@ -532,7 +626,7 @@ export default function CheckoutPage() {
             )}
 
             {/* Address Form (pre-filled or empty depending on selection) */}
-            <AddressForm data={shipping} setData={setShipping} />
+            <AddressForm data={shipping} setData={setShipping} errors={addressErrors} />
 
             <div className="checkout-checkbox-wrapper" style={{ marginTop: "14px" }}>
               <input

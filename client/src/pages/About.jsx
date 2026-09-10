@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "../css/About.css";
 
 function About() {
@@ -117,9 +118,9 @@ function About() {
 
           {/* View All Reviews Link */}
           <div className="view-all-reviews-wrapper">
-            <a href="#reviews" className="view-all-reviews">
+            <Link to="/about#reviews" className="view-all-reviews">
               View All Reviews
-            </a>
+            </Link>
           </div>
         </div>
       </section>

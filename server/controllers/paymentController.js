@@ -11,6 +11,19 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_secret',
 });
 
+// Shared helper: validate required address fields
+const validateShippingAddress = (addr) => {
+  if (!addr) return 'Shipping address is required.';
+  if (!addr.firstName && !addr.lastName) return 'Recipient name is required in shipping address.';
+  if (!addr.address || !addr.address.trim()) return 'Street address is required.';
+  if (!addr.city || !addr.city.trim()) return 'City is required.';
+  if (!addr.state || !addr.state.trim()) return 'State is required.';
+  if (!addr.pinCode || !addr.pinCode.trim()) return 'PIN code is required.';
+  const phoneDigits = (addr.phone || '').replace(/\D/g, '');
+  if (!phoneDigits || phoneDigits.length < 7) return 'A valid phone number is required.';
+  return null;
+};
+
 // @desc    Create Razorpay Order
 // @route   POST /api/payment/create-order
 // @access  Public
@@ -107,6 +120,12 @@ exports.verifyPayment = async (req, res) => {
       pricing,
       user
     } = req.body;
+
+    // Validate shipping address before creating order
+    const addrErr = validateShippingAddress(shippingAddress);
+    if (addrErr) {
+      return res.status(400).json({ success: false, message: addrErr });
+    }
 
     // Check for duplicate order verification
     const existingOrder = await Order.findOne({ 'paymentDetails.razorpay_order_id': razorpay_order_id });
@@ -268,6 +287,101 @@ exports.verifyPayment = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in verifyPayment:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+  }
+};
+
+// @desc    Create Cash on Delivery Order (Payment status default: Pending)
+// @route   POST /api/payment/create-cod-order
+// @access  Public
+exports.createCodOrder = async (req, res) => {
+  try {
+    const {
+      contactEmail,
+      shippingAddress,
+      billingAddress,
+      orderItems,
+      pricing,
+      user
+    } = req.body;
+
+    // Validate shipping address before creating COD order
+    const addrErr = validateShippingAddress(shippingAddress);
+    if (addrErr) {
+      return res.status(400).json({ success: false, message: addrErr });
+    }
+
+    const mongoose = require('mongoose');
+
+    const sanitizeAddr = (addr) => ({
+      country: addr?.country || '',
+      firstName: addr?.firstName || '',
+      lastName: addr?.lastName || '',
+      address: addr?.address || '',
+      city: addr?.city || '',
+      state: addr?.state || '',
+      pinCode: addr?.pinCode || '',
+      phone: addr?.phone || ''
+    });
+
+    const sanitizedOrderItems = (orderItems || []).map(item => ({
+      product: mongoose.Types.ObjectId.isValid(item.product) ? item.product : undefined,
+      name: item.name || 'Jewellery Item',
+      quantity: item.quantity || 1,
+      price: item.price || 0,
+      image: item.image || ''
+    }));
+
+    const newOrder = new Order({
+      user: user || null,
+      contactEmail: contactEmail || 'customer@example.com',
+      shippingAddress: sanitizeAddr(shippingAddress),
+      billingAddress: sanitizeAddr(billingAddress),
+      orderItems: sanitizedOrderItems,
+      pricing: {
+        subtotal: pricing?.subtotal || 0,
+        shipping: pricing?.shipping || 0,
+        tax: pricing?.tax || 0,
+        discount: pricing?.discount || 0,
+        total: pricing?.total || 0
+      },
+      paymentDetails: {
+        payment_method: 'Cash on Delivery'
+      },
+      paymentStatus: 'Pending', // COD orders start as Pending (Not Paid)
+      orderStatus: 'Pending',
+    });
+
+    await newOrder.save();
+
+    // Decrement stock for each ordered product
+    for (const item of sanitizedOrderItems) {
+      if (item.product) {
+        await Product.findByIdAndUpdate(
+          item.product,
+          { $inc: { stockQuantity: -item.quantity } }
+        );
+      }
+    }
+
+    // Clear cart if user logged in
+    if (user && orderItems && orderItems.length > 0) {
+      const purchasedProductIds = orderItems.map(item => item.product).filter(Boolean);
+      if (purchasedProductIds.length > 0) {
+        await Cart.findOneAndUpdate(
+          { user },
+          { $pull: { items: { product: { $in: purchasedProductIds } } } }
+        );
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cash on Delivery order placed successfully',
+      order: newOrder
+    });
+  } catch (error) {
+    console.error('Error in createCodOrder:', error);
     res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
   }
 };

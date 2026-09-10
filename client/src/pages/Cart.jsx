@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaTimes, FaPlus, FaMinus, FaTrashAlt, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { useCart } from '../utils/CartContext';
+import { formatINR } from '../utils/currency';
 import '../css/Cart.css';
 
 /**
@@ -93,7 +94,7 @@ function Cart({ isOpen = true, onClose }) {
                       {item.title}
                     </Link>
                     {item.variant && <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '2px' }}>{item.variant}</div>}
-                    <div style={{ color: 'var(--primary-color-hover)', fontWeight: '600', marginTop: '4px' }}>Rs. {Number(item.price).toFixed(2)}</div>
+                    <div style={{ color: 'var(--primary-color-hover)', fontWeight: '600', marginTop: '4px' }}>{formatINR(item.price)}</div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem' }}>
                       <div className="quantity-selector" style={{ display: 'flex', alignItems: 'center', border: '1px solid #D1D5DB', borderRadius: '6px', overflow: 'hidden' }}>
@@ -132,7 +133,7 @@ function Cart({ isOpen = true, onClose }) {
                       </button>
 
                       <span style={{ marginLeft: 'auto', fontWeight: '600', color: 'var(--text-dark)' }}>
-                        Rs. {(item.price * item.quantity).toFixed(2)}
+                        {formatINR(item.price * item.quantity)}
                       </span>
                     </div>
                     {item.error && <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '4px' }}>{item.error}</div>}
@@ -166,7 +167,7 @@ function Cart({ isOpen = true, onClose }) {
             <div style={{ background: 'var(--bg-lighter)', borderRadius: '10px', padding: '1.5rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Estimated Total</span>
-                <span style={{ fontWeight: '700', fontSize: '1.25rem' }}>Rs. {subtotal.toFixed(2)}</span>
+                <span style={{ fontWeight: '700', fontSize: '1.25rem' }}>{formatINR(subtotal)}</span>
               </div>
               <p style={{ fontSize: '0.8rem', color: '#9CA3AF', marginTop: '0.5rem' }}>
                 Taxes, discounts and shipping calculated at checkout.{' '}
@@ -258,7 +259,7 @@ function Cart({ isOpen = true, onClose }) {
                     </div>
 
                     {item.variant && <div className="cart-product-variant">{item.variant}</div>}
-                    <div className="cart-product-price">Rs. {Number(item.price).toFixed(2)}</div>
+                    <div className="cart-product-price">{formatINR(item.price)}</div>
 
                     <div className="cart-product-actions">
                       <div className="quantity-selector">
@@ -294,7 +295,7 @@ function Cart({ isOpen = true, onClose }) {
                         <FaTrashAlt size={14} />
                       </button>
 
-                      <div className="cart-product-total">Rs. {(item.price * item.quantity).toFixed(2)}</div>
+                      <div className="cart-product-total">{formatINR(item.price * item.quantity)}</div>
                     </div>
 
                     {item.error && <div className="quantity-error">{item.error}</div>}
@@ -328,7 +329,7 @@ function Cart({ isOpen = true, onClose }) {
               {/* Order Summary */}
               <div className="summary-row">
                 <span className="estimated-total-label">Estimated Total</span>
-                <span className="estimated-total-amount">Rs. {subtotal.toFixed(2)}</span>
+                <span className="estimated-total-amount">{formatINR(subtotal)}</span>
               </div>
 
               <p className="tax-shipping-note">

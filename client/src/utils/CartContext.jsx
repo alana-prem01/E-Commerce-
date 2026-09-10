@@ -152,7 +152,18 @@ export const CartProvider = ({ children }) => {
   };
 
   const clearCart = async () => {
+    // Clear in-memory state immediately
     setCartItems([]);
+    // Also clear the user-scoped localStorage cache so items don't reappear on refresh
+    const userId = getCurrentUserId();
+    const key = getCartStorageKey(userId);
+    if (key) {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        console.error('Failed to clear cart from localStorage', e);
+      }
+    }
     // Also clear cart on the backend so server state stays in sync
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     if (isLoggedIn) {
