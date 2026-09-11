@@ -8,12 +8,12 @@ const UserListPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
-    
+
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const PAGE_SIZE = 10;
-    
+
     // Modal states
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -57,8 +57,8 @@ const UserListPage = () => {
 
     const filteredUsers = useMemo(() => {
         return users.filter(u => {
-            const matchesSearch = u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                  u.email?.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                u.email?.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesRole = roleFilter ? u.role === roleFilter : true;
             const matchesStatus = statusFilter ? u.status === statusFilter : true;
             return matchesSearch && matchesRole && matchesStatus;
@@ -124,26 +124,21 @@ const UserListPage = () => {
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--admin-text-main)', margin: '0 0 8px 0' }}>User List</h1>
                     <p style={{ color: 'var(--admin-text-muted)', margin: 0, fontSize: '0.95rem' }}>Manage user accounts and their roles.</p>
                 </div>
-                <button className="admin-btn admin-btn-primary" onClick={handleAddClick}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
-                        <path d="M5 12h14"/><path d="M12 5v14"/>
-                    </svg>
-                    Add User
-                </button>
+
             </div>
 
             {/* Filter & Search Section */}
             <div className="admin-card mb-4" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <input 
-                    type="text" 
-                    className="admin-input" 
+                <input
+                    type="text"
+                    className="admin-input"
                     style={{ flex: '1 1 300px' }}
-                    placeholder="Search by name or email" 
+                    placeholder="Search by name or email"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <select 
-                    className="admin-select" 
+                <select
+                    className="admin-select"
                     style={{ flex: '0 1 150px' }}
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
@@ -152,8 +147,8 @@ const UserListPage = () => {
                     <option value="Admin">Admin</option>
                     <option value="User">User</option>
                 </select>
-                <select 
-                    className="admin-select" 
+                <select
+                    className="admin-select"
                     style={{ flex: '0 1 150px' }}
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
@@ -213,20 +208,20 @@ const UserListPage = () => {
                                             </td>
                                             <td style={{ textAlign: 'right' }}>
                                                 <div className="d-flex justify-content-center gap-2" style={{ justifyContent: 'flex-end' }}>
-                                                    <button 
+                                                    <button
                                                         className={`admin-btn ${user.status === 'Blocked' ? 'admin-btn-outline' : 'admin-btn-warning'}`}
                                                         style={{ padding: '6px' }}
                                                         title={user.status === 'Blocked' ? 'Unblock' : 'Block'}
                                                         onClick={() => toggleUserStatus(user)}
                                                     >
                                                         {user.status === 'Blocked' ? (
-                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h4l2-2h4l2 2h4l2-2h4"/><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h4l2-2h4l2 2h4l2-2h4" /><circle cx="12" cy="12" r="10" /><path d="M8 12h8" /></svg>
                                                         ) : (
-                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>
                                                         )}
                                                     </button>
                                                     <button className="admin-btn admin-btn-danger" style={{ padding: '6px' }} title="Delete" onClick={() => handleDeleteClick(user)}>
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
                                                     </button>
                                                 </div>
                                             </td>
@@ -254,7 +249,7 @@ const UserListPage = () => {
                         </tbody>
                     </table>
                 )}
-                
+
                 {/* Pagination Controls */}
                 {!loading && (
                     <AdminPagination
