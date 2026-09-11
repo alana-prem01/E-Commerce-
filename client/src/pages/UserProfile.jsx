@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../css/UserProfile.css";
+// FiEye removed – using text button
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
 
@@ -570,6 +571,14 @@ function UserProfile() {
 
                   <span className="order-date">{dateStr}</span>
                   <span className="order-price">{priceStr}</span>
+                  <button
+                    type="button"
+                    className="btn-action-outline"
+                    onClick={(e) => { e.stopPropagation(); handleOrderClick(order._id || order.id); }}
+                    aria-label={`View order details for ${displayId}`}
+                  >
+                    View Details
+                  </button>
                 </div>
               );
             })
