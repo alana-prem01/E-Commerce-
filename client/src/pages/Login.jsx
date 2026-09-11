@@ -302,7 +302,7 @@ function Login() {
           </div>
 
           {/* Google reCAPTCHA */}
-          <ReCaptcha 
+          <ReCaptcha
             onChange={(token) => {
               setRecaptchaToken(token);
               setRecaptchaError("");
@@ -317,15 +317,7 @@ function Login() {
 
           {/* Options Row */}
           <div className="options-row">
-            <label className="remember-me">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="checkbox"
-              />
-              <span>Remember Me</span>
-            </label>
+
             <span
               className="forgot-password-link"
               onClick={() => navigate("/forgot-password")}
