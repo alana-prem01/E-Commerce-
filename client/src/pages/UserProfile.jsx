@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../css/UserProfile.css";
-import EmailChangeModal from "../components/EmailChangeModal";
+import EmailChangeModal from "../Components/EmailChangeModal"
 // FiEye removed – using text button
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
@@ -785,38 +785,38 @@ function UserProfile() {
                     </button>
                   </div>
                 </div>
-              {/* EXCLUSIVE NEW PRODUCTS & UPDATES */}
-<div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #eee" }}>
-  <span className="label-text" style={{ color: "#5e3b25", fontWeight: "700" }}>EXCLUSIVE NEW PRODUCTS &amp; UPDATES</span>
-  {loadingNewProducts ? (
-    <div style={{ fontSize: "13px", color: "#666", padding: "12px 0" }}>Loading latest arrivals...</div>
-  ) : newProducts.length > 0 ? (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "12px", marginTop: "10px" }}>
-      {newProducts.map((prod) => (
-        <Link
-          key={prod._id || prod.id}
-          to={`/product/${prod._id || prod.id}`}
-          style={{ textDecoration: "none", color: "inherit", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px", backgroundColor: "#fff", display: "flex", flexDirection: "column", alignItems: "center" }}
-        >
-          <img
-            src={prod.productImage || prod.image || (prod.images && prod.images[0]) || ""}
-            alt={prod.productName || prod.title || prod.name}
-            style={{ width: "100%", height: "90px", objectFit: "cover", borderRadius: "6px" }}
-          />
-          <div style={{ fontSize: "12px", fontWeight: "600", marginTop: "6px", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%" }}>
-            {prod.productName || prod.title || prod.name}
-          </div>
-          <div style={{ fontSize: "12px", color: "#0B5D50", fontWeight: "700", marginTop: "2px" }}>
-            ₹{Number(prod.price).toLocaleString("en-IN")}
-          </div>
-        </Link>
-      ))}
-    </div>
-  ) : (
-    <div style={{ fontSize: "13px", color: "#888", padding: "10px 0" }}>No new products available at the moment.</div>
-  )}
-</div>
-</>
+                {/* EXCLUSIVE NEW PRODUCTS & UPDATES */}
+                <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #eee" }}>
+                  <span className="label-text" style={{ color: "#5e3b25", fontWeight: "700" }}>EXCLUSIVE NEW PRODUCTS &amp; UPDATES</span>
+                  {loadingNewProducts ? (
+                    <div style={{ fontSize: "13px", color: "#666", padding: "12px 0" }}>Loading latest arrivals...</div>
+                  ) : newProducts.length > 0 ? (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "12px", marginTop: "10px" }}>
+                      {newProducts.map((prod) => (
+                        <Link
+                          key={prod._id || prod.id}
+                          to={`/product/${prod._id || prod.id}`}
+                          style={{ textDecoration: "none", color: "inherit", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px", backgroundColor: "#fff", display: "flex", flexDirection: "column", alignItems: "center" }}
+                        >
+                          <img
+                            src={prod.productImage || prod.image || (prod.images && prod.images[0]) || ""}
+                            alt={prod.productName || prod.title || prod.name}
+                            style={{ width: "100%", height: "90px", objectFit: "cover", borderRadius: "6px" }}
+                          />
+                          <div style={{ fontSize: "12px", fontWeight: "600", marginTop: "6px", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%" }}>
+                            {prod.productName || prod.title || prod.name}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#0B5D50", fontWeight: "700", marginTop: "2px" }}>
+                            ₹{Number(prod.price).toLocaleString("en-IN")}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: "13px", color: "#888", padding: "10px 0" }}>No new products available at the moment.</div>
+                  )}
+                </div>
+              </>
             ) : (
               <>
                 <div>
@@ -829,16 +829,16 @@ function UserProfile() {
                   Join Elora Premium for ₹599/year to receive Free Delivery on orders, a 15% Discount Coupon, and early product updates.
                 </div>
                 {!isPremiumActive && (
-                <div style={{ marginTop: "10px" }}>
-                  <button
-                    className="btn-primary"
-                    onClick={handleSubscribePremium}
-                    disabled={submittingPremium}
-                  >
-                    {submittingPremium ? "Processing..." : "Subscribe to Premium (₹599/year)"}
-                  </button>
-                </div>
-              )}
+                  <div style={{ marginTop: "10px" }}>
+                    <button
+                      className="btn-primary"
+                      onClick={handleSubscribePremium}
+                      disabled={submittingPremium}
+                    >
+                      {submittingPremium ? "Processing..." : "Subscribe to Premium (₹599/year)"}
+                    </button>
+                  </div>
+                )}
                 {premiumError && <div className="security-error" style={{ marginTop: "8px" }}>{premiumError}</div>}
               </>
             )}
