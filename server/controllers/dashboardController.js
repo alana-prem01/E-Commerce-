@@ -12,12 +12,30 @@ const getDashboardStats = async (req, res) => {
         const totalProducts = await Product.countDocuments();
         const totalOrders = await Order.countDocuments();
         
-        // Exclude Cancelled and Failed orders from revenue
+        // Revenue includes cancelled orders; refunds only deducted when refunded
         const revenueResult = await Order.aggregate([
-            { $match: { orderStatus: { $ne: 'Cancelled' }, paymentStatus: { $ne: 'Failed' } } },
-            { $group: { _id: null, totalRevenue: { $sum: "$pricing.total" } } }
+            { $match: { paymentStatus: { $ne: 'Failed' } } },
+            {
+              $group: {
+                _id: null,
+                totalRevenue: {
+                  $sum: {
+                    $subtract: [
+                      "$pricing.total",
+                      {
+                        $cond: [
+                          { $eq: ["$refundStatus", "Refunded"] },
+                          { $ifNull: ["$refundAmount", 0] },
+                          0
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
         ]);
-        const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
+        const totalRevenue = Math.max(0, revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0);
 
         // 2. Revenue - Last 7 Days
         const last7Days = [];
@@ -49,13 +67,14 @@ const getDashboardStats = async (req, res) => {
             createdAt: { $gte: sevenDaysAgo },
             orderStatus: { $ne: 'Cancelled' },
             paymentStatus: { $ne: 'Failed' }
-        }).select('createdAt pricing.total');
+        }).select('createdAt pricing.total refundAmount');
 
         validRecentOrders.forEach(order => {
             const orderTime = new Date(order.createdAt).getTime();
             const matchedDay = last7Days.find(d => orderTime >= d.startDate.getTime() && orderTime < d.endDate.getTime());
             if (matchedDay) {
-                matchedDay.revenue += (order.pricing?.total || 0);
+                const netOrderRevenue = Math.max(0, (order.pricing?.total || 0) - (order.refundAmount || 0));
+                matchedDay.revenue += netOrderRevenue;
                 matchedDay.orders += 1;
             }
         });

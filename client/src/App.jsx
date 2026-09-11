@@ -40,6 +40,7 @@ import SingleUserDetailsPage from './pages/SingleUserDetailsPage';
 import ProtectedRoute from './utils/ProtectedRoute';
 import SearchResultsPage from './pages/SearchResultsPage';
 import WishlistPage from './pages/WishlistPage';
+import Wallet from './pages/Wallet';
 import CouponManagementPage from './pages/CouponManagementPage';
 import PremiumSubscribersPage from './pages/PremiumSubscribersPage';
 import ContactMessagesPage from './pages/ContactMessagesPage';
@@ -150,6 +151,8 @@ function App() {
               <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
               <Route path="/order-tracking/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
               <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
+              {/* New Wallet Page */}
+              <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
 
               {/* Protected Admin Pages */}
               <Route path="/admin-dashboard" element={<PrivateRoute role="Admin"><AdminDashboard /></PrivateRoute>} />

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaSearch, FaChevronDown, FaTimes, FaBars, FaHeart } from "react-icons/fa";
+import { FaSearch, FaChevronDown, FaTimes, FaBars, FaHeart, FaWallet } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
 import { IoCart } from "react-icons/io5";
 import { useCart } from "../utils/CartContext";
@@ -215,6 +215,10 @@ function Header() {
             <Link to={isLoggedIn ? "/cart" : "/login"} className={`cart-link nav-link-custom ${isActive("/cart")}`} title="Cart">
               <IoCart className="icon" />
               {totalItemCount > 0 && <span className="cart-badge">{totalItemCount}</span>}
+            </Link>
+            {/* Wallet */}
+            <Link to="/wallet" className={`nav-link-custom icon-btn ${isActive("/wallet")}`} title="Wallet">
+              <FaWallet className="icon" />
             </Link>
 
             {/* Mobile Menu Hamburger */}

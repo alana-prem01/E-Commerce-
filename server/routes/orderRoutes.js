@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllOrders, getOrderById, updateOrderStatus } = require('../controllers/orderController');
+const { getAllOrders, getOrderById, updateOrderStatus, refundOrder } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 // All routes are protected and require Admin role
@@ -15,5 +15,8 @@ router.route('/getorder/:id')
 
 router.route('/updatestatus/:id')
     .put(updateOrderStatus);
+
+router.route('/refund/:id')
+    .post(refundOrder);
 
 module.exports = router;

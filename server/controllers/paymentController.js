@@ -120,7 +120,8 @@ exports.verifyPayment = async (req, res) => {
       pricing,
       user,
       couponCode,
-      isBuyNow
+      isBuyNow,
+      walletAmountToUse
     } = req.body;
 
     // Validate shipping address before creating order
@@ -144,6 +145,22 @@ exports.verifyPayment = async (req, res) => {
 
     if (razorpay_signature !== expectedSign) {
       return res.status(400).json({ success: false, message: 'Invalid signature sent!' });
+    }
+
+    // Process partial wallet debit if requested
+    let walletDeducted = 0;
+    if (walletAmountToUse && walletAmountToUse > 0 && user) {
+      const { debitWallet } = require('./walletController');
+      try {
+        await debitWallet({
+          userId: user,
+          amount: walletAmountToUse,
+          reason: `Partial Wallet Payment for Order`,
+        });
+        walletDeducted = walletAmountToUse;
+      } catch (wErr) {
+        console.error('Partial Wallet Debit Error in verifyPayment:', wErr.message);
+      }
     }
 
     const mongoose = require('mongoose');
@@ -180,13 +197,15 @@ exports.verifyPayment = async (req, res) => {
         shipping: pricing?.shipping || 0,
         tax: pricing?.tax || 0,
         discount: pricing?.discount || 0,
-        total: pricing?.total || 0
+        total: pricing?.total || 0,
+        walletContribution: walletDeducted,
+        razorpayContribution: Math.max(0, (pricing?.total || 0) - walletDeducted)
       },
       paymentDetails: {
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
-        payment_method: 'Razorpay'
+        payment_method: walletDeducted > 0 ? 'Wallet + Razorpay' : 'Razorpay'
       },
       paymentStatus: 'Paid',
     });
@@ -409,3 +428,196 @@ exports.createCodOrder = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
   }
 };
+
+// @desc    Create Full Wallet Payment Order
+// @route   POST /api/payment/create-wallet-order
+// @access  Private
+exports.createWalletOrder = async (req, res) => {
+  try {
+    const {
+      contactEmail,
+      shippingAddress,
+      billingAddress,
+      orderItems,
+      pricing,
+      user,
+      couponCode,
+      isBuyNow
+    } = req.body;
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User authentication required for Wallet payment' });
+    }
+
+    // Validate shipping address
+    const addrErr = validateShippingAddress(shippingAddress);
+    if (addrErr) {
+      return res.status(400).json({ success: false, message: addrErr });
+    }
+
+    const totalPayable = pricing?.total || 0;
+    if (totalPayable <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid order payable amount' });
+    }
+
+    // Atomic debit from user wallet with race condition safety
+    const { debitWallet } = require('./walletController');
+    try {
+      await debitWallet({
+        userId: user,
+        amount: totalPayable,
+        reason: 'Order Payment via Wallet'
+      });
+    } catch (debitErr) {
+      return res.status(400).json({
+        success: false,
+        message: 'Insufficient wallet balance to complete this purchase'
+      });
+    }
+
+    const mongoose = require('mongoose');
+    const sanitizeAddr = (addr) => ({
+      country: addr?.country || '',
+      firstName: addr?.firstName || '',
+      lastName: addr?.lastName || '',
+      address: addr?.address || '',
+      city: addr?.city || '',
+      state: addr?.state || '',
+      pinCode: addr?.pinCode || '',
+      phone: addr?.phone || ''
+    });
+
+    const sanitizedOrderItems = (orderItems || []).map(item => ({
+      product: mongoose.Types.ObjectId.isValid(item.product) ? item.product : undefined,
+      name: item.name || 'Jewellery Item',
+      quantity: item.quantity || 1,
+      price: item.price || 0,
+      image: item.image || ''
+    }));
+
+    const newOrder = new Order({
+      user,
+      contactEmail: contactEmail || 'customer@example.com',
+      shippingAddress: sanitizeAddr(shippingAddress),
+      billingAddress: sanitizeAddr(billingAddress),
+      orderItems: sanitizedOrderItems,
+      couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
+      pricing: {
+        subtotal: pricing?.subtotal || 0,
+        shipping: pricing?.shipping || 0,
+        tax: pricing?.tax || 0,
+        discount: pricing?.discount || 0,
+        total: totalPayable,
+        walletContribution: totalPayable,
+        razorpayContribution: 0
+      },
+      paymentDetails: {
+        payment_method: 'Wallet',
+        razorpay_payment_id: `WALLET_${Date.now()}`
+      },
+      paymentStatus: 'Paid',
+      orderStatus: 'Pending'
+    });
+
+    await newOrder.save();
+
+    // Increment usedCount on coupon
+    if (couponCode) {
+      const Coupon = require('../models/CouponSchema');
+      await Coupon.findOneAndUpdate(
+        { code: couponCode.trim().toUpperCase() },
+        { $inc: { usedCount: 1 } }
+      );
+    }
+
+    // Decrement product stock
+    for (const item of sanitizedOrderItems) {
+      if (item.product) {
+        await Product.findByIdAndUpdate(
+          item.product,
+          { $inc: { stockQuantity: -item.quantity } }
+        );
+      }
+    }
+
+    // Clear cart if not Buy Now
+    if (!isBuyNow && user && orderItems && orderItems.length > 0) {
+      const purchasedProductIds = orderItems.map(item => item.product).filter(Boolean);
+      if (purchasedProductIds.length > 0) {
+        await Cart.findOneAndUpdate(
+          { user },
+          { $pull: { items: { product: { $in: purchasedProductIds } } } }
+        );
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Order placed successfully using Wallet Balance',
+      order: newOrder
+    });
+  } catch (error) {
+    console.error('Error in createWalletOrder:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+  }
+};
+
+// @desc    Razorpay Webhook Handler for Refund updates
+// @route   POST /api/payment/webhook
+// @access  Public (Signature Verified)
+exports.handleRazorpayWebhook = async (req, res) => {
+  try {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    if (webhookSecret) {
+      const rzpSignature = req.headers['x-razorpay-signature'];
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(JSON.stringify(req.body))
+        .digest('hex');
+
+      if (rzpSignature !== expectedSignature) {
+        return res.status(400).json({ success: false, message: 'Invalid Webhook Signature' });
+      }
+    }
+
+    const event = req.body.event;
+    const payload = req.body.payload;
+
+    if (event === 'refund.processed') {
+      const refundEntity = payload.refund.entity;
+      const razorpayPaymentId = refundEntity.payment_id;
+      const refundId = refundEntity.id;
+      const refundAmount = refundEntity.amount ? refundEntity.amount / 100 : 0;
+
+      const order = await Order.findOne({ 'paymentDetails.razorpay_payment_id': razorpayPaymentId });
+
+      if (order && order.refundStatus !== 'Refunded') {
+        order.paymentStatus = 'Refunded';
+        order.refundStatus = 'Refunded';
+        order.refundAmount = refundAmount || order.refundAmount;
+        order.refundId = refundId;
+        order.refundDate = Date.now();
+        await order.save();
+
+        if (order.user) {
+          const { creditWallet } = require('./walletController');
+          await creditWallet({
+            userId: order.user,
+            amount: refundAmount || order.pricing?.total || 0,
+            reason: `Order Refund Webhook #${order._id.toString().slice(-6).toUpperCase()}`,
+            orderId: order._id,
+            refundId: refundId,
+            referenceId: `REFUND_${order._id}_${refundId}`
+          });
+        }
+      }
+    }
+
+    return res.status(200).json({ status: 'ok' });
+  } catch (error) {
+    console.error('Razorpay Webhook Error:', error);
+    return res.status(500).json({ success: false, message: 'Webhook processing error' });
+  }
+};
+

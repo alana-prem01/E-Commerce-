@@ -16,6 +16,28 @@ function OrderTracking() {
   const [loading, setLoading] = useState(!initialOrder);
   const [error, setError] = useState('');
 
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancelOrder = async () => {
+    try {
+      setCancelling(true);
+      const res = await api.post(`/profile/orders/${order._id}/cancel`, { cancelReason });
+      if (res.success && res.order) {
+        setOrder(res.order);
+        setShowCancelModal(false);
+      } else {
+        alert(res.message || 'Failed to cancel order');
+      }
+    } catch (err) {
+      console.error('Error cancelling order:', err);
+      alert(err.message || 'Failed to cancel order');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -186,6 +208,8 @@ function OrderTracking() {
   const discountStr = pricing.discount !== undefined && pricing.discount > 0 ? `-₹${pricing.discount.toLocaleString('en-IN')}` : null;
   const totalStr = `₹${(pricing.total || 0).toLocaleString('en-IN')}`;
 
+  const isCancellable = (status === 'Pending' || status === 'Processing') && status !== 'Cancelled';
+
   return (
     <div className="order-tracking-container">
       {/* 1. Back Link */}
@@ -194,13 +218,173 @@ function OrderTracking() {
       </Link>
 
       {/* 2. Order Header */}
-      <div className="order-header">
+      <div className="order-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div className="order-title-group">
           <h1 className="order-title">Order #{displayId}</h1>
           <p className="order-subtext">Placed on {placedDateStr}</p>
         </div>
-        <span className={getBadgeClass(status)}>{status}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span className={getBadgeClass(status)}>{status}</span>
+          {isCancellable && (
+            <button
+              onClick={() => setShowCancelModal(true)}
+              style={{
+                backgroundColor: '#dc2626',
+                color: '#fff',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Cancel Order
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Refund / Cancellation Status Message Banner */}
+      {status === 'Cancelled' && (
+        <div style={{
+          padding: '16px 20px',
+          borderRadius: '8px',
+          margin: '0 0 24px 0',
+          fontWeight: 500,
+          fontSize: '14px',
+          border: '1px solid',
+          lineHeight: '1.5',
+          ...(order.refundStatus === 'Refunded' ? {
+            backgroundColor: '#f0fdf4',
+            borderColor: '#bbf7d0',
+            color: '#15803d'
+          } : order.refundStatus === 'Processing' ? {
+            backgroundColor: '#eff6ff',
+            borderColor: '#bfdbfe',
+            color: '#1d4ed8'
+          } : order.paymentStatus === 'Paid' || order.refundStatus === 'Eligible' ? {
+            backgroundColor: '#fefce8',
+            borderColor: '#fef08a',
+            color: '#a16207'
+          } : {
+            backgroundColor: '#f9fafb',
+            borderColor: '#e5e7eb',
+            color: '#4b5563'
+          })
+        }}>
+          {order.refundStatus === 'Refunded' ? (
+            <div>
+              <strong>Payment refund successful.</strong> ₹{(order.refundAmount || order.pricing?.total || 0).toLocaleString('en-IN')} has been credited to your wallet. You can use your wallet balance for your next order.
+            </div>
+          ) : order.refundStatus === 'Processing' ? (
+            <div>
+              <strong>Your refund is being processed.</strong>
+            </div>
+          ) : order.paymentStatus === 'Paid' || order.refundStatus === 'Eligible' ? (
+            <div>
+              <strong>Your order has been cancelled. Refund is pending.</strong>
+            </div>
+          ) : (
+            <div>
+              <strong>Your order has been cancelled.</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Cancel Order Modal */}
+      {showCancelModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '12px',
+            maxWidth: '480px',
+            width: '100%',
+            padding: '28px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', fontWeight: 600, color: '#111827' }}>
+              Confirm Cancellation
+            </h3>
+            <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#4b5563', lineHeight: '1.5' }}>
+              Are you sure you want to cancel Order #{displayId}?
+              {order.paymentStatus === 'Paid' && (
+                <span style={{ display: 'block', marginTop: '8px', color: '#059669', fontWeight: 500 }}>
+                  ₹{(order.pricing?.total || 0).toLocaleString('en-IN')} will be refunded to your Wallet once processed by Admin.
+                </span>
+              )}
+            </p>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                Reason for Cancellation (Optional)
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Please tell us why you are cancelling..."
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                disabled={cancelling}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: '#fff',
+                  color: '#374151',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                Keep Order
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                disabled={cancelling}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: '#dc2626',
+                  color: '#fff',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  cursor: cancelling ? 'not-allowed' : 'pointer',
+                  opacity: cancelling ? 0.7 : 1
+                }}
+              >
+                {cancelling ? 'Cancelling...' : 'Yes, Cancel Order'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 3. Tracking Card */}
       <div className="tracking-card">

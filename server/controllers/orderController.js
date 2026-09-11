@@ -197,18 +197,139 @@ const updateOrderStatus = async (req, res) => {
 
 // @desc    Get logged in user orders
 // @route   GET /api/profile/orders
+// @desc    Cancel logged in user order (or item)
+// @route   POST /api/profile/orders/:id/cancel
 // @access  Private
-const getMyOrders = async (req, res) => {
+const cancelMyOrder = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, count: orders.length, orders });
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Invalid Order ID' });
+    }
+
+    const { itemId, cancelReason } = req.body;
+    const query = { _id: req.params.id };
+
+    // Regular users can only cancel their own orders; Admins can cancel any order
+    if (req.user.role !== 'Admin') {
+      query.user = req.user._id;
+    }
+
+    const order = await Order.findOne(query);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found or not authorized' });
+    }
+
+    // Check cancellation eligibility
+    const nonCancellableStatuses = ['Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
+    if (nonCancellableStatuses.includes(order.orderStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: `Order cannot be cancelled because it is already ${order.orderStatus.toLowerCase()}`
+      });
+    }
+
+    // Prevent duplicate cancellation
+    if (order.orderStatus === 'Cancelled') {
+      return res.status(400).json({ success: false, message: 'Order is already cancelled' });
+    }
+
+    // Handle Item-level cancellation if itemId provided
+    if (itemId && order.orderItems && order.orderItems.length > 1) {
+      const itemToCancel = order.orderItems.id(itemId) || order.orderItems.find(i => i._id.toString() === itemId || i.product?.toString() === itemId);
+      
+      if (!itemToCancel) {
+        return res.status(404).json({ success: false, message: 'Item not found in order' });
+      }
+
+      if (itemToCancel.itemStatus === 'Cancelled') {
+        return res.status(400).json({ success: false, message: 'This item is already cancelled' });
+      }
+
+      itemToCancel.itemStatus = 'Cancelled';
+      
+      // Calculate item's proportional refundable amount from total order paid
+      const totalSubtotal = order.pricing?.subtotal || order.orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const itemSubtotal = itemToCancel.price * itemToCancel.quantity;
+      const trustedItemRefundable = totalSubtotal > 0
+        ? Math.round((itemSubtotal / totalSubtotal) * (order.pricing?.total || 0))
+        : itemSubtotal;
+
+      if (order.paymentStatus === 'Paid') {
+        itemToCancel.refundStatus = 'Eligible';
+        itemToCancel.refundAmount = trustedItemRefundable;
+        order.refundStatus = 'Eligible';
+        order.refundAmount = (order.refundAmount || 0) + trustedItemRefundable;
+      }
+
+      // Check if all items are now cancelled
+      const activeItems = order.orderItems.filter(i => i.itemStatus !== 'Cancelled');
+      if (activeItems.length === 0) {
+        order.orderStatus = 'Cancelled';
+        order.cancelReason = cancelReason || 'All items cancelled by user';
+        if (!order.tracking) order.tracking = {};
+        order.tracking.cancelledAt = Date.now();
+      }
+    } else {
+      // Full Order Cancellation
+      order.orderStatus = 'Cancelled';
+      order.cancelReason = cancelReason || 'Cancelled by user';
+      
+      if (!order.tracking) order.tracking = {};
+      order.tracking.cancelledAt = Date.now();
+
+      // Mark items as cancelled
+      if (order.orderItems) {
+        order.orderItems.forEach(item => {
+          item.itemStatus = 'Cancelled';
+        });
+      }
+
+      // Determine refund eligibility based on payment status
+      if (order.paymentStatus === 'Paid') {
+        order.refundStatus = 'Eligible';
+        order.refundAmount = order.pricing?.total || 0;
+        if (order.orderItems) {
+          order.orderItems.forEach(item => {
+            item.refundStatus = 'Eligible';
+          });
+        }
+      } else {
+        order.refundStatus = 'None';
+        order.refundAmount = 0;
+      }
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Order cancelled successfully',
+      order
+    });
   } catch (error) {
-    console.error('Error in getMyOrders:', error);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    console.error('Error in cancelMyOrder:', error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };
 
-// @desc    Get logged in user single order by ID
+// @desc    Get logged in user orders
+// @route   GET /api/profile/orders
+// @access  Private
+const getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .populate('user', 'name email');
+    return res.status(200).json({ success: true, orders });
+  } catch (error) {
+    console.error('Error in getMyOrders:', error);
+    return res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
+// @desc    Get logged in user order by ID
 // @route   GET /api/profile/orders/:id
 // @access  Private
 const getMyOrderById = async (req, res) => {
@@ -217,25 +338,139 @@ const getMyOrderById = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(404).json({ success: false, message: 'Invalid Order ID' });
     }
+    const order = await Order.findOne({ _id: req.params.id, user: req.user._id })
+      .populate('user', 'name email');
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    return res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error('Error in getMyOrderById:', error);
+    return res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
 
-    const query = { _id: req.params.id };
-    if (req.user.role !== 'Admin') {
-      query.user = req.user._id;
+// @desc    Process refund for a cancelled order (Admin)
+// @route   POST /api/orders/refund/:id
+// @access  Private/Admin
+const refundOrder = async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Invalid Order ID' });
     }
 
-    const order = await Order.findOne(query);
+    const order = await Order.findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    res.status(200).json({ success: true, order });
-  } catch (error) {
-    console.error('Error in getMyOrderById:', error);
-    if (error.kind === 'ObjectId') {
-      return res.status(404).json({ success: false, message: 'Order not found' });
+    // Verify refund is needed and not already completed
+    if (order.refundStatus === 'Refunded') {
+      return res.status(400).json({ success: false, message: 'This order has already been refunded' });
     }
-    res.status(500).json({ success: false, message: 'Server Error' });
+
+    if (order.orderStatus !== 'Cancelled' && order.refundStatus !== 'Eligible') {
+      return res.status(400).json({ success: false, message: 'Order is not eligible for refund' });
+    }
+
+    // Calculate trusted refund amount server-side
+    const trustedRefundAmount = order.refundAmount > 0 ? order.refundAmount : (order.pricing?.total || 0);
+
+    if (trustedRefundAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Refund amount must be greater than zero' });
+    }
+
+    let razorpayRefundId = null;
+    const razorpayPaymentId = order.paymentDetails?.razorpay_payment_id;
+
+    // Execute Razorpay refund if paid online via Razorpay
+    if (razorpayPaymentId && razorpayPaymentId !== 'COD' && !razorpayPaymentId.startsWith('WALLET')) {
+      const Razorpay = require('razorpay');
+      const razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID || 'dummy_id',
+        key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_secret',
+      });
+
+      try {
+        const razorpayRefund = await razorpay.payments.refund(razorpayPaymentId, {
+          amount: Math.round(trustedRefundAmount * 100), // paise
+          notes: {
+            orderId: order._id.toString(),
+            reason: 'Admin Initiated Refund'
+          }
+        });
+
+        if (razorpayRefund && razorpayRefund.id) {
+          razorpayRefundId = razorpayRefund.id;
+        }
+      } catch (rzpError) {
+        console.error('Razorpay Refund API Exception:', rzpError);
+        
+        // Handle common Razorpay API error cases gracefully (e.g. already refunded directly on dashboard)
+        if (rzpError.error && rzpError.error.description && rzpError.error.description.includes('already refunded')) {
+          razorpayRefundId = `RZP_PREV_REFUND_${Date.now()}`;
+        } else if (process.env.NODE_ENV === 'test' || process.env.RAZORPAY_KEY_ID === 'dummy_id') {
+          // Development/Test fallback when using dummy credentials
+          razorpayRefundId = `RZP_MOCK_REFUND_${Date.now()}`;
+        } else {
+          return res.status(500).json({
+            success: false,
+            message: `Razorpay Refund Failed: ${rzpError.error?.description || rzpError.message || 'Payment gateway error'}`
+          });
+        }
+      }
+    } else {
+      // Wallet or COD refund reference ID
+      razorpayRefundId = `REFUND_WAL_${order._id.toString().slice(-8)}_${Date.now()}`;
+    }
+
+    // Update order status atomically
+    order.paymentStatus = 'Refunded';
+    order.refundStatus = 'Refunded';
+    order.refundAmount = trustedRefundAmount;
+    order.refundId = razorpayRefundId;
+    order.refundDate = Date.now();
+
+    if (order.orderItems) {
+      order.orderItems.forEach(item => {
+        if (item.itemStatus === 'Cancelled') {
+          item.refundStatus = 'Refunded';
+          item.refundId = razorpayRefundId;
+        }
+      });
+    }
+
+    await order.save();
+
+    // Credit user's wallet if user is associated with order
+    if (order.user) {
+      const { creditWallet } = require('./walletController');
+      try {
+        await creditWallet({
+          userId: order.user,
+          amount: trustedRefundAmount,
+          reason: `Order Refund #${order._id.toString().slice(-6).toUpperCase()}`,
+          orderId: order._id,
+          refundId: razorpayRefundId,
+          referenceId: `REFUND_${order._id}_${razorpayRefundId}`
+        });
+      } catch (walletErr) {
+        console.error('Wallet Credit Error on Refund:', walletErr.message);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Refund of ₹${trustedRefundAmount.toLocaleString('en-IN')} completed successfully and credited to user wallet.`,
+      refundAmount: trustedRefundAmount,
+      refundId: razorpayRefundId,
+      order
+    });
+  } catch (error) {
+    console.error('Error in refundOrder:', error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };
 
@@ -244,5 +479,8 @@ module.exports = {
   getOrderById,
   updateOrderStatus,
   getMyOrders,
-  getMyOrderById
+  getMyOrderById,
+  cancelMyOrder,
+  refundOrder
 };
+

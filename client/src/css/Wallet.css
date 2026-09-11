@@ -1,0 +1,62 @@
+.wallet-page {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.wallet-page h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #c39b77;
+}
+
+.wallet-balance {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.balance-amount {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #2ecc71;
+}
+
+.transaction-list {
+  list-style: none;
+  padding: 0;
+}
+
+.transaction-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.tx-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+.tx-amount {
+  color: #e74c3c;
+}
+
+.tx-amount[data-type="CREDIT"] {
+  color: #2ecc71;
+}
+
+.tx-meta {
+  font-size: 0.85rem;
+  color: #ccc;
+  display: flex;
+  justify-content: space-between;
+}

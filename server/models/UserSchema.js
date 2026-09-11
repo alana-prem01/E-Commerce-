@@ -161,6 +161,12 @@ const userSchema = new mongoose.Schema({
         expiryDate: { type: Date },
         razorpay_order_id: { type: String },
         razorpay_payment_id: { type: String }
+    },
+
+    walletBalance: {
+        type: Number,
+        default: 0,
+        min: 0
     }
 }, {
     timestamps: true

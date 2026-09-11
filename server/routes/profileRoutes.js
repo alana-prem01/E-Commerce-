@@ -9,8 +9,9 @@ const {
     deleteAddress,
     setDefaultAddress
 } = require('../controllers/userController');
-const { getMyOrders, getMyOrderById } = require('../controllers/orderController');
+const { getMyOrders, getMyOrderById, cancelMyOrder } = require('../controllers/orderController');
 const { getWishlist, toggleWishlist } = require('../controllers/wishlistController');
+const { getWalletDetails, getWalletTransactions } = require('../controllers/walletController');
 const { protect } = require('../middleware/authMiddleware');
 
 // All profile routes must be protected so the user is logged in
@@ -37,6 +38,12 @@ router.route('/orders')
 
 router.route('/orders/:id')
     .get(getMyOrderById);
+
+router.post('/orders/:id/cancel', cancelMyOrder);
+
+// Wallet routes
+router.get('/wallet', getWalletDetails);
+router.get('/wallet/transactions', getWalletTransactions);
 
 // Wishlist routes
 router.get('/wishlist', getWishlist);

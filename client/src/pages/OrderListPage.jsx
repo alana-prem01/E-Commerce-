@@ -217,6 +217,29 @@ const OrderListPage = () => {
                             <circle cx="12" cy="12" r="3"></circle>
                           </svg>
                         </Link>
+                        {order.orderStatus === 'Cancelled' && order.refundStatus === 'Eligible' && (
+                          <button
+                            className="admin-btn admin-btn-danger"
+                            style={{ marginLeft: '8px', padding: '4px 8px' }}
+                            onClick={async () => {
+                              if (!window.confirm('Are you sure you want to process a refund for this order?')) return;
+                              try {
+                                const res = await api.post(`/orders/refund/${order._id}`);
+                                if (res.success) {
+                                  toast.success(res.message || 'Refund processed successfully');
+                                  setOrders(orders.map(o => o._id === order._id ? { ...o, refundStatus: 'Refunded', paymentStatus: 'Refunded' } : o));
+                                } else {
+                                  toast.error(res.message || 'Refund failed');
+                                }
+                              } catch (err) {
+                                console.error('Refund error:', err);
+                                toast.error(err.message || 'Refund request failed');
+                              }
+                            }}
+                          >
+                            Refund
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

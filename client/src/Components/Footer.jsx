@@ -10,6 +10,7 @@ function Footer() {
   const [emailError, setEmailError] = useState("");
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isPremiumActive, setIsPremiumActive] = useState(false);
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -17,7 +18,12 @@ function Footer() {
       try {
         const user = JSON.parse(userStr);
         if (user.email) setEmail(user.email);
-      } catch { }
+        const membership = user.membership || {};
+        const now = new Date();
+        const expiry = membership.expiryDate ? new Date(membership.expiryDate) : null;
+        const active = membership.isPremium && expiry && expiry > now;
+        setIsPremiumActive(!!active);
+      } catch {}
     }
   }, []);
 
@@ -131,9 +137,14 @@ function Footer() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <button type="submit" disabled={submitting}>
-            {submitting ? "SUBSCRIBING..." : "SUBSCRIBE"}
-          </button>
+          {!isPremiumActive && (
+            <button type="submit" disabled={submitting}>
+              {submitting ? "SUBSCRIBING..." : "SUBSCRIBE"}
+            </button>
+          )}
+          {isPremiumActive && (
+            <div style={{ fontSize: "13px", color: "#5e3b25", marginTop: "8px" }}>Premium Membership Active</div>
+          )}
         </form>
       </div>
       {emailError && <div className="newsletter-msg error">{emailError}</div>}
@@ -154,10 +165,10 @@ function Footer() {
               Timeless jewellery crafted with passion and precision. Designed to make every moment special.
             </p>
             <div className="footer-social-row">
-              <button type="button" className="social-icon-link" onClick={() => {}} aria-label="Instagram"><FaInstagram size={16} /></button>
-              <button type="button" className="social-icon-link" onClick={() => {}} aria-label="Facebook"><FaFacebookF size={16} /></button>
-              <button type="button" className="social-icon-link" onClick={() => {}} aria-label="Twitter"><FaTwitter size={16} /></button>
-              <button type="button" className="social-icon-link" onClick={() => {}} aria-label="WhatsApp"><FaWhatsapp size={16} /></button>
+              <button type="button" className="social-icon-link" onClick={() => { }} aria-label="Instagram"><FaInstagram size={16} /></button>
+              <button type="button" className="social-icon-link" onClick={() => { }} aria-label="Facebook"><FaFacebookF size={16} /></button>
+              <button type="button" className="social-icon-link" onClick={() => { }} aria-label="Twitter"><FaTwitter size={16} /></button>
+              <button type="button" className="social-icon-link" onClick={() => { }} aria-label="WhatsApp"><FaWhatsapp size={16} /></button>
             </div>
           </div>
 
@@ -166,7 +177,7 @@ function Footer() {
             <h4 className="footer-heading">QUICK LINKS</h4>
             <div className="footer-links-list">
               <Link to="/" className="footer-link-item" onClick={handleLinkClick}>Home</Link>
-              <Link to="/best-sellers" className="footer-link-item" onClick={handleLinkClick}>Shop</Link>
+              <Link to="/shop" className="footer-link-item" onClick={handleLinkClick}>Shop</Link>
               <Link to="/category/necklaces" className="footer-link-item" onClick={handleLinkClick}>Collections</Link>
               <Link to="/about" className="footer-link-item" onClick={handleLinkClick}>About Us</Link>
               <Link to="/contact" className="footer-link-item" onClick={handleLinkClick}>Contact</Link>

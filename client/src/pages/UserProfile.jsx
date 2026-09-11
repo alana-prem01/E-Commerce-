@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../css/UserProfile.css";
+import EmailChangeModal from "../components/EmailChangeModal";
 // FiEye removed – using text button
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
@@ -191,6 +192,16 @@ function UserProfile() {
     phone: user.phone || "",
   });
   const [tempContact, setTempContact] = useState({ ...contactData });
+
+  // New state for email change flow
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [otpSuccess, setOtpSuccess] = useState("");
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   // Sync contactData when fullUser changes
   useEffect(() => {
@@ -649,18 +660,47 @@ function UserProfile() {
               </div>
               <div>
                 <label className="label-text">EMAIL ADDRESS</label>
-                {/* Email requires secure OTP verification — not editable inline */}
+                {/* Email change button – opens OTP flow modal */}
                 <div className="input-field" style={{ backgroundColor: '#f5f5f5', color: '#888', cursor: 'default', display: 'flex', alignItems: 'center', userSelect: 'none' }}>
                   {contactData.email}
                 </div>
-                <p style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
-                  To change your email address, use the{' '}
-                  <a href="/profile" style={{ color: 'var(--primary-color-hover)', textDecoration: 'underline' }}
-                    onClick={(e) => { e.preventDefault(); alert('Please use the Account Security section or contact support to change your email address. This requires OTP verification.'); }}
-                  >
-                    Account Security
-                  </a>{' '}flow for secure OTP verification.
-                </p>
+                <button className="btn-action-outline" style={{ marginTop: '8px' }} onClick={() => setIsChangingEmail(true)}>
+                  Change Email
+                </button>
+                <EmailChangeModal
+                  isOpen={isChangingEmail}
+                  onClose={() => {
+                    setIsChangingEmail(false);
+                    setOtpSent(false);
+                    setOtp('');
+                    setNewEmail('');
+                    setOtpError('');
+                    setOtpSuccess('');
+                  }}
+                  currentEmail={contactData.email}
+                  newEmail={newEmail}
+                  setNewEmail={setNewEmail}
+                  otp={otp}
+                  setOtp={setOtp}
+                  otpSent={otpSent}
+                  setOtpSent={setOtpSent}
+                  otpError={otpError}
+                  setOtpError={setOtpError}
+                  otpSuccess={otpSuccess}
+                  setOtpSuccess={setOtpSuccess}
+                  isOtpLoading={isOtpLoading}
+                  setIsOtpLoading={setIsOtpLoading}
+                  isVerifying={isVerifying}
+                  setIsVerifying={setIsVerifying}
+                  onEmailUpdated={(updatedEmail) => {
+                    // Update UI and local storage
+                    setContactData((prev) => ({ ...prev, email: updatedEmail }));
+                    setFullUser((prev) => ({ ...prev, email: updatedEmail }));
+                    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                    storedUser.email = updatedEmail;
+                    localStorage.setItem('user', JSON.stringify(storedUser));
+                  }}
+                />
               </div>
               <div>
                 <label className="label-text">PHONE NUMBER</label>
@@ -745,7 +785,38 @@ function UserProfile() {
                     </button>
                   </div>
                 </div>
-              </>
+              {/* EXCLUSIVE NEW PRODUCTS & UPDATES */}
+<div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #eee" }}>
+  <span className="label-text" style={{ color: "#5e3b25", fontWeight: "700" }}>EXCLUSIVE NEW PRODUCTS &amp; UPDATES</span>
+  {loadingNewProducts ? (
+    <div style={{ fontSize: "13px", color: "#666", padding: "12px 0" }}>Loading latest arrivals...</div>
+  ) : newProducts.length > 0 ? (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "12px", marginTop: "10px" }}>
+      {newProducts.map((prod) => (
+        <Link
+          key={prod._id || prod.id}
+          to={`/product/${prod._id || prod.id}`}
+          style={{ textDecoration: "none", color: "inherit", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px", backgroundColor: "#fff", display: "flex", flexDirection: "column", alignItems: "center" }}
+        >
+          <img
+            src={prod.productImage || prod.image || (prod.images && prod.images[0]) || ""}
+            alt={prod.productName || prod.title || prod.name}
+            style={{ width: "100%", height: "90px", objectFit: "cover", borderRadius: "6px" }}
+          />
+          <div style={{ fontSize: "12px", fontWeight: "600", marginTop: "6px", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%" }}>
+            {prod.productName || prod.title || prod.name}
+          </div>
+          <div style={{ fontSize: "12px", color: "#0B5D50", fontWeight: "700", marginTop: "2px" }}>
+            ₹{Number(prod.price).toLocaleString("en-IN")}
+          </div>
+        </Link>
+      ))}
+    </div>
+  ) : (
+    <div style={{ fontSize: "13px", color: "#888", padding: "10px 0" }}>No new products available at the moment.</div>
+  )}
+</div>
+</>
             ) : (
               <>
                 <div>
@@ -757,6 +828,7 @@ function UserProfile() {
                 <div className="value-text-muted" style={{ fontSize: "13px" }}>
                   Join Elora Premium for ₹599/year to receive Free Delivery on orders, a 15% Discount Coupon, and early product updates.
                 </div>
+                {!isPremiumActive && (
                 <div style={{ marginTop: "10px" }}>
                   <button
                     className="btn-primary"
@@ -766,41 +838,10 @@ function UserProfile() {
                     {submittingPremium ? "Processing..." : "Subscribe to Premium (₹599/year)"}
                   </button>
                 </div>
+              )}
                 {premiumError && <div className="security-error" style={{ marginTop: "8px" }}>{premiumError}</div>}
               </>
             )}
-
-            {/* EXCLUSIVE NEW PRODUCTS SECTION */}
-            <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid #eee" }}>
-              <span className="label-text" style={{ color: "#5e3b25", fontWeight: "700" }}>EXCLUSIVE NEW PRODUCTS & UPDATES</span>
-              {loadingNewProducts ? (
-                <div style={{ fontSize: "13px", color: "#666", padding: "12px 0" }}>Loading latest arrivals...</div>
-              ) : newProducts.length > 0 ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "12px", marginTop: "10px" }}>
-                  {newProducts.map((prod) => (
-                    <Link
-                      key={prod._id || prod.id}
-                      to={`/product/${prod._id || prod.id}`}
-                      style={{ textDecoration: "none", color: "inherit", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px", backgroundColor: "#fff", display: "flex", flexDirection: "column", alignItems: "center" }}
-                    >
-                      <img
-                        src={prod.productImage || prod.image || (prod.images && prod.images[0]) || ""}
-                        alt={prod.productName || prod.title || prod.name}
-                        style={{ width: "100%", height: "90px", objectFit: "cover", borderRadius: "6px" }}
-                      />
-                      <div style={{ fontSize: "12px", fontWeight: "600", marginTop: "6px", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%" }}>
-                        {prod.productName || prod.title || prod.name}
-                      </div>
-                      <div style={{ fontSize: "12px", color: "#0B5D50", fontWeight: "700", marginTop: "2px" }}>
-                        ₹{Number(prod.price).toLocaleString("en-IN")}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ fontSize: "13px", color: "#888", padding: "10px 0" }}>No new products available at the moment.</div>
-              )}
-            </div>
           </div>
         </div>
 
