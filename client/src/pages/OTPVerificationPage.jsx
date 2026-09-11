@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import OtpTimer from '../Components/OtpTimer';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
 import '../css/OTPVerificationPage.css';
@@ -7,6 +8,7 @@ import '../css/OTPVerificationPage.css';
 export default function OTPVerificationPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState('email'); // 'email' or 'otp'
+  const [otpSentTime, setOtpSentTime] = useState(null);
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
@@ -39,6 +41,7 @@ export default function OTPVerificationPage() {
       if (response.success) {
         toast.success(response.message || 'OTP sent to your email!');
         setStep('otp');
+        setOtpSentTime(Date.now());
       } else {
         setError(response.message || 'Failed to send OTP.');
       }
@@ -96,6 +99,7 @@ export default function OTPVerificationPage() {
       const response = await api.post('/auth/forgot-password', { email: email.trim() });
       if (response.success) {
         toast.success('A new OTP has been sent to your email.');
+        setOtpSentTime(Date.now());
       }
     } catch (err) {
       setError(err.message || 'Failed to resend OTP.');
@@ -188,6 +192,16 @@ export default function OTPVerificationPage() {
                 </div>
                 {error && <span className="otp-error-message">{error}</span>}
               </div>
+
+              {otpSentTime && (
+                <OtpTimer
+                  startTime={otpSentTime}
+                  onExpire={() => {
+                    setOtp('');
+                    setIsSubmitting(false);
+                  }}
+                />
+              )}
 
               {/* Verify OTP Button */}
               <button 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../css/UserProfile.css";
 import EmailChangeModal from "../Components/EmailChangeModal"
+import OtpTimer from "../Components/OtpTimer";
 // FiEye removed – using text button
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
@@ -463,6 +464,7 @@ function UserProfile() {
   const [securityConfirmPassword, setSecurityConfirmPassword] = useState('');
   const [securityError, setSecurityError] = useState('');
   const [isSecurityLoading, setIsSecurityLoading] = useState(false);
+  const [securityOtpSentTime, setSecurityOtpSentTime] = useState(null);
 
   const handleSendSecurityOTP = async () => {
     setSecurityError('');
@@ -471,6 +473,7 @@ function UserProfile() {
       const res = await api.post('/auth/change-password/send-otp', {});
       if (res.success) {
         setSecurityStep('otp');
+        setSecurityOtpSentTime(Date.now());
       } else {
         setSecurityError(res.message || 'Failed to send OTP.');
       }
@@ -1109,6 +1112,16 @@ function UserProfile() {
                     onChange={(e) => setSecurityOtp(e.target.value)}
                   />
                 </div>
+                {securityOtpSentTime && (
+                  <OtpTimer
+                    startTime={securityOtpSentTime}
+                    onExpire={() => {
+                      setSecurityStep('idle');
+                      setSecurityOtp('');
+                      setSecurityError('');
+                    }}
+                  />
+                )}
                 <div className="button-group">
                   <button className="btn-primary" onClick={handleVerifySecurityOTP} disabled={isSecurityLoading}>
                     {isSecurityLoading ? 'Verifying...' : 'Verify OTP'}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff, FiLock, FiMail, FiUser, FiSave, FiCheckCircle, FiShield, FiKey, FiArrowLeft, FiEdit2 } from 'react-icons/fi';
+import OtpTimer from '../Components/OtpTimer';
 import api from '../utils/api';
 import '../css/AdminProfilePage.css';
 
@@ -23,6 +24,8 @@ export default function AdminProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isOtpLoading, setIsOtpLoading] = useState(false);
+  const [otpSentTime, setOtpSentTime] = useState(null);
+  const [emailOtpSentTime, setEmailOtpSentTime] = useState(null);
 
   // Change Email OTP state: 1 = Enter new email, 2 = Verify OTP, 3 = Success
   const [emailStep, setEmailStep] = useState(1);
@@ -98,6 +101,7 @@ export default function AdminProfilePage() {
       const res = await api.post('/auth/change-email/send-otp');
       if (res && res.success) {
         toast.success(res.message || `OTP sent to your current email (${email || savedUser.email})`);
+        setEmailOtpSentTime(Date.now());
         setEmailStep(2);
       } else {
         toast.error(res?.message || 'Failed to send OTP.');
@@ -177,6 +181,7 @@ export default function AdminProfilePage() {
 
       if (res && res.success) {
         toast.success(res.message || 'OTP verification code sent to your email!');
+        setOtpSentTime(Date.now());
         setOtpStep(2);
       } else {
         toast.error(res?.message || 'Failed to send OTP.');
@@ -451,61 +456,76 @@ export default function AdminProfilePage() {
 
             {/* EMAIL STEP 2: Verify OTP & Enter New Email */}
             {emailStep === 2 && (
-              <form onSubmit={handleVerifyEmailOTP}>
-                <p style={{ fontSize: '0.9rem', color: 'var(--admin-text-muted, #64748B)', marginBottom: '16px' }}>
-                  A 6-digit OTP was sent to your current email <strong>{email || savedUser.email}</strong>. Enter the OTP code and your new email address below.
-                </p>
+              <>
+                <form onSubmit={handleVerifyEmailOTP}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--admin-text-muted, #64748B)', marginBottom: '16px' }}>
+                    A 6-digit OTP was sent to your current email <strong>{email || savedUser.email}</strong>. Enter the OTP code and your new email address below.
+                  </p>
 
-                <div className="row g-3 mb-3">
-                  <div className="col-md-5">
-                    <label className="form-label font-weight-bold">Verification Code (OTP)</label>
-                    <input
-                      type="text"
-                      className="admin-input text-center font-weight-bold"
-                      style={{ letterSpacing: '4px', fontSize: '1.1rem' }}
-                      maxLength={6}
-                      placeholder="123456"
-                      value={emailOtp}
-                      onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ''))}
-                      autoFocus
-                      required
-                    />
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-5">
+                      <label className="form-label font-weight-bold">Verification Code (OTP)</label>
+                      <input
+                        type="text"
+                        className="admin-input text-center font-weight-bold"
+                        style={{ letterSpacing: '4px', fontSize: '1.1rem' }}
+                        maxLength={6}
+                        placeholder="123456"
+                        value={emailOtp}
+                        onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ''))}
+                        autoFocus
+                        required
+                      />
+                    </div>
+                    <div className="col-md-7">
+                      <label className="form-label font-weight-bold">
+                        <FiMail className="me-1 text-secondary" /> New Email Address
+                      </label>
+                      <input
+                        type="email"
+                        className="admin-input"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder="Enter new email address"
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="col-md-7">
-                    <label className="form-label font-weight-bold">
-                      <FiMail className="me-1 text-secondary" /> New Email Address
-                    </label>
-                    <input
-                      type="email"
-                      className="admin-input"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      placeholder="Enter new email address"
-                      required
-                    />
-                  </div>
-                </div>
 
-                <div className="d-flex align-items-center gap-3 mt-4">
-                  <button
-                    type="submit"
-                    className="admin-btn admin-btn-primary d-inline-flex align-items-center gap-2"
-                    disabled={isEmailOtpLoading || !emailOtp || !newEmail}
-                  >
-                    <FiSave size={16} />
-                    {isEmailOtpLoading ? 'Verifying & Updating...' : 'Verify OTP & Update Email'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-link text-decoration-none p-0"
-                    style={{ fontSize: '0.9rem', color: '#0D9488' }}
-                    onClick={handleSendEmailOTP}
-                    disabled={isEmailOtpLoading}
-                  >
-                    Resend OTP
-                  </button>
-                </div>
-              </form>
+                  {/* OTP Timer */}
+                  {emailOtpSentTime && (
+                    <OtpTimer
+                      startTime={emailOtpSentTime}
+                      onExpire={() => {
+                        setEmailStep(1);
+                        setEmailOtp('');
+                        setNewEmail('');
+                        toast.info('OTP expired. Please resend.');
+                      }}
+                    />
+                  )}
+
+                  <div className="d-flex align-items-center gap-3 mt-4">
+                    <button
+                      type="submit"
+                      className="admin-btn admin-btn-primary d-inline-flex align-items-center gap-2"
+                      disabled={isEmailOtpLoading || !emailOtp || !newEmail}
+                    >
+                      <FiSave size={16} />
+                      {isEmailOtpLoading ? 'Verifying & Updating...' : 'Verify OTP & Update Email'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-link text-decoration-none p-0"
+                      style={{ fontSize: '0.9rem', color: '#0D9488' }}
+                      onClick={handleSendEmailOTP}
+                      disabled={isEmailOtpLoading}
+                    >
+                      Resend OTP
+                    </button>
+                  </div>
+                </form>
+              </>
             )}
 
             {/* EMAIL STEP 3: Success */}
@@ -585,6 +605,18 @@ export default function AdminProfilePage() {
                     required
                   />
                 </div>
+
+                {/* OTP Timer */}
+                {otpSentTime && (
+                  <OtpTimer
+                    startTime={otpSentTime}
+                    onExpire={() => {
+                      setOtpStep(1);
+                      setOtpCode('');
+                      toast.info('OTP expired. Please request a new one.');
+                    }}
+                  />
+                )}
 
                 <div className="d-flex align-items-center gap-3 mt-4">
                   <button

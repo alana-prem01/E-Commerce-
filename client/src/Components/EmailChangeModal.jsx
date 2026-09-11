@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import OtpTimer from '../Components/OtpTimer';
 import { api } from '../utils/api';
 
 // Simple modal styling – you can adjust in UserProfile.css or create a separate CSS file
@@ -44,6 +45,7 @@ export default function EmailChangeModal({
   setIsVerifying,
   onEmailUpdated,
 }) {
+  const [otpSentTime, setOtpSentTime] = useState(null);
   if (!isOpen) return null;
 
   const handleSendOtp = async () => {
@@ -54,6 +56,7 @@ export default function EmailChangeModal({
       if (res.success) {
         setOtpSent(true);
         setOtpSuccess('OTP sent to your current email.');
+        setOtpSentTime(Date.now());
       } else {
         setOtpError(res.message || 'Failed to send OTP.');
       }
@@ -131,6 +134,16 @@ export default function EmailChangeModal({
               onChange={e => setNewEmail(e.target.value)}
               style={{ marginTop: '12px' }}
             />
+            {otpSentTime && (
+              <OtpTimer
+                startTime={otpSentTime}
+                onExpire={() => {
+                  setOtpSent(false);
+                  setOtp('');
+                  setNewEmail('');
+                }}
+              />
+            )}
             <button
               className="btn-primary"
               onClick={handleUpdateEmail}
