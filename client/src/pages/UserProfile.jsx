@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../css/UserProfile.css";
-import EmailChangeModal from "../components/EmailChangeModal";
+import EmailChangeModal from "../components/EmailChangeModal.jsx";
 // FiEye removed – using text button
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
