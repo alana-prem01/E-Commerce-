@@ -89,6 +89,31 @@ const signup = async (req, res) => {
             });
         }
 
+        // Check duplicate phone
+        if (phone) {
+            const phoneDigits = phone.replace(/\D/g, '');
+            const cleanCode = '91';
+            let localDigits = phoneDigits;
+            if (phoneDigits.startsWith(cleanCode) && phoneDigits.length > cleanCode.length) {
+                localDigits = phoneDigits.slice(cleanCode.length);
+            }
+            const existingPhoneUser = await User.findOne({
+                $or: [
+                    { phone: `+${cleanCode}${localDigits}` },
+                    { phone: `${cleanCode}${localDigits}` },
+                    { phone: localDigits },
+                    { phone: phone.trim() }
+                ]
+            });
+
+            if (existingPhoneUser) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Mobile number is already registered"
+                });
+            }
+        }
+
         // 5. Password Validation
 
         if (trimmedPassword.length < 8 || trimmedPassword.length > 20) {
@@ -184,7 +209,7 @@ const signup = async (req, res) => {
 // @access  Public
 const signin = async (req, res) => {
     try {
-        const { email, password, recaptchaToken, turnstileToken, captchaToken } = req.body;
+        const { email, phone, countryCode, password, recaptchaToken, turnstileToken, captchaToken } = req.body;
 
         const tokenToVerify = recaptchaToken || captchaToken;
 
@@ -207,25 +232,14 @@ const signin = async (req, res) => {
             }
         }
 
-        if (!email) {
-            return res.status(400).json({ success: false, message: "Email is required" });
+        if (!email && !phone) {
+            return res.status(400).json({ success: false, message: "Email or mobile number is required" });
         }
         if (!password) {
             return res.status(400).json({ success: false, message: "Password is required" });
         }
 
-        const trimmedEmail = email.trim().toLowerCase();
         const trimmedPassword = password.trim();
-
-        if (trimmedEmail.length > 100) {
-            return res.status(400).json({ success: false, message: "Email cannot exceed 100 characters" });
-        }
-
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (/\s/.test(email) || (email.match(/@/g) || []).length !== 1 || !emailRegex.test(trimmedEmail)) {
-            return res.status(400).json({ success: false, message: "Invalid email format" });
-        }
-
         if (trimmedPassword.length < 8 || trimmedPassword.length > 20) {
             return res.status(400).json({ success: false, message: "Password must be between 8 and 20 characters" });
         }
@@ -234,15 +248,68 @@ const signin = async (req, res) => {
             return res.status(400).json({ success: false, message: "Password cannot contain spaces" });
         }
 
-        const user = await User.findOne({
-            email: trimmedEmail
-        });
+        let user;
+        let isPhoneAuth = false;
 
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid email or password"
+        const isNumericPhoneInput = email && !email.includes('@') && /^\+?[0-9\s-]{7,15}$/.test(email.trim());
+
+        if (phone || isNumericPhoneInput) {
+            isPhoneAuth = true;
+            const targetPhone = phone || email;
+            const phoneDigits = targetPhone.replace(/\D/g, '');
+            if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+                return res.status(400).json({ success: false, message: "Please enter a valid phone number (7-15 digits)" });
+            }
+            if ((countryCode === '+91' || !countryCode) && phoneDigits.length === 10 && !/^[6-9]\d{9}$/.test(phoneDigits)) {
+                return res.status(400).json({ success: false, message: "Please enter a valid 10-digit Indian mobile number starting with 6-9" });
+            }
+
+            const cleanCode = (countryCode || '+91').replace(/\D/g, ''); // e.g. "91"
+            let localDigits = phoneDigits;
+            if (cleanCode && phoneDigits.startsWith(cleanCode) && phoneDigits.length > cleanCode.length) {
+                localDigits = phoneDigits.slice(cleanCode.length);
+            }
+
+            const fullWithPlus = `+${cleanCode}${localDigits}`;
+            const fullDigits = `${cleanCode}${localDigits}`;
+            const localNum = localDigits;
+
+            user = await User.findOne({
+                $or: [
+                    { phone: fullWithPlus },
+                    { phone: fullDigits },
+                    { phone: localNum },
+                    { phone: targetPhone.trim() }
+                ]
             });
+
+            if (!user) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid mobile number or password"
+                });
+            }
+        } else {
+            const trimmedEmail = email.trim().toLowerCase();
+            if (trimmedEmail.length > 100) {
+                return res.status(400).json({ success: false, message: "Email cannot exceed 100 characters" });
+            }
+
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (/\s/.test(email) || (email.match(/@/g) || []).length !== 1 || !emailRegex.test(trimmedEmail)) {
+                return res.status(400).json({ success: false, message: "Invalid email format" });
+            }
+
+            user = await User.findOne({
+                email: trimmedEmail
+            });
+
+            if (!user) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid email or password"
+                });
+            }
         }
 
         if (user.status === 'Blocked') {
@@ -252,16 +319,46 @@ const signin = async (req, res) => {
             });
         }
 
+        // Account Lockout check for multiple failed attempts
+        if (user.lockUntil && user.lockUntil > Date.now()) {
+            const minutesLeft = Math.ceil((user.lockUntil - Date.now()) / (60 * 1000));
+            return res.status(429).json({
+                success: false,
+                message: `Account is temporarily locked due to multiple failed login attempts. Please try again in ${minutesLeft} minute(s).`
+            });
+        }
+
         const isMatch = await bcrypt.compare(
             trimmedPassword,
             user.password
         );
 
         if (!isMatch) {
+            user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+            if (user.failedLoginAttempts >= 5) {
+                user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15-minute lock
+                user.failedLoginAttempts = 0;
+                await user.save();
+                return res.status(429).json({
+                    success: false,
+                    message: "Too many failed login attempts. Account is temporarily locked for 15 minutes."
+                });
+            }
+            await user.save();
+            const attemptsLeft = 5 - user.failedLoginAttempts;
+            const warningMsg = attemptsLeft === 1
+                ? "Invalid credentials. Warning: This is your final attempt before your account is temporarily locked for 15 minutes!"
+                : (isPhoneAuth ? "Invalid mobile number or password" : "Invalid email or password");
             return res.status(401).json({
                 success: false,
-                message: "Invalid email or password"
+                message: warningMsg
             });
+        }
+
+        // Reset failed login tracking on success
+        if (user.failedLoginAttempts > 0 || user.lockUntil) {
+            user.failedLoginAttempts = 0;
+            user.lockUntil = undefined;
         }
 
         user.lastLogin = new Date();
@@ -414,6 +511,17 @@ const resetPassword = async (req, res) => {
                 success: false,
                 message: "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character"
             });
+        }
+
+        // Password History Check: Cannot reuse current password
+        if (user.password) {
+            const isSamePassword = await bcrypt.compare(trimmedPassword, user.password);
+            if (isSamePassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: "New password cannot be the same as your current password. Please choose a different password."
+                });
+            }
         }
 
         // Hash new password
@@ -739,6 +847,12 @@ const googleAuth = async (req, res) => {
             const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                 headers: { Authorization: `Bearer ${access_token}` }
             });
+            if (!response.ok) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Google access token validation failed. Unable to authenticate with Google."
+                });
+            }
             const googleData = await response.json();
             email = googleData.email?.toLowerCase();
             name = googleData.name || "Google User";
@@ -822,6 +936,180 @@ const googleAuth = async (req, res) => {
     }
 };
 
+// @desc    Send Mobile Login OTP
+// @route   POST /api/auth/send-mobile-otp
+// @access  Public
+const sendMobileOTP = async (req, res) => {
+    try {
+        const { phone, countryCode } = req.body;
+
+        if (!phone) {
+            return res.status(400).json({ success: false, message: "Mobile number is required" });
+        }
+
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+            return res.status(400).json({ success: false, message: "Please enter a valid phone number (7-15 digits)" });
+        }
+
+        // Check if Indian mobile
+        if ((countryCode === '+91' || !countryCode) && phoneDigits.length === 10 && !/^[6-9]\d{9}$/.test(phoneDigits)) {
+            return res.status(400).json({ success: false, message: "Please enter a valid 10-digit Indian mobile number starting with 6-9" });
+        }
+
+        const formattedPhone = countryCode ? `${countryCode}${phoneDigits}` : phoneDigits;
+
+        let user = await User.findOne({
+            $or: [
+                { phone: formattedPhone },
+                { phone: phoneDigits },
+                { phone: `+91${phoneDigits}` }
+            ]
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "Mobile number is not registered. Please sign up first."
+            });
+        }
+
+        if (user.status === 'Blocked') {
+            return res.status(403).json({
+                success: false,
+                message: "Your account has been blocked. Please contact support."
+            });
+        }
+
+        // Cooldown check: 60 seconds rate limit
+        if (user.mobileOTPLastSent && (Date.now() - new Date(user.mobileOTPLastSent).getTime()) < 60000) {
+            const waitSec = Math.ceil((60000 - (Date.now() - new Date(user.mobileOTPLastSent).getTime())) / 1000);
+            return res.status(429).json({
+                success: false,
+                message: `Please wait ${waitSec} seconds before requesting a new OTP.`
+            });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`[DEBUG] Mobile Login OTP for ${formattedPhone}: ${otp}`);
+
+        user.mobileOTP = otp;
+        user.mobileOTPExpires = Date.now() + 10 * 60 * 1000;
+        user.mobileOTPAttempts = 0;
+        user.mobileOTPLastSent = new Date();
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: `OTP sent successfully to ${formattedPhone}`,
+            debugOtp: process.env.NODE_ENV !== 'production' ? otp : undefined
+        });
+    } catch (error) {
+        console.error("Send Mobile OTP Error:", error);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// @desc    Verify Mobile Login OTP & Login
+// @route   POST /api/auth/verify-mobile-otp
+// @access  Public
+const verifyMobileOTP = async (req, res) => {
+    try {
+        const { phone, countryCode, otp } = req.body;
+
+        if (!phone || !otp) {
+            return res.status(400).json({ success: false, message: "Mobile number and OTP are required" });
+        }
+
+        const trimmedOtp = otp.trim();
+        if (trimmedOtp.length !== 6 || !/^\d+$/.test(trimmedOtp)) {
+            return res.status(400).json({ success: false, message: "Please enter a valid 6-digit numeric OTP" });
+        }
+
+        const phoneDigits = phone.replace(/\D/g, '');
+        const formattedPhone = countryCode ? `${countryCode}${phoneDigits}` : phoneDigits;
+
+        let user = await User.findOne({
+            $or: [
+                { phone: formattedPhone },
+                { phone: phoneDigits },
+                { phone: `+91${phoneDigits}` }
+            ]
+        });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Mobile number is not registered" });
+        }
+
+        if (user.status === 'Blocked') {
+            return res.status(403).json({ success: false, message: "Your account has been blocked. Please contact support." });
+        }
+
+        // Check active OTP presence & expiration
+        if (!user.mobileOTP || !user.mobileOTPExpires || user.mobileOTPExpires < Date.now()) {
+            return res.status(400).json({ success: false, message: "OTP has expired or is invalid. Please request a new OTP." });
+        }
+
+        // Check max failed attempts (max 5)
+        if (user.mobileOTPAttempts >= 5) {
+            user.mobileOTP = undefined;
+            user.mobileOTPExpires = undefined;
+            await user.save();
+            return res.status(429).json({
+                success: false,
+                message: "Maximum OTP verification attempts exceeded. Please request a new OTP."
+            });
+        }
+
+        // Compare OTP
+        if (user.mobileOTP !== trimmedOtp) {
+            user.mobileOTPAttempts = (user.mobileOTPAttempts || 0) + 1;
+            await user.save();
+            const attemptsLeft = 5 - user.mobileOTPAttempts;
+            return res.status(400).json({
+                success: false,
+                message: `Invalid OTP. ${attemptsLeft} attempt(s) remaining.`
+            });
+        }
+
+        // OTP Verified successfully!
+        user.mobileOTP = undefined;
+        user.mobileOTPExpires = undefined;
+        user.mobileOTPAttempts = 0;
+        user.phoneVerified = true;
+        user.lastLogin = new Date();
+        await user.save();
+
+        if (user.role === 'Admin') {
+            return res.status(403).json({
+                success: false,
+                message: "Admins must use the Admin Portal to sign in."
+            });
+        }
+
+        const payload = { id: user._id, role: user.role };
+        const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+        return res.status(200).json({
+            success: true,
+            message: "Mobile OTP login successful",
+            accessToken,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                role: user.role,
+                membership: user.membership
+            }
+        });
+    } catch (error) {
+        console.error("Verify Mobile OTP Error:", error);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
 module.exports = {
     signup,
     signin,
@@ -833,5 +1121,7 @@ module.exports = {
     verifyChangePasswordOTP,
     resetChangePassword,
     sendChangeEmailOTP,
-    verifyChangeEmailOTP
+    verifyChangeEmailOTP,
+    sendMobileOTP,
+    verifyMobileOTP
 };

@@ -7,6 +7,8 @@ const { protect } = require('../middleware/authMiddleware');
 router.post('/signup', authLimiter, authController.signup);
 router.post('/signin', authLimiter, authController.signin);
 router.post('/google', authLimiter, authController.googleAuth);
+router.post('/send-mobile-otp', authLimiter, authController.sendMobileOTP);
+router.post('/verify-mobile-otp', authLimiter, authController.verifyMobileOTP);
 router.post('/forgot-password', authLimiter, authController.forgotPassword);
 router.post('/verify-otp', authLimiter, authController.verifyOTP);
 router.post('/reset-password', authLimiter, authController.resetPassword);

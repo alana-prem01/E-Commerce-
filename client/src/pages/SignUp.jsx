@@ -33,11 +33,20 @@ const SignUp = () => {
     onSuccess: handleGoogleSuccess,
     onError: (error) => {
       console.error('Google Auth Error:', error);
-      toast.error('Google Sign Up failed. Please check your configuration.');
+      if (error?.error === 'popup_closed_by_user') {
+        toast.info('Google signup cancelled.');
+      } else if (error?.error === 'access_denied') {
+        toast.error('Google permission denied.');
+      } else if (error?.error === 'popup_blocked_by_browser') {
+        toast.error('Google popup was blocked by browser. Please allow popups.');
+      } else {
+        toast.error(error?.error_description || 'Google Sign Up failed. Please try again.');
+      }
     },
   });
 
   const handleGoogleClick = () => {
+    if (isSubmitting) return;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId || clientId.includes('dummy')) {
       toast.info('Google Client ID is not configured. Please add VITE_GOOGLE_CLIENT_ID to your client/.env file.');

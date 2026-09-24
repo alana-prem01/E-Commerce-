@@ -25,6 +25,13 @@ const protect = async (req, res, next) => {
                 });
             }
 
+            if (req.user.status === 'Blocked') {
+                return res.status(403).json({
+                    success: false,
+                    message: "Account disabled during session. Please contact support."
+                });
+            }
+
             return next();
         } catch (error) {
             console.error("Auth Middleware Error:", error);

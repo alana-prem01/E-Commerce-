@@ -107,12 +107,36 @@ const NotFoundHandler = () => {
   return isAdminRoute ? <AdminNotFound /> : <NotFound />;
 };
 
+import NetworkErrorModal from './Components/NetworkErrorModal';
+import ServerErrorModal from './Components/ServerErrorModal';
+
 function App() {
+  const [networkErrorOpen, setNetworkErrorOpen] = React.useState(false);
+  const [serverErrorOpen, setServerErrorOpen] = React.useState(false);
+  const [serverErrorMessage, setServerErrorMessage] = React.useState('');
+
+  useEffect(() => {
+    const handleNetworkError = () => setNetworkErrorOpen(true);
+    const handleServerError = (e) => {
+      setServerErrorMessage(e.detail?.message || 'Server error occurred.');
+      setServerErrorOpen(true);
+    };
+
+    window.addEventListener('app-network-error', handleNetworkError);
+    window.addEventListener('app-server-error', handleServerError);
+    return () => {
+      window.removeEventListener('app-network-error', handleNetworkError);
+      window.removeEventListener('app-server-error', handleServerError);
+    };
+  }, []);
+
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
         <CartProvider>
           <Layout>
+            <NetworkErrorModal isOpen={networkErrorOpen} onClose={() => setNetworkErrorOpen(false)} />
+            <ServerErrorModal isOpen={serverErrorOpen} onClose={() => setServerErrorOpen(false)} errorMessage={serverErrorMessage} />
             <Routes>
               {/* Public Pages */}
               <Route path="/" element={<Home />} />

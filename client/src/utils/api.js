@@ -28,10 +28,18 @@ const apiFetch = async (endpoint, options = {}) => {
     headers['Content-Type'] = 'application/json';
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (netErr) {
+    const errorMsg = 'Network error: Unable to connect to backend server. Please check your internet connection.';
+    toast.error(errorMsg, { toastId: 'network-error' });
+    window.dispatchEvent(new CustomEvent('app-network-error', { detail: { message: errorMsg } }));
+    throw new Error(errorMsg);
+  }
 
   const contentType = response.headers.get('content-type');
   let data;
@@ -39,29 +47,38 @@ const apiFetch = async (endpoint, options = {}) => {
     data = await response.json();
   } else {
     const textData = await response.text();
-    // Throw a clear error instead of crashing on JSON parse
     throw new Error(`Server returned a non-JSON response (${response.status}): ` + textData.slice(0, 100));
   }
 
-  if (response.status === 401) {
-    // Only intercept 401 if it's not a signin/login request
+  if (response.status === 429) {
+    const msg = data.message || 'Too many requests. Please wait a moment before trying again.';
+    toast.warn(msg, { toastId: 'rate-limit' });
+  }
+
+  if (response.status >= 500) {
+    const msg = data.message || 'Internal Server Error. Please try again later.';
+    window.dispatchEvent(new CustomEvent('app-server-error', { detail: { message: msg } }));
+  }
+
+  if (response.status === 401 || (response.status === 403 && data.message?.includes('disabled'))) {
+    // Intercept if it's not a signin/login request
     if (!endpoint.includes('/signin') && !endpoint.includes('/login')) {
-      // Token expired or invalid – clean up auth state
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('cartItems');
       window.dispatchEvent(new Event('auth-change'));
-      // Show toast then redirect after a short delay so the user sees the message
+      
       if (!window._sessionExpiredRedirecting) {
         window._sessionExpiredRedirecting = true;
-        toast.error('Your session has expired. Please sign in again.', { autoClose: 1800 });
+        const msg = data.message || 'Your session has expired. Please sign in again.';
+        toast.error(msg, { autoClose: 1800 });
         setTimeout(() => {
           window._sessionExpiredRedirecting = false;
           window.location.href = '/login';
         }, 1900);
       }
-      throw new Error('Session expired. Please login again.');
+      throw new Error(data.message || 'Session expired. Please login again.');
     }
   }
 

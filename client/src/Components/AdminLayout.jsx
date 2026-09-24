@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FiGrid, FiPackage, FiLayers, FiShoppingBag, FiUsers, FiUser, FiLogOut, FiMenu, FiX, FiTag, FiStar, FiMail } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 import AdminNavbar from './AdminNavbar';
 import '../css/AdminDashboard.css';
 import '../css/admin-core.css';
@@ -46,6 +47,7 @@ const AdminLayout = ({ children }) => {
 
     const handleLogout = (e) => {
         e.preventDefault();
+        toast.success("Successfully logged out!");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
         localStorage.removeItem("isLoggedIn");

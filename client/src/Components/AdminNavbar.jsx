@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FiUser } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 import '../css/AdminNavbar.css';
 
 const AdminNavbar = () => {
@@ -26,6 +27,7 @@ const AdminNavbar = () => {
 
     const handleLogout = (e) => {
         e.preventDefault();
+        toast.success("Successfully logged out!");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
         localStorage.removeItem("isLoggedIn");

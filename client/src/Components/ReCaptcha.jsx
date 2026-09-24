@@ -47,6 +47,9 @@ const ReCaptcha = ({ siteKey, onChange, onExpired, onError, theme = 'light' }) =
       script.src = 'https://www.google.com/recaptcha/api.js?onload=onGoogleReCaptchaLoad&render=explicit';
       script.async = true;
       script.defer = true;
+      script.onerror = () => {
+        if (callbacksRef.current.onError) callbacksRef.current.onError('CAPTCHA provider failed to load script.');
+      };
       window.onGoogleReCaptchaLoad = () => {
         renderWidget();
       };

@@ -77,6 +77,32 @@ const userSchema = new mongoose.Schema({
         type: Date
     },
 
+    failedLoginAttempts: {
+        type: Number,
+        default: 0
+    },
+
+    lockUntil: {
+        type: Date
+    },
+
+    mobileOTP: {
+        type: String
+    },
+
+    mobileOTPExpires: {
+        type: Date
+    },
+
+    mobileOTPAttempts: {
+        type: Number,
+        default: 0
+    },
+
+    mobileOTPLastSent: {
+        type: Date
+    },
+
     resetPasswordOTP: {
         type: String
     },

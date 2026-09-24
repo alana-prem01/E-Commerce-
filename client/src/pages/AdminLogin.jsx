@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FiEye, FiEyeOff } from "react-icons/fi";
@@ -8,6 +8,24 @@ import "../css/Login.css";
 
 function AdminLogin() {
   const navigate = useNavigate();
+
+  // Redirect already authenticated users away from admin login page
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const token = localStorage.getItem('accessToken');
+    if (isLoggedIn && token) {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.role === 'Admin') {
+          navigate('/admin-dashboard', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+      } catch {
+        navigate('/admin-dashboard', { replace: true });
+      }
+    }
+  }, [navigate]);
 
   // State Management
   const [email, setEmail] = useState("");

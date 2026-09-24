@@ -2,7 +2,13 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const path = require("path");
-require("dotenv").config();
+const fs = require("fs");
+
+// Load .env from server root or utils/.env fallback
+const envPath = fs.existsSync(path.join(__dirname, ".env"))
+  ? path.join(__dirname, ".env")
+  : path.join(__dirname, "utils", ".env");
+require("dotenv").config({ path: envPath });
 
 const connectDB = require("./config/db");
 const createAdmin = require("./config/createAdmin");

@@ -4,6 +4,7 @@ import EmailChangeModal from "../Components/EmailChangeModal"
 import OtpTimer from "../Components/OtpTimer";
 // FiEye removed – using text button
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { api } from "../utils/api";
 
 function UserProfile() {
@@ -1185,12 +1186,15 @@ function UserProfile() {
         <button
           className="btn-signout"
           onClick={() => {
+            toast.success("Successfully logged out!");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("user");
             localStorage.removeItem("isLoggedIn");
             localStorage.removeItem("cartItems");
             window.dispatchEvent(new Event('auth-change'));
-            window.location.href = "/login";
+            setTimeout(() => {
+              window.location.href = "/login";
+            }, 300);
           }}
         >
           Sign out
