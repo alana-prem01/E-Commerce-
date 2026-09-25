@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../css/UserProfile.css";
-import EmailChangeModal from "../Components/EmailChangeModal"
+import EmailChangeModal from "../Components/EmailChangeModal";
+import DeleteAccountModal from "../Components/DeleteAccountModal";
 import OtpTimer from "../Components/OtpTimer";
 // FiEye removed – using text button
 import { Link, useNavigate } from "react-router-dom";
@@ -188,6 +189,7 @@ function UserProfile() {
   const [isSavingContact, setIsSavingContact] = useState(false);
   const [contactError, setContactError] = useState("");
   const [contactSuccess, setContactSuccess] = useState("");
+  const [contactCountryCode, setContactCountryCode] = useState("+91");
   const [contactData, setContactData] = useState({
     name: user.name || "User",
     email: user.email || "user@example.com",
@@ -205,6 +207,21 @@ function UserProfile() {
   const [isOtpLoading, setIsOtpLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  // State for Delete Account Modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const handleAccountDeleted = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("cartItems");
+    window.dispatchEvent(new Event('auth-change'));
+    toast.success("Your account has been permanently deleted.");
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 400);
+  };
+
   // Sync contactData when fullUser changes
   useEffect(() => {
     if (fullUser) {
@@ -217,7 +234,19 @@ function UserProfile() {
   }, [fullUser]);
 
   const handleEditContactClick = () => {
-    setTempContact({ name: contactData.name, email: contactData.email, phone: contactData.phone || "" });
+    const rawPhone = contactData.phone || "";
+    let cc = "+91";
+    let digits = rawPhone;
+    const knownCCs = ["+971", "+91", "+44", "+61", "+1"];
+    for (const prefix of knownCCs) {
+      if (rawPhone.startsWith(prefix)) {
+        cc = prefix;
+        digits = rawPhone.slice(prefix.length);
+        break;
+      }
+    }
+    setContactCountryCode(cc);
+    setTempContact({ name: contactData.name, email: contactData.email, phone: digits.replace(/\D/g, "") });
     setContactError("");
     setContactSuccess("");
     setIsEditingContact(true);
@@ -238,28 +267,31 @@ function UserProfile() {
       return;
     }
 
-    // Phone validation (optional but if provided, must be valid)
+    // Phone validation matching SignUp rules
+    let formattedPhone = "";
     if (tempContact.phone && tempContact.phone.trim()) {
-      const phoneDigits = tempContact.phone.replace(/\D/g, '');
-      if (phoneDigits.length < 7 || phoneDigits.length > 15) {
-        setContactError("Please enter a valid phone number (7-15 digits).");
+      const digits = tempContact.phone.replace(/\D/g, "");
+      if (contactCountryCode === "+91") {
+        if (digits.length !== 10) {
+          setContactError("Please enter a valid 10-digit Indian mobile number.");
+          return;
+        }
+        if (!/^[6-9]\d{9}$/.test(digits)) {
+          setContactError("Indian mobile numbers must start with 6, 7, 8, or 9.");
+          return;
+        }
+      } else if (digits.length < 7 || digits.length > 15) {
+        setContactError("Please enter a valid phone number.");
         return;
       }
-    }
-
-    // Block email change via this form — email requires OTP verification
-    const emailChanged = tempContact.email !== contactData.email;
-    if (emailChanged) {
-      // silently ignore — email field is read-only in edit mode
+      formattedPhone = `${contactCountryCode}${digits}`;
     }
 
     setIsSavingContact(true);
     try {
-      // NOTE: Email is NOT updated here — email changes require verification
-      // via the secure OTP flow at /auth/change-email/send-otp.
       const res = await api.put('/profile', {
         name: tempContact.name.trim(),
-        phone: tempContact.phone ? tempContact.phone.replace(/\D/g, '') : undefined,
+        phone: formattedPhone || undefined,
       });
 
       if (res.success && res.data) {
@@ -608,7 +640,28 @@ function UserProfile() {
 
       {/* 2. Profile Main Column */}
       <main className="profile-main-col">
-        <h1 className="column-heading">Profile</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <h1 className="column-heading" style={{ margin: 0 }}>Profile</h1>
+          <button
+            type="button"
+            style={{
+              backgroundColor: '#DC2626',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '8px 18px',
+              fontWeight: '600',
+              fontSize: '14px',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s ease',
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#B91C1C')}
+            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#DC2626')}
+            onClick={() => setIsDeleteModalOpen(true)}
+          >
+            Delete My Account
+          </button>
+        </div>
 
         {/* CONTACT CARD */}
         <div className="profile-card">
@@ -708,26 +761,42 @@ function UserProfile() {
               </div>
               <div>
                 <label className="label-text">PHONE NUMBER</label>
-                <input
-                  type="tel"
-                  className="input-field"
-                  placeholder="10-digit mobile number"
-                  value={tempContact.phone}
-                  inputMode="numeric"
-                  onChange={(e) => setTempContact({ ...tempContact, phone: e.target.value })}
-                  onKeyDown={(e) => {
-                    const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
-                    if (!allowedKeys.includes(e.key) && !/^[0-9+]$/.test(e.key)) e.preventDefault();
-                  }}
-                  onPaste={(e) => {
-                    e.preventDefault();
-                    const pasted = (e.clipboardData || window.clipboardData).getData('text');
-                    const digitsOnly = pasted.replace(/\D/g, '').slice(0, 15);
-                    setTempContact({ ...tempContact, phone: tempContact.phone + digitsOnly });
-                  }}
-                  maxLength={15}
-                />
-                <p style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>Enter digits only (e.g. 9876543210)</p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <select
+                    className="input-field"
+                    style={{ width: '115px', flexShrink: 0, paddingRight: '4px' }}
+                    value={contactCountryCode}
+                    onChange={(e) => setContactCountryCode(e.target.value)}
+                  >
+                    <option value="+91">+91 (IN)</option>
+                    <option value="+1">+1 (US/CA)</option>
+                    <option value="+44">+44 (UK)</option>
+                    <option value="+61">+61 (AU)</option>
+                    <option value="+971">+971 (AE)</option>
+                  </select>
+                  <input
+                    type="tel"
+                    className="input-field"
+                    placeholder={contactCountryCode === '+91' ? "10-digit mobile number" : "Mobile number"}
+                    value={tempContact.phone}
+                    inputMode="numeric"
+                    onChange={(e) => setTempContact({ ...tempContact, phone: e.target.value })}
+                    onKeyDown={(e) => {
+                      const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+                      if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) e.preventDefault();
+                    }}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                      const digitsOnly = pasted.replace(/\D/g, '').slice(0, 15);
+                      setTempContact({ ...tempContact, phone: tempContact.phone + digitsOnly });
+                    }}
+                    maxLength={contactCountryCode === '+91' ? 10 : 15}
+                  />
+                </div>
+                <p style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
+                  {contactCountryCode === '+91' ? "Enter 10-digit mobile number starting with 6, 7, 8, or 9" : "Enter digits only"}
+                </p>
               </div>
               <div className="button-group">
                 <button className="btn-primary" onClick={handleSaveContact} disabled={isSavingContact}>
@@ -1199,6 +1268,12 @@ function UserProfile() {
         >
           Sign out
         </button>
+
+        <DeleteAccountModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onAccountDeleted={handleAccountDeleted}
+        />
       </main>
     </div>
   );

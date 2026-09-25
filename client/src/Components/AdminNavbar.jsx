@@ -25,15 +25,23 @@ const AdminNavbar = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleLogout = (e) => {
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+    const handleLogoutClick = (e) => {
         e.preventDefault();
+        setIsProfileOpen(false);
+        setShowLogoutModal(true);
+    };
+
+    const confirmLogout = () => {
+        setShowLogoutModal(false);
         toast.success("Successfully logged out!");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
         localStorage.removeItem("isLoggedIn");
         localStorage.removeItem("cartItems");
         window.dispatchEvent(new Event('auth-change'));
-        navigate("/login");
+        navigate("/admin-login");
     };
 
     return (
@@ -66,6 +74,12 @@ const AdminNavbar = () => {
                 >
                     Add Product
                 </Link>
+                <Link 
+                    to="/admin-profile" 
+                    className={`admin-navbar-link ${location.pathname === '/admin-profile' ? 'active' : ''}`}
+                >
+                    Settings
+                </Link>
             </div>
 
             {/* Icons Container */}
@@ -81,14 +95,28 @@ const AdminNavbar = () => {
                     <div className={`admin-navbar-dropdown ${isProfileOpen ? 'active' : ''}`}>
                         <div className="admin-navbar-dropdown-name">{name}</div>
                         <div className="admin-navbar-dropdown-item" onClick={() => { setIsProfileOpen(false); navigate('/admin-profile'); }}>
-                            My Profile
+                            Settings & Profile
                         </div>
-                        <div className="admin-navbar-dropdown-item logout" onClick={handleLogout}>
+                        <div className="admin-navbar-dropdown-item logout" onClick={handleLogoutClick}>
                             Logout
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Admin Logout Confirmation Modal (SETTINGS-278) */}
+            {showLogoutModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">Portal Logout</div>
+                        <div className="modal-body">Are you sure you want to log out of the Admin Portal?</div>
+                        <div className="modal-actions">
+                            <button className="btn-secondary" onClick={() => setShowLogoutModal(false)}>Cancel</button>
+                            <button className="btn-danger" onClick={confirmLogout}>Logout</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

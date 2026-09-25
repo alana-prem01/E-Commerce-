@@ -131,9 +131,12 @@ export const api = {
       body: body instanceof FormData ? body : JSON.stringify(body),
     });
   },
-  delete: async (endpoint) => {
+  delete: async (endpoint, body) => {
     if (endpoint.includes('/products')) clearProductCache();
-    return apiFetch(endpoint, { method: 'DELETE' });
+    return apiFetch(endpoint, {
+      method: 'DELETE',
+      ...(body ? { body: JSON.stringify(body) } : {})
+    });
   },
   clearCache: clearProductCache
 };

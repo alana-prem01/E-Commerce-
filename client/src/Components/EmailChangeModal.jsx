@@ -46,45 +46,79 @@ export default function EmailChangeModal({
   onEmailUpdated,
 }) {
   const [otpSentTime, setOtpSentTime] = useState(null);
+const [step, setStep] = useState(1); // 1: send OTP, 2: verify OTP, 3: enter new email
   if (!isOpen) return null;
 
   const handleSendOtp = async () => {
+    // OTP will be sent to the current email; no new email validation needed
+
     setIsOtpLoading(true);
     setOtpError('');
+    setOtpSuccess('');
     try {
-      const res = await api.post('/auth/change-email/send-otp');
+      const res = await api.post('/auth/change-email/send-otp', {});
       if (res.success) {
         setOtpSent(true);
         setOtpSuccess('OTP sent to your current email.');
         setOtpSentTime(Date.now());
+        setStep(2);
       } else {
         setOtpError(res.message || 'Failed to send OTP.');
       }
     } catch (err) {
-      setOtpError(err.message || 'Failed to send OTP.');
+      setOtpError(err.message || err.data?.message || 'Failed to send OTP.');
     } finally {
       setIsOtpLoading(false);
     }
   };
 
-  const handleUpdateEmail = async () => {
-    if (!otp) {
-      setOtpError('Please enter the OTP.');
-      return;
-    }
-    if (!newEmail) {
-      setOtpError('Please enter a new email address.');
+  const handleVerifyOtp = async () => {
+    const trimmedOtp = otp ? otp.trim() : '';
+    if (!trimmedOtp) {
+      setOtpError('Please enter the verification code.');
       return;
     }
     setIsVerifying(true);
     setOtpError('');
+    setOtpSuccess('');
     try {
-      const payload = { otp, newEmail };
-      const res = await api.post('/auth/change-email/verify-otp', payload);
-      if (res.success && res.email) {
-        onEmailUpdated(res.email);
+      const res = await api.post('/auth/change-email/verify-otp', { otp: trimmedOtp });
+      if (res.success) {
+        setOtpSuccess('OTP verified. You may now enter a new email.');
+        setStep(3);
+      } else {
+        setOtpError(res.message || 'OTP verification failed.');
+      }
+    } catch (err) {
+      setOtpError(err.message || err.data?.message || 'OTP verification failed.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleUpdateEmail = async () => {
+    const trimmedNewEmail = newEmail ? newEmail.trim() : '';
+    if (!trimmedNewEmail) {
+      setOtpError('Please enter a new email address.');
+      return;
+    }
+    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    if (!emailRegex.test(trimmedNewEmail)) {
+      setOtpError('Enter a valid email address.');
+      return;
+    }
+    if (currentEmail && trimmedNewEmail.toLowerCase() === currentEmail.toLowerCase()) {
+      setOtpError('New email cannot be the same as current email.');
+      return;
+    }
+    setIsVerifying(true);
+    setOtpError('');
+    setOtpSuccess('');
+    try {
+      const res = await api.post('/auth/change-email/update-email', { newEmail: trimmedNewEmail });
+      if (res.success) {
+        onEmailUpdated(res.email || trimmedNewEmail);
         setOtpSuccess('Email updated successfully!');
-        // close after short delay
         setTimeout(() => {
           onClose();
         }, 1200);
@@ -92,7 +126,7 @@ export default function EmailChangeModal({
         setOtpError(res.message || 'Failed to update email.');
       }
     } catch (err) {
-      setOtpError(err.message || 'Failed to update email.');
+      setOtpError(err.message || err.data?.message || 'Failed to update email.');
     } finally {
       setIsVerifying(false);
     }
@@ -104,51 +138,74 @@ export default function EmailChangeModal({
         <h3 style={{ marginTop: 0, marginBottom: '12px', color: 'var(--secondary-color)' }}>Change Email</h3>
         <p style={{ fontSize: '13px', marginBottom: '12px' }}>Current email: <strong>{currentEmail}</strong></p>
 
-        {/* STEP 1 – Send OTP */}
-        {!otpSent && (
+        {/* STEP 1 – Send OTP to current email */}
+        {step === 1 && (
           <button
             className="btn-primary"
             onClick={handleSendOtp}
             disabled={isOtpLoading}
+            style={{ width: '100%' }}
           >
-            {isOtpLoading ? 'Sending OTP...' : 'Send OTP'}
+            {isOtpLoading ? 'Sending OTP...' : 'Send OTP to Current Email'}
           </button>
         )}
 
-        {/* STEP 2 – Enter OTP and New Email */}
-        {otpSent && (
+        {/* STEP 2 – Verify OTP */}
+        {step === 2 && (
           <>
-            <input
-              type="text"
-              placeholder="Enter OTP"
-              className="input-field"
-              value={otp}
-              onChange={e => setOtp(e.target.value)}
-              style={{ marginTop: '12px' }}
-            />
-            <input
-              type="email"
-              placeholder="New email address"
-              className="input-field"
-              value={newEmail}
-              onChange={e => setNewEmail(e.target.value)}
-              style={{ marginTop: '12px' }}
-            />
+            <p style={{ fontSize: '13px', marginBottom: '12px', color: '#555' }}>
+              Please enter the OTP sent to your current email.
+            </p>
+            <div className="form-group" style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#555', display: 'block', marginBottom: '4px' }}>Verification Code (OTP)</label>
+              <input
+                type="text"
+                placeholder="Enter 6-digit OTP"
+                className="input-field"
+                value={otp}
+                onChange={e => { setOtp(e.target.value); setOtpError(''); }}
+                maxLength={6}
+              />
+            </div>
             {otpSentTime && (
               <OtpTimer
                 startTime={otpSentTime}
                 onExpire={() => {
-                  setOtpSent(false);
+                  setStep(1);
                   setOtp('');
-                  setNewEmail('');
+                  setOtpSent(false);
                 }}
               />
             )}
             <button
               className="btn-primary"
+              onClick={handleVerifyOtp}
+              disabled={isVerifying}
+              style={{ marginTop: '8px', width: '100%' }}
+            >
+              {isVerifying ? 'Verifying...' : 'Verify OTP'}
+            </button>
+          </>
+        )}
+
+        {/* STEP 3 – Enter new email and update */}
+        {step === 3 && (
+          <>
+            <div className="form-group" style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#555', display: 'block', marginBottom: '4px' }}>New Email Address</label>
+              <input
+                type="email"
+                placeholder="new.email@example.com"
+                className="input-field"
+                value={newEmail}
+                onChange={e => { setNewEmail(e.target.value); setOtpError(''); }}
+              />
+            </div>
+            <button
+              className="btn-primary"
               onClick={handleUpdateEmail}
               disabled={isVerifying}
-              style={{ marginTop: '8px' }}
+              style={{ marginTop: '8px', width: '100%' }}
             >
               {isVerifying ? 'Updating...' : 'Update Email'}
             </button>
@@ -157,15 +214,15 @@ export default function EmailChangeModal({
 
         {/* Feedback messages */}
         {otpError && (
-          <div className="security-error" style={{ marginTop: '8px' }}>{otpError}</div>
+          <div className="security-error" style={{ marginTop: '8px', color: '#DC2626', fontSize: '13px' }}>{otpError}</div>
         )}
         {otpSuccess && (
-          <div className="security-success" style={{ marginTop: '8px' }}>{otpSuccess}</div>
+          <div className="security-success" style={{ marginTop: '8px', color: '#16A34A', fontSize: '13px' }}>{otpSuccess}</div>
         )}
         <button
           className="btn-secondary"
           onClick={onClose}
-          style={{ marginTop: '16px' }}
+          style={{ marginTop: '16px', width: '100%' }}
         >
           Cancel
         </button>

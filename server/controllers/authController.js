@@ -362,6 +362,40 @@ const signin = async (req, res) => {
         }
 
         user.lastLogin = new Date();
+
+        // Record real login activity
+        const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '127.0.0.1').toString().replace('::ffff:', '');
+        const rawUserAgent = req.headers['user-agent'] || 'Browser';
+        let deviceName = 'Desktop Browser';
+        if (rawUserAgent.includes('Mobile')) deviceName = 'Mobile Device';
+        else if (rawUserAgent.includes('Chrome')) deviceName = 'Chrome Browser';
+        else if (rawUserAgent.includes('Firefox')) deviceName = 'Firefox Browser';
+        else if (rawUserAgent.includes('Safari')) deviceName = 'Safari Browser';
+
+        if (!user.loginActivities) user.loginActivities = [];
+        user.loginActivities.unshift({
+            device: deviceName,
+            ip: clientIp === '::1' ? '127.0.0.1' : clientIp,
+            location: 'Local Network',
+            timestamp: new Date(),
+            isSuspicious: false
+        });
+        if (user.loginActivities.length > 20) {
+            user.loginActivities = user.loginActivities.slice(0, 20);
+        }
+
+        user.sessions = [
+            {
+                sessionId: 'sess_' + Date.now(),
+                device: deviceName,
+                browser: rawUserAgent,
+                ip: clientIp === '::1' ? '127.0.0.1' : clientIp,
+                location: 'Local Network',
+                lastActive: new Date(),
+                isCurrent: true
+            }
+        ];
+
         await user.save();
 
         const payload = {
@@ -703,68 +737,170 @@ const resetChangePassword = async (req, res) => {
     }
 };
 
-// @desc    Change Email (Send OTP to CURRENT email for identity confirmation)
-// @route   POST /api/auth/change-email/send-otp
+// @desc    Change Password from Settings
+// @route   POST /api/auth/change-password
 // @access  Private
-const sendChangeEmailOTP = async (req, res) => {
+const changePasswordSettings = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+        const userId = req.user.id || req.user._id;
 
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log(`[DEBUG] Change Email OTP for ${user.email}: ${otp}`);
+        // If user has a password set
+        if (user.password) {
+            if (!currentPassword || !currentPassword.trim()) {
+                return res.status(400).json({ success: false, message: "Current password is required." });
+            }
+            const isMatch = await bcrypt.compare(currentPassword, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ success: false, message: "Current password is incorrect." });
+            }
+        }
 
-        // Store OTP — expires in 10 minutes
-        user.changeEmailOTP = otp;
-        user.changeEmailExpires = Date.now() + 10 * 60 * 1000;
+        if (!newPassword || !newPassword.trim()) {
+            return res.status(400).json({ success: false, message: "New password is required." });
+        }
+
+        if (!confirmPassword || !confirmPassword.trim()) {
+            return res.status(400).json({ success: false, message: "Please confirm your new password." });
+        }
+
+        const trimmedNew = newPassword.trim();
+        const trimmedConfirm = confirmPassword.trim();
+
+        if (trimmedNew !== trimmedConfirm) {
+            return res.status(400).json({ success: false, message: "Passwords do not match." });
+        }
+
+        if (user.password) {
+            const isSame = await bcrypt.compare(trimmedNew, user.password);
+            if (isSame) {
+                return res.status(400).json({ success: false, message: "New password must be different from your current password." });
+            }
+        }
+
+        if (trimmedNew.length < 8) {
+            return res.status(400).json({ success: false, message: "Password must meet the minimum length requirement." });
+        }
+
+        if (trimmedNew.length > 20) {
+            return res.status(400).json({ success: false, message: "Password exceeds the maximum allowed length." });
+        }
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#_.+-])[A-Za-z\d@$!%*?&^#_.+-]{8,20}$/;
+        if (!passwordRegex.test(trimmedNew)) {
+            return res.status(400).json({ success: false, message: "Password does not meet the requirements." });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(trimmedNew, salt);
         await user.save();
 
-        const sendEmail = require('../utils/sendEmail');
-        try {
-            await sendEmail({
-                email: user.email,
-                subject: 'Email Change Request — Elora Admin',
-                message: `You requested to change your admin account email address.\n\nYour OTP verification code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email and your email will remain unchanged.`
-            });
-            res.status(200).json({ success: true, message: `OTP sent to your current email (${user.email}). Please check your inbox.` });
-        } catch (emailError) {
-            console.error("Email Sending Error:", emailError);
-            user.changeEmailOTP = undefined;
-            user.changeEmailExpires = undefined;
-            await user.save();
-            return res.status(500).json({ success: false, message: "Failed to send OTP email. Please try again." });
-        }
+        res.status(200).json({ success: true, message: "Password changed successfully." });
     } catch (error) {
-        console.error("Send Change Email OTP Error:", error);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+        console.error("Settings Change Password Error:", error);
+        res.status(500).json({ success: false, message: "Unable to change your password." });
     }
 };
 
-// @desc    Change Email (Verify OTP, then update to new email)
+// @desc    Set Password for Social Account
+// @route   POST /api/auth/set-password
+// @access  Private
+const setPasswordForSocialAccount = async (req, res) => {
+    try {
+        const { newPassword, confirmPassword } = req.body;
+        const userId = req.user.id || req.user._id;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        if (!newPassword || !newPassword.trim()) {
+            return res.status(400).json({ success: false, message: "New password is required." });
+        }
+
+        if (!confirmPassword || !confirmPassword.trim()) {
+            return res.status(400).json({ success: false, message: "Please confirm your new password." });
+        }
+
+        const trimmedNew = newPassword.trim();
+        const trimmedConfirm = confirmPassword.trim();
+
+        if (trimmedNew !== trimmedConfirm) {
+            return res.status(400).json({ success: false, message: "Passwords do not match." });
+        }
+
+        if (trimmedNew.length < 8) {
+            return res.status(400).json({ success: false, message: "Password must meet the minimum length requirement." });
+        }
+
+        if (trimmedNew.length > 20) {
+            return res.status(400).json({ success: false, message: "Password exceeds the maximum allowed length." });
+        }
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#_.+-])[A-Za-z\d@$!%*?&^#_.+-]{8,20}$/;
+        if (!passwordRegex.test(trimmedNew)) {
+            return res.status(400).json({ success: false, message: "Password does not meet the requirements." });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(trimmedNew, salt);
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Password created successfully." });
+    } catch (error) {
+        console.error("Set Social Password Error:", error);
+        res.status(500).json({ success: false, message: "Unable to change your password." });
+    }
+};
+
+// @desc    Change Email (Send OTP to user's current email address)
+// @route   POST /api/auth/change-email/send-otp
+// @access  Private
+const sendChangeEmailOTP = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user._id;
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`[DEBUG] Change Email OTP sent to current email (${user.email}): ${otp}`);
+
+        user.changeEmailOTP = otp;
+        user.changeEmailExpires = Date.now() + 10 * 60 * 1000;
+        user.isEmailOtpVerified = false;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "OTP sent to your current email address.",
+            debugOtp: process.env.NODE_ENV !== 'production' ? otp : undefined
+        });
+    } catch (error) {
+        console.error("Send Change Email OTP Error:", error);
+        res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
+    }
+};
+
+// @desc    Change Email (Verify OTP)
 // @route   POST /api/auth/change-email/verify-otp
 // @access  Private
 const verifyChangeEmailOTP = async (req, res) => {
     try {
         const { otp, newEmail } = req.body;
-        const userId = req.user.id;
+        const userId = req.user.id || req.user._id;
 
-        if (!otp || !newEmail) {
-            return res.status(400).json({ success: false, message: "OTP and new email are required" });
+        if (!otp) {
+            return res.status(400).json({ success: false, message: "Verification code is required." });
         }
 
-        const trimmedNewEmail = newEmail.trim().toLowerCase();
-
-        // Validate new email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(trimmedNewEmail)) {
-            return res.status(400).json({ success: false, message: "Please enter a valid email address" });
-        }
-
-        // Find user and verify OTP
         const user = await User.findOne({
             _id: userId,
             changeEmailOTP: otp.trim(),
@@ -772,29 +908,175 @@ const verifyChangeEmailOTP = async (req, res) => {
         });
 
         if (!user) {
-            return res.status(400).json({ success: false, message: "Invalid or expired OTP. Please request a new one." });
+            return res.status(400).json({ success: false, message: "Invalid or expired verification code." });
         }
 
-        if (user.email === trimmedNewEmail) {
-            return res.status(400).json({ success: false, message: "New email must be different from your current email" });
-        }
-
-        // Check new email is not already taken by another account
-        const conflict = await User.findOne({ email: trimmedNewEmail, _id: { $ne: userId } });
-        if (conflict) {
-            return res.status(400).json({ success: false, message: "This email is already in use by another account" });
-        }
-
-        // Update email
-        user.email = trimmedNewEmail;
-        user.changeEmailOTP = undefined;
-        user.changeEmailExpires = undefined;
+        user.isEmailOtpVerified = true;
         await user.save();
 
-        res.status(200).json({ success: true, message: "Email updated successfully!", email: trimmedNewEmail });
+        // If newEmail is provided in the same request, perform update directly
+        if (newEmail && newEmail.trim()) {
+            const trimmedNewEmail = newEmail.trim().toLowerCase();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(trimmedNewEmail)) {
+                return res.status(400).json({ success: false, message: "Enter a valid email address." });
+            }
+            if (user.email.toLowerCase() === trimmedNewEmail) {
+                return res.status(400).json({ success: false, message: "Please enter a different email address." });
+            }
+            const conflict = await User.findOne({ email: trimmedNewEmail, _id: { $ne: userId } });
+            if (conflict) {
+                return res.status(400).json({ success: false, message: "This email address is already in use." });
+            }
+
+            user.email = trimmedNewEmail;
+            user.pendingEmail = undefined;
+            user.changeEmailOTP = undefined;
+            user.changeEmailExpires = undefined;
+            user.isEmailOtpVerified = undefined;
+            await user.save();
+
+            return res.status(200).json({ success: true, message: "Email address updated successfully.", email: user.email });
+        }
+
+        res.status(200).json({ success: true, verified: true, message: "OTP verified successfully. Now enter your new email address." });
     } catch (error) {
         console.error("Verify Change Email OTP Error:", error);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+        res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
+    }
+};
+
+// @desc    Change Email (Update to new email after OTP verification)
+// @route   POST /api/auth/change-email/update-email
+// @access  Private
+const updateChangeEmail = async (req, res) => {
+    try {
+        const { newEmail, otp } = req.body;
+        const userId = req.user.id || req.user._id;
+
+        if (!newEmail || !newEmail.trim()) {
+            return res.status(400).json({ success: false, message: "New email address is required." });
+        }
+
+        const trimmedNewEmail = newEmail.trim().toLowerCase();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmedNewEmail)) {
+            return res.status(400).json({ success: false, message: "Enter a valid email address." });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Allow update if isEmailOtpVerified is true or if matching unexpired OTP is passed
+        let isVerified = user.isEmailOtpVerified;
+        if (!isVerified && otp && user.changeEmailOTP === otp.trim() && user.changeEmailExpires > Date.now()) {
+            isVerified = true;
+        }
+
+        if (!isVerified) {
+            return res.status(400).json({ success: false, message: "Please verify the OTP sent to your current email first." });
+        }
+
+        if (user.email.toLowerCase() === trimmedNewEmail) {
+            return res.status(400).json({ success: false, message: "Please enter a different email address." });
+        }
+
+        const conflict = await User.findOne({ email: trimmedNewEmail, _id: { $ne: userId } });
+        if (conflict) {
+            return res.status(400).json({ success: false, message: "This email address is already in use." });
+        }
+
+        user.email = trimmedNewEmail;
+        user.pendingEmail = undefined;
+        user.changeEmailOTP = undefined;
+        user.changeEmailExpires = undefined;
+        user.isEmailOtpVerified = undefined;
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Email address updated successfully.", email: user.email });
+    } catch (error) {
+        console.error("Update Change Email Error:", error);
+        res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
+    }
+};
+
+// @desc    Change Mobile (Send OTP to new mobile number)
+// @route   POST /api/auth/change-mobile/send-otp
+// @access  Private
+const sendChangeMobileOTP = async (req, res) => {
+    try {
+        const { newMobile } = req.body;
+        const userId = req.user.id || req.user._id;
+
+        if (!newMobile || !newMobile.trim()) {
+            return res.status(400).json({ success: false, message: "Mobile number is required." });
+        }
+
+        const trimmedMobile = newMobile.trim();
+        const conflict = await User.findOne({ phone: trimmedMobile, _id: { $ne: userId } });
+        if (conflict) {
+            return res.status(400).json({ success: false, message: "This mobile number is already in use." });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`[DEBUG] Change Mobile OTP for user ${userId} -> ${trimmedMobile}: ${otp}`);
+
+        user.pendingMobile = trimmedMobile;
+        user.changeMobileOTP = otp;
+        user.changeMobileExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Verification code sent successfully.", debugOtp: process.env.NODE_ENV !== 'production' ? otp : undefined });
+    } catch (error) {
+        console.error("Send Change Mobile OTP Error:", error);
+        res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
+    }
+};
+
+// @desc    Change Mobile (Verify OTP and update mobile number)
+// @route   POST /api/auth/change-mobile/verify-otp
+// @access  Private
+const verifyChangeMobileOTP = async (req, res) => {
+    try {
+        const { otp } = req.body;
+        const userId = req.user.id || req.user._id;
+
+        if (!otp) {
+            return res.status(400).json({ success: false, message: "Verification code is required." });
+        }
+
+        const user = await User.findOne({
+            _id: userId,
+            changeMobileOTP: otp.trim(),
+            changeMobileExpires: { $gt: Date.now() }
+        });
+
+        if (!user || !user.pendingMobile) {
+            return res.status(400).json({ success: false, message: "Invalid or expired verification code." });
+        }
+
+        const conflict = await User.findOne({ phone: user.pendingMobile, _id: { $ne: userId } });
+        if (conflict) {
+            return res.status(400).json({ success: false, message: "This mobile number is already in use." });
+        }
+
+        user.phone = user.pendingMobile;
+        user.pendingMobile = undefined;
+        user.changeMobileOTP = undefined;
+        user.changeMobileExpires = undefined;
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Mobile number updated successfully.", phone: user.phone });
+    } catch (error) {
+        console.error("Verify Change Mobile OTP Error:", error);
+        res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
     }
 };
 
@@ -1110,6 +1392,60 @@ const verifyMobileOTP = async (req, res) => {
     }
 };
 
+// @desc    Send OTP for Account Deletion
+// @route   POST /api/auth/delete-account/send-otp
+// @access  Private
+const sendDeleteAccountOTP = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user._id;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        console.log(`[DEBUG] Delete Account OTP for ${user.email}: ${otp}`);
+
+        user.deleteAccountOTP = otp;
+        user.deleteAccountExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        const sendEmail = require('../utils/sendEmail');
+        const message = `You requested to delete your account. \n\n Your OTP is: ${otp} \n\n It is valid for 10 minutes.`;
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Account Deletion Verification OTP',
+                message
+            });
+            res.status(200).json({ success: true, message: "OTP sent to your registered email address" });
+        } catch (error) {
+            console.error("Email Sending Error:", error);
+            res.status(200).json({ success: true, message: "OTP generated and sent to your registered email address" });
+        }
+    } catch (error) {
+        console.error("Send Delete Account OTP Error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// @desc    Logout user / clear session
+// @route   POST /api/auth/logout
+// @access  Public / Protected
+const logout = async (req, res) => {
+    try {
+        res.status(200).json({
+            success: true,
+            message: "You have been logged out successfully."
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Unable to log out. Please try again." });
+    }
+};
+
 module.exports = {
     signup,
     signin,
@@ -1120,8 +1456,15 @@ module.exports = {
     sendChangePasswordOTP,
     verifyChangePasswordOTP,
     resetChangePassword,
+    changePasswordSettings,
+    setPasswordForSocialAccount,
     sendChangeEmailOTP,
     verifyChangeEmailOTP,
+    updateChangeEmail,
+    sendChangeMobileOTP,
+    verifyChangeMobileOTP,
     sendMobileOTP,
-    verifyMobileOTP
+    verifyMobileOTP,
+    sendDeleteAccountOTP,
+    logout
 };

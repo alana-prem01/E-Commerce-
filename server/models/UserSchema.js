@@ -125,6 +125,58 @@ const userSchema = new mongoose.Schema({
         type: Date
     },
 
+    deleteAccountOTP: {
+        type: String
+    },
+
+    deleteAccountExpires: {
+        type: Date
+    },
+
+    firstName: {
+        type: String,
+        trim: true
+    },
+
+    lastName: {
+        type: String,
+        trim: true
+    },
+
+    displayName: {
+        type: String,
+        trim: true
+    },
+
+    dob: {
+        type: Date
+    },
+
+    gender: {
+        type: String,
+        enum: ["Male", "Female", "Other", "Prefer not to say", ""],
+        default: ""
+    },
+
+    bio: {
+        type: String,
+        maxlength: 150,
+        trim: true
+    },
+
+    pendingMobile: {
+        type: String,
+        trim: true
+    },
+
+    changeMobileOTP: {
+        type: String
+    },
+
+    changeMobileExpires: {
+        type: Date
+    },
+
     username: {
         type: String,
         trim: true
@@ -134,6 +186,89 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+
+    deactivated: {
+        type: Boolean,
+        default: false
+    },
+
+    deactivatedAt: {
+        type: Date
+    },
+
+    deletionGracePeriodExpires: {
+        type: Date
+    },
+
+    recoveryCodes: [{
+        code: { type: String },
+        used: { type: Boolean, default: false }
+    }],
+
+    sessions: [{
+        sessionId: { type: String },
+        device: { type: String },
+        browser: { type: String },
+        ip: { type: String },
+        location: { type: String },
+        lastActive: { type: Date, default: Date.now },
+        isCurrent: { type: Boolean, default: false }
+    }],
+
+    loginActivities: [{
+        device: { type: String },
+        ip: { type: String },
+        location: { type: String },
+        timestamp: { type: Date, default: Date.now },
+        isSuspicious: { type: Boolean, default: false }
+    }],
+
+    notificationSettings: {
+        orderUpdates: { type: Boolean, default: true },
+        deliveryUpdates: { type: Boolean, default: true }
+    },
+
+    privacySettings: {
+        profileVisibility: { type: Boolean, default: true },
+        activityVisibility: { type: Boolean, default: true },
+        personalizedRecommendations: { type: Boolean, default: true }
+    },
+
+    preferences: {
+        language: { type: String, default: "English" },
+        region: { type: String, default: "India" },
+        theme: { type: String, enum: ["light", "dark", "system"], default: "system" },
+        textSize: { type: Number, default: 100 },
+        dateTimeFormat: { type: String, default: "DD/MM/YYYY" }
+    },
+
+    savedPaymentMethods: [{
+        paymentMethodId: { type: String },
+        cardType: { type: String, default: "Visa" },
+        last4: { type: String },
+        expiryMonth: { type: String },
+        expiryYear: { type: String },
+        holderName: { type: String },
+        isDefault: { type: Boolean, default: false }
+    }],
+
+    supportTickets: [{
+        ticketId: { type: String },
+        subject: { type: String },
+        message: { type: String },
+        attachment: { type: String },
+        status: { type: String, default: "Open" },
+        createdAt: { type: Date, default: Date.now }
+    }],
+
+    invoices: [{
+        invoiceId: { type: String },
+        amount: { type: Number },
+        date: { type: Date, default: Date.now },
+        status: { type: String, default: "Paid" },
+        planName: { type: String, default: "Elora Premium" },
+        pdfUrl: { type: String }
+    }],
 
     emailVerified: {
         type: Boolean,
