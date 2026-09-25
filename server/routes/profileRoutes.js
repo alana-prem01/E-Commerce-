@@ -88,6 +88,10 @@ router.route('/orders/:id')
 
 router.post('/orders/:id/cancel', cancelMyOrder);
 
+// Wishlist routes
+router.get('/wishlist', getWishlist);
+router.post('/wishlist/:productId', toggleWishlist);
+
 // Wallet routes
 router.get('/wallet', getWalletDetails);
 router.get('/wallet/transactions', getWalletTransactions);
