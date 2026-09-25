@@ -268,8 +268,16 @@ export default function AdminProfilePage() {
 
   const handleVerifyAdminPasswordOtp = async () => {
     const trimmed = adminOtp.trim();
-    if (!trimmed || trimmed.length !== 6) {
-      setPassErrors({ otp: 'Please enter a valid 6-digit OTP.' });
+    if (!trimmed) {
+      const msg = 'Please enter the verification OTP.';
+      setPassErrors({ otp: msg });
+      toast.error(msg);
+      return;
+    }
+    if (trimmed.length !== 6) {
+      const msg = 'Please enter a valid 6-digit OTP.';
+      setPassErrors({ otp: msg });
+      toast.error(msg);
       return;
     }
     setIsVerifyingAdminOtp(true);
@@ -280,10 +288,14 @@ export default function AdminProfilePage() {
         setIsAdminOtpVerified(true);
         toast.success('OTP verified successfully! You can now set your new password.');
       } else {
-        setPassErrors({ otp: res.message || 'Invalid or expired OTP.' });
+        const msg = res.message || 'Invalid or expired OTP. Please try again.';
+        setPassErrors({ otp: msg });
+        toast.error(msg);
       }
     } catch (err) {
-      setPassErrors({ otp: err.message || 'Invalid or expired OTP.' });
+      const msg = err.message || err.data?.message || 'Invalid or expired OTP. Please try again.';
+      setPassErrors({ otp: msg });
+      toast.error(msg);
     } finally {
       setIsVerifyingAdminOtp(false);
     }
@@ -627,7 +639,7 @@ export default function AdminProfilePage() {
                         type="button"
                         className="btn-primary"
                         onClick={handleVerifyAdminPasswordOtp}
-                        disabled={isVerifyingAdminOtp || adminOtp.trim().length !== 6}
+                        disabled={isVerifyingAdminOtp || !adminOtp.trim()}
                         style={{ padding: '8px 20px' }}
                       >
                         {isVerifyingAdminOtp ? 'Verifying...' : 'Verify OTP'}
