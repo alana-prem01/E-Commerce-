@@ -52,7 +52,7 @@ import { ToastContainer } from "react-toastify";
 import { CartProvider } from './utils/CartContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "dummy-google-client-id.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "253682117944-d9s3f8b0ca2aoa5alsj6cf0r8tn311ej.apps.googleusercontent.com";
 
 const Layout = ({ children }) => {
   const location = useLocation();

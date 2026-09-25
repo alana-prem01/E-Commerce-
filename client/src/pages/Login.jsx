@@ -79,9 +79,9 @@ function Login() {
 
   const handleGoogleClick = () => {
     if (isSubmitting) return;
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId || clientId.includes('dummy')) {
-      toast.info('Google Client ID is not configured. Please add VITE_GOOGLE_CLIENT_ID to your client/.env file.');
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "253682117944-d9s3f8b0ca2aoa5alsj6cf0r8tn311ej.apps.googleusercontent.com";
+    if (!clientId) {
+      toast.info('Google Client ID is not configured.');
       return;
     }
     loginWithGoogle();
