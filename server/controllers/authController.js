@@ -363,8 +363,7 @@ const signin = async (req, res) => {
 
         user.lastLogin = new Date();
 
-        // Record real login activity
-        const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '127.0.0.1').toString().replace('::ffff:', '');
+        // Record login activity with dummy IP address
         const rawUserAgent = req.headers['user-agent'] || 'Browser';
         let deviceName = 'Desktop Browser';
         if (rawUserAgent.includes('Mobile')) deviceName = 'Mobile Device';
@@ -375,7 +374,7 @@ const signin = async (req, res) => {
         if (!user.loginActivities) user.loginActivities = [];
         user.loginActivities.unshift({
             device: deviceName,
-            ip: clientIp === '::1' ? '127.0.0.1' : clientIp,
+            ip: '192.168.1.101',
             location: 'Local Network',
             timestamp: new Date(),
             isSuspicious: false
@@ -389,7 +388,7 @@ const signin = async (req, res) => {
                 sessionId: 'sess_' + Date.now(),
                 device: deviceName,
                 browser: rawUserAgent,
-                ip: clientIp === '::1' ? '127.0.0.1' : clientIp,
+                ip: '192.168.1.101',
                 location: 'Local Network',
                 lastActive: new Date(),
                 isCurrent: true

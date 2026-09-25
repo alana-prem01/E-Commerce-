@@ -1650,10 +1650,9 @@ const getAdminSettings = async (req, res) => {
         
         let updated = false;
         if (!user.loginActivities || user.loginActivities.length === 0) {
-            const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '127.0.0.1').toString().replace('::ffff:', '');
             user.loginActivities = [{
                 device: 'Desktop Browser',
-                ip: clientIp === '::1' ? '127.0.0.1' : clientIp,
+                ip: '192.168.1.101',
                 location: 'Local Network',
                 timestamp: user.lastLogin || new Date(),
                 isSuspicious: false
@@ -1662,12 +1661,11 @@ const getAdminSettings = async (req, res) => {
         }
 
         if (!user.sessions || user.sessions.length === 0) {
-            const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '127.0.0.1').toString().replace('::ffff:', '');
             user.sessions = [{
                 sessionId: 'sess_current',
                 device: 'Current Admin Session',
                 browser: req.headers['user-agent'] || 'Browser',
-                ip: clientIp === '::1' ? '127.0.0.1' : clientIp,
+                ip: '192.168.1.101',
                 location: 'Local Network',
                 lastActive: new Date(),
                 isCurrent: true

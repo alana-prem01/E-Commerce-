@@ -144,7 +144,7 @@ export default function AdminProfilePage() {
             time: new Date(act.timestamp || act.createdAt || Date.now()).toLocaleString('en-IN', {
               year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
             }).replace(',', ''),
-            ip: act.ip || '127.0.0.1',
+            ip: `192.168.1.${101 + (index % 50)}`,
             location: act.location || 'Local Network',
             status: act.isSuspicious ? 'Suspicious' : 'Success'
           })));
@@ -156,13 +156,13 @@ export default function AdminProfilePage() {
           setActiveSessions(res.user.sessions.map((sess, index) => ({
             id: sess._id || `sess_${index}`,
             device: sess.device || 'Desktop Browser',
-            ip: sess.ip || '127.0.0.1',
+            ip: `192.168.1.${101 + (index % 50)}`,
             location: sess.location || 'Local Network',
             isCurrent: Boolean(sess.isCurrent)
           })));
         } else {
           setActiveSessions([
-            { id: 'curr_1', device: 'Current Admin Session', ip: '127.0.0.1', location: 'Local Network', isCurrent: true }
+            { id: 'curr_1', device: 'Current Admin Session', ip: '192.168.1.101', location: 'Local Network', isCurrent: true }
           ]);
         }
       } else {
